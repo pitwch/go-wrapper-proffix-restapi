@@ -21,6 +21,8 @@ Die Konfiguration wird dem Client mitgegeben:
 | apiPassword   | b62cce2fe18f7a156a9c...0f0d7bd18d9e8a40be2e663017 | SHA256-Hash des Benutzerpasswortes    |
 | apiModule     | ADR,STU                                           | Benötigte Module (mit Komma getrennt) |
 | options       | array('key'=>'112a5a90...59028')                  | Optionen (Details unter Optionen)     |
+
+
 Beispiel:
 
 ```golang
