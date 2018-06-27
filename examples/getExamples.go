@@ -49,8 +49,8 @@ func getDatabaseExample() {
 
 func getAdresseExample() {
 
-	//Query endpoint ADR/Adresse/1
-	rc, err := pxrest.Get("ADR/Adresse/1", url.Values{})
+	//Query endpoint ADR/Adresse/1 without Header as not needed
+	rc, _, err := pxrest.Get("ADR/Adresse/1", url.Values{})
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -60,6 +60,8 @@ func getAdresseExample() {
 	fmt.Printf(resp, err)
 
 	defer rc.Close()
+
+
 }
 
 func getAdresseWithParamsExample() {
@@ -71,7 +73,7 @@ func getAdresseWithParamsExample() {
 	param.Set("Filter", "Vorname@='Max'")
 
 	//Query Endpoint ADR/Adresse
-	rc, err := pxrest.Get("ADR/Adresse", param)
+	rc,_, err := pxrest.Get("ADR/Adresse", param)
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
