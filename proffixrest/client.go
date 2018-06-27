@@ -89,8 +89,6 @@ func (c *Client) PxLogin() (string, error) {
 	if err := encoder.Encode(data); err != nil {
 		return "", err
 	}
-	log.Println(urlstr)
-	log.Println(body)
 	req, err := http.NewRequest("POST", urlstr, body)
 	if err != nil {
 		return "", err
@@ -119,7 +117,6 @@ func (c *Client) PxLogin() (string, error) {
 func (c *Client) PxLogout(pxsessionid string) (int, error) {
 	urlstr := c.restURL.String() + c.option.LoginEndpoint
 
-	log.Println(urlstr)
 	req, err := http.NewRequest("DELETE", urlstr, nil)
 	if err != nil {
 		return 0, err
@@ -145,11 +142,18 @@ func (c *Client) PxLogout(pxsessionid string) (int, error) {
 	}
 	return resp.StatusCode, nil
 }
-func (c *Client) request(method, endpoint string, params url.Values, data interface{}) (io.ReadCloser, error) {
-	urlstr := c.restURL.String() + endpoint
-	if params == nil {
-		params = make(url.Values)
+func (c *Client) request(method, endpoint string, params url.Values, pxsessionid string, data interface{}) (io.ReadCloser, error) {
+
+	var urlstr string
+
+	if params.Encode() != "" {
+		urlstr = c.restURL.String() + endpoint + "?" + params.Encode()
+
+	} else {
+		urlstr = c.restURL.String() + endpoint
 	}
+
+	log.Print(urlstr)
 	//if c.restURL.Scheme == "https" {
 	//	urlstr += "?" + c.basicAuth(params)
 	//} else {
@@ -167,14 +171,13 @@ func (c *Client) request(method, endpoint string, params url.Values, data interf
 	if err := encoder.Encode(data); err != nil {
 		return nil, err
 	}
-	log.Println(urlstr)
 
 	req, err := http.NewRequest(method, urlstr, body)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("PxSessionId", "")
+	req.Header.Set("PxSessionId", pxsessionid)
 	resp, err := c.rawClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -186,9 +189,8 @@ func (c *Client) request(method, endpoint string, params url.Values, data interf
 
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
-		newStr := buf.String()
-
-		fmt.Printf(newStr)
+		body := buf.String()
+		log.Print(body)
 
 		return nil, fmt.Errorf("Request failed: %s", resp.Status)
 	}
@@ -196,21 +198,63 @@ func (c *Client) request(method, endpoint string, params url.Values, data interf
 }
 
 func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, error) {
-	return c.request("POST", endpoint, nil, data)
+	pxsessionid, err := c.PxLogin()
+	if err != nil {
+		return nil, err
+	}
+	request,err :=  c.request("POST", endpoint, url.Values{}, pxsessionid,data)
+
+	c.PxLogout(pxsessionid)
+
+	return request,err
 }
 
 func (c *Client) Put(endpoint string, data interface{}) (io.ReadCloser, error) {
-	return c.request("PUT", endpoint, nil, data)
+	pxsessionid, err := c.PxLogin()
+	if err != nil {
+		return nil, err
+	}
+	request, err := c.request("PUT", endpoint, url.Values{}, pxsessionid, data)
+
+	c.PxLogout(pxsessionid)
+
+	return request, err
 }
 
 func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, error) {
-	return c.request("GET", endpoint, params, nil)
+	pxsessionid, err := c.PxLogin()
+	if err != nil {
+		return nil, err
+	}
+	request, err := c.request("GET", endpoint, params, pxsessionid, nil)
+
+	c.PxLogout(pxsessionid)
+
+	return request, err
 }
 
 func (c *Client) Delete(endpoint string, params url.Values) (io.ReadCloser, error) {
-	return c.request("DELETE", endpoint, params, nil)
+	pxsessionid, err := c.PxLogin()
+	if err != nil {
+		return nil, err
+	}
+	request, err := c.request("DELETE", endpoint, params, pxsessionid, nil)
+
+	c.PxLogout(pxsessionid)
+
+	return request, err
 }
 
-func (c *Client) Options(endpoint string) (io.ReadCloser, error) {
-	return c.request("OPTIONS", endpoint, nil, nil)
+func (c *Client) Info(pxapi string) (io.ReadCloser, error) {
+
+	param := url.Values{}
+	param.Set("key", pxapi)
+	return c.request("GET", "PRO/Info", param, "", nil)
+}
+
+func (c *Client) Database(pxapi string) (io.ReadCloser, error) {
+
+	param := url.Values{}
+	param.Set("key", pxapi)
+	return c.request("GET", "PRO/Datenbank", param, "", nil)
 }
