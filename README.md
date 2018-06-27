@@ -2,6 +2,9 @@
 
 Ein einfacher aber zuverlässiger Wrapper für die PROFFIX REST-API in Go.
 
+![alt text](https://raw.githubusercontent.com/pitwch/go-wrapper-proffix-restapi/master/assets/img/golang-px.jpg "Golang Wrapper PROFFIX REST API")
+
+
 ### Installation
 
 ```bash
