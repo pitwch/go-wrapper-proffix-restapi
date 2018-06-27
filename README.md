@@ -1,6 +1,6 @@
-### Golang Wrapper für PROFFIX REST-API
+# Golang Wrapper für PROFFIX REST-API
 
-
+Ein einfacher aber zuverlässiger Wrapper für die PROFFIX REST-API in Go.
 
 ### Installation
 
@@ -116,9 +116,38 @@ var data map[string]interface{} = map[string]interface{}{
 
 ##### Response / Antwort
 
+Alle Methoden geben `io.ReadCloser`, `http.Header` sowie `nil` oder `error` zurück.
 
-todo
+Beispiel (Kein Header):
 
+```golang
+// Returns no Header (_)
+	rc, _, err := pxrest.Get("ADR/Adresse/1", url.Values{})
+```
+
+
+Beispiel (Mit Header):
+
+```golang
+// Returns Header
+	rc, header, err := pxrest.Post("ADR/Adresse/1", data)
+
+// Print Header->Location
+	fmt.Print(header.Get("Location"))
+	
+```
+
+**Hinweis:** Der Typ `io.ReadCloser` kann mittels Buffer Decode gelesen werden:
+
+```golang
+	rc, header, err := pxrest.Get("ADR/Adresse/1", url.Values{})
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(rc)
+	resp := buf.String()
+	fmt.Printf(resp, err)
+	defer rc.Close()
+```
 
 #### Spezielle Endpunkte
 
