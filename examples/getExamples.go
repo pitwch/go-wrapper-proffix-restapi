@@ -14,7 +14,7 @@ var pxrest, err = px.NewClient(
 	"b62cce2fe18f7a156a9c719c57bebf0478a3d50f0d7bd18d9e8a40be2e663017",
 	"DEMO",
 	[]string{"ADR", "FIB"},
-	&px.Options{},
+	&px.Options{Timeout: 30},
 )
 
 func getInfoExample() {

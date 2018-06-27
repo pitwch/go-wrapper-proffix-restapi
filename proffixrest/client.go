@@ -37,46 +37,46 @@ type DatabaseStruct struct {
 	Name string `json:"Name"`
 }
 
-func NewClient(restapi, Benutzer string, Passwort string, Datenbank string, Module []string, option *Options) (*Client, error) {
-	restURL, err := url.Parse(restapi)
+func NewClient(RestURL, apiUser string, apiPassword string, apiDatabase string, apiModule []string, options *Options) (*Client, error) {
+	restURL, err := url.Parse(RestURL)
 	if err != nil {
 		return nil, err
 	}
 
-	if option == nil {
-		option = &Options{}
+	if options == nil {
+		options = &Options{}
 	}
 
-	if option.Version == "" {
-		option.Version = "v2"
+	if options.Version == "" {
+		options.Version = "v2"
 	}
 
-	if option.APIPrefix == "" {
-		option.APIPrefix = "/pxapi/"
+	if options.APIPrefix == "" {
+		options.APIPrefix = "/pxapi/"
 	}
 
-	if option.LoginEndpoint == "" {
-		option.LoginEndpoint = "PRO/Login"
+	if options.LoginEndpoint == "" {
+		options.LoginEndpoint = "PRO/Login"
 	}
 
-	if option.UserAgent == "" {
-		option.UserAgent = "go-wrapper-proffix-restapi " + Version
+	if options.UserAgent == "" {
+		options.UserAgent = "go-wrapper-proffix-restapi " + Version
 	}
 
-	path := option.APIPrefix + option.Version + "/"
+	path := options.APIPrefix + options.Version + "/"
 	restURL.Path = path
 
 	rawClient := &http.Client{}
 	rawClient.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: option.VerifySSL},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: options.VerifySSL},
 	}
 	return &Client{
 		restURL:   restURL,
-		Benutzer:  Benutzer,
-		Passwort:  Passwort,
-		Datenbank: Datenbank,
-		Module:    Module,
-		option:    option,
+		Benutzer:  apiUser,
+		Passwort:  apiPassword,
+		Datenbank: apiDatabase,
+		Module:    apiModule,
+		option:    options,
 		rawClient: rawClient,
 	}, nil
 }
