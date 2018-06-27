@@ -1,6 +1,6 @@
-### Golang Wrapper für PROFFIX REST-API
+# Golang Wrapper für PROFFIX REST-API
 
-
+Ein einfacher aber zuverlässiger Wrapper für die PROFFIX REST-API in Go.
 
 ### Installation
 
@@ -13,15 +13,14 @@ $ go get github.com/pitwch/go-wrapper-proffix-restapi/proffixrest
 
 Die Konfiguration wird dem Client mitgegeben:
 
-| Konfiguration | Beispiel                                          | Bemerkung                             |
-|---------------|---------------------------------------------------|---------------------------------------|
-| RestURL       | https://myserver.ch:999                           | URL der REST-API **ohne pxapi/v2/**   |
-| apiDatabase   | DEMO                                              | Name der Datenbank                    |
-| apiUser       | USR                                               | Names des Benutzers                   |
-| apiPassword   | b62cce2fe18f7a156a9c...0f0d7bd18d9e8a40be2e663017 | SHA256-Hash des Benutzerpasswortes    |
-| apiModule     | ADR,STU                                           | Benötigte Module (mit Komma getrennt) |
-| options       | array('key'=>'112a5a90...59028')                  | Optionen (Details unter Optionen)     |
-
+| Konfiguration | Beispiel                 | Type          | Bemerkung                             |
+|---------------|--------------------------|---------------|---------------------------------------|
+| RestURL       | https://myserver.ch:999  | `string`      | URL der REST-API **ohne pxapi/v2/**   |
+| apiDatabase   | DEMO                     | `string`      | Name der Datenbank                    |
+| apiUser       | USR                      | `string`      | Names des Benutzers                   |
+| apiPassword   | b62cce2fe18f7a156a9c...  | `string`      | SHA256-Hash des Benutzerpasswortes    |
+| apiModule     | []string{"ADR", "FIB"}   | `[]string`    | Benötigte Module (mit Komma getrennt) |
+| options       | &px.Options{Timeout: 30} | `*px.Options` | Optionen (Details unter Optionen)     |
 
 Beispiel:
 
@@ -51,7 +50,7 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | Version          | v2                                                               | API-Version; Standard = v2                                     |
 | APIPrefix        | /pxapi/                                                          | Prefix für die API; Standard = /pxapi/                         |
 | LoginEndpoint    | PRO/Login                                                        | Endpunkt für Login; Standard = PRO/Login                       |
-| UserAgent        | php-wrapper-proffix-restapi                                      | User Agent; Standard = php-wrapper-proffix-restapi             |
+| UserAgent        | go-wrapper-proffix-restapi                                       | User Agent; Standard = php-wrapper-proffix-restapi             |
 | Timeout          | 15                                                               | Timeout in Sekunden                                            |
 | VerifySSL        | true                                                             | SSL prüfen                                                     |
 
@@ -116,9 +115,38 @@ var data map[string]interface{} = map[string]interface{}{
 
 ##### Response / Antwort
 
+Alle Methoden geben `io.ReadCloser`, `http.Header` sowie `nil` oder `error` zurück.
 
-todo
+Beispiel (Kein Header):
 
+```golang
+// Returns no Header (_)
+	rc, _, err := pxrest.Get("ADR/Adresse/1", url.Values{})
+```
+
+
+Beispiel (Mit Header):
+
+```golang
+// Returns Header
+	rc, header, err := pxrest.Post("ADR/Adresse/1", data)
+
+// Print Header->Location
+	fmt.Print(header.Get("Location"))
+	
+```
+
+**Hinweis:** Der Typ `io.ReadCloser` kann mittels Buffer Decode gelesen werden:
+
+```golang
+	rc, header, err := pxrest.Get("ADR/Adresse/1", url.Values{})
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(rc)
+	resp := buf.String()
+	fmt.Printf(resp, err)
+	defer rc.Close()
+```
 
 #### Spezielle Endpunkte
 
