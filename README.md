@@ -5,7 +5,7 @@
 ### Installation
 
 ```bash
-$ go get github.com/pitw/go-wrapper-proffix-restapi/proffixrest
+$ go get github.com/pitwch/go-wrapper-proffix-restapi/proffixrest
 ```
 
 
