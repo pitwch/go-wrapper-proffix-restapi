@@ -159,9 +159,7 @@ Ruft Infos vom Endpunkt **PRO/Datenbank** ab.
 
 	defer rc.Close()
   ```
-### Ausnahmen / Spezialfälle
 
-* Endpunkte welche Leerschläge enthalten können (z.B. LAG/Artikel/PC 7/Bestand) müssen mit rawurlencode() genutzt werden
 
 ### Weitere Beispiele
 
