@@ -21,7 +21,7 @@ type Client struct {
 	Benutzer  string
 	Passwort  string
 	Datenbank string
-	Module    string
+	Module    []string
 	option    *Options
 	rawClient *http.Client
 }
@@ -30,15 +30,14 @@ type LoginStruct struct {
 	Benutzer  string         `json:"Benutzer"`
 	Passwort  string         `json:"Passwort"`
 	Datenbank DatabaseStruct `json:"Datenbank"`
-	Module    string         `json:"Module"`
+	Module    []string       `json:"Module"`
 }
 
 type DatabaseStruct struct {
-	Name        string `json:"Name"`
-	Bezeichnung string `json:"Bezeichnung"`
+	Name string `json:"Name"`
 }
 
-func NewClient(restapi, Benutzer string, Passwort string, Datenbank string, Module string, option *Options) (*Client, error) {
+func NewClient(restapi, Benutzer string, Passwort string, Datenbank string, Module []string, option *Options) (*Client, error) {
 	restURL, err := url.Parse(restapi)
 	if err != nil {
 		return nil, err
@@ -81,33 +80,71 @@ func NewClient(restapi, Benutzer string, Passwort string, Datenbank string, Modu
 		rawClient: rawClient,
 	}, nil
 }
+func (c *Client) PxLogin() (string, error) {
+	urlstr := c.restURL.String() + c.option.LoginEndpoint
 
-func (c *Client) PxLogin(option *Options) string {
-
-	loginJson := LoginStruct{c.Benutzer, c.Passwort, DatabaseStruct{c.Datenbank,""}, c.Module}
-	jsonStr, err := json.Marshal(loginJson)
-	if err != nil {
-		panic(err)
+	data := LoginStruct{c.Benutzer, c.Passwort, DatabaseStruct{c.Datenbank}, c.Module}
+	body := new(bytes.Buffer)
+	encoder := json.NewEncoder(body)
+	if err := encoder.Encode(data); err != nil {
+		return "", err
 	}
-	log.Println(loginJson)
-	req, err := http.NewRequest("POST", "https://fernwartung.pitw.ch:955/pxapi/v2/PRO/Login", bytes.NewBuffer(jsonStr))
+	log.Println(urlstr)
+	log.Println(body)
+	req, err := http.NewRequest("POST", urlstr, body)
+	if err != nil {
+		return "", err
+	}
 	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := c.rawClient.Do(req)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusBadRequest ||
+		resp.StatusCode == http.StatusUnauthorized ||
+		resp.StatusCode == http.StatusNotFound ||
+		resp.StatusCode == http.StatusInternalServerError {
 
-	if resp.StatusCode != 201 {
-		log.Println("Error", resp.Body)
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+		newStr := buf.String()
 
+		fmt.Printf(newStr)
+
+		return "", fmt.Errorf("Request failed: %s", resp.Status)
 	}
-
-	return string(resp.Header.Get("PxSessionId"))
+	return resp.Header.Get("PxSessionId"), nil
 }
 
+func (c *Client) PxLogout(pxsessionid string) (int, error) {
+	urlstr := c.restURL.String() + c.option.LoginEndpoint
+
+	log.Println(urlstr)
+	req, err := http.NewRequest("DELETE", urlstr, nil)
+	if err != nil {
+		return 0, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("PxSessionId", pxsessionid)
+	resp, err := c.rawClient.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	if resp.StatusCode == http.StatusBadRequest ||
+		resp.StatusCode == http.StatusUnauthorized ||
+		resp.StatusCode == http.StatusNotFound ||
+		resp.StatusCode == http.StatusInternalServerError {
+
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+		newStr := buf.String()
+
+		fmt.Printf(newStr)
+
+		return 0, fmt.Errorf("Request failed: %s", resp.Status)
+	}
+	return resp.StatusCode, nil
+}
 func (c *Client) request(method, endpoint string, params url.Values, data interface{}) (io.ReadCloser, error) {
 	urlstr := c.restURL.String() + endpoint
 	if params == nil {
@@ -136,10 +173,8 @@ func (c *Client) request(method, endpoint string, params url.Values, data interf
 	if err != nil {
 		return nil, err
 	}
-	x := c.PxLogin(c.option)
-	log.Println(x)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("PxSessionId", x)
+	req.Header.Set("PxSessionId", "")
 	resp, err := c.rawClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -173,7 +208,7 @@ func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, error) 
 }
 
 func (c *Client) Delete(endpoint string, params url.Values) (io.ReadCloser, error) {
-	return c.request("POST", endpoint, params, nil)
+	return c.request("DELETE", endpoint, params, nil)
 }
 
 func (c *Client) Options(endpoint string) (io.ReadCloser, error) {
