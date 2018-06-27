@@ -78,7 +78,7 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 //Einfache Abfrage
      rc, _, err := pxrest.Get("ADR/Adresse/1", url.Values{})
 
-/Abfrage mit Parametern
+//Abfrage mit Parametern
 	param := url.Values{}
 	param.Set("Filter", "Vorname@='Max'")
 
