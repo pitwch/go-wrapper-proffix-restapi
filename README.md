@@ -27,7 +27,7 @@ Beispiel:
 
 ```golang
 import (
-  px "github.com/pitw/go-wrapper-proffix-restapi/proffixrest"
+  px "github.com/pitwch/go-wrapper-proffix-restapi/proffixrest"
 )
 
 var pxrest, err = px.NewClient(
