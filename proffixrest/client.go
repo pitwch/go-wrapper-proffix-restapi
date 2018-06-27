@@ -142,7 +142,7 @@ func (c *Client) PxLogout(pxsessionid string) (int, error) {
 	}
 	return resp.StatusCode, nil
 }
-func (c *Client) request(method, endpoint string, params url.Values, pxsessionid string, data interface{}) (io.ReadCloser, error) {
+func (c *Client) request(method, endpoint string, params url.Values, pxsessionid string, data interface{}) (io.ReadCloser,http.Header, error) {
 
 	var urlstr string
 
@@ -163,24 +163,24 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 	case http.MethodPost, http.MethodPut:
 	case http.MethodDelete, http.MethodGet, http.MethodOptions:
 	default:
-		return nil, fmt.Errorf("Method is not recognised: %s", method)
+		return nil, nil, fmt.Errorf("Method is not recognised: %s", method)
 	}
 
 	body := new(bytes.Buffer)
 	encoder := json.NewEncoder(body)
 	if err := encoder.Encode(data); err != nil {
-		return nil, err
+		return nil,nil, err
 	}
 
 	req, err := http.NewRequest(method, urlstr, body)
 	if err != nil {
-		return nil, err
+		return nil,nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("PxSessionId", pxsessionid)
 	resp, err := c.rawClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil,nil, err
 	}
 	if resp.StatusCode == http.StatusBadRequest ||
 		resp.StatusCode == http.StatusUnauthorized ||
@@ -192,69 +192,73 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 		body := buf.String()
 		log.Print(body)
 
-		return nil, fmt.Errorf("Request failed: %s", resp.Status)
+		return nil,nil, fmt.Errorf("Request failed: %s", resp.Status)
 	}
-	return resp.Body, nil
+	return resp.Body, resp.Header, nil
 }
 
-func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, error) {
+func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, http.Header,error) {
 	pxsessionid, err := c.PxLogin()
 	if err != nil {
-		return nil, err
+		return nil,nil, err
 	}
-	request,err :=  c.request("POST", endpoint, url.Values{}, pxsessionid,data)
+	request,header,err :=  c.request("POST", endpoint, url.Values{}, pxsessionid,data)
 
 	c.PxLogout(pxsessionid)
 
-	return request,err
+	return request,header,err
 }
 
-func (c *Client) Put(endpoint string, data interface{}) (io.ReadCloser, error) {
+func (c *Client) Put(endpoint string, data interface{}) (io.ReadCloser, http.Header, error) {
 	pxsessionid, err := c.PxLogin()
 	if err != nil {
-		return nil, err
+		return nil,nil, err
 	}
-	request, err := c.request("PUT", endpoint, url.Values{}, pxsessionid, data)
+	request, header, err := c.request("PUT", endpoint, url.Values{}, pxsessionid, data)
 
 	c.PxLogout(pxsessionid)
 
-	return request, err
+	return request, header,err
 }
 
-func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, error) {
+func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser,  http.Header, error) {
 	pxsessionid, err := c.PxLogin()
 	if err != nil {
-		return nil, err
+		return nil,nil, err
 	}
-	request, err := c.request("GET", endpoint, params, pxsessionid, nil)
+	request, header, err := c.request("GET", endpoint, params, pxsessionid, nil)
 
 	c.PxLogout(pxsessionid)
 
-	return request, err
+	return request,header, err
 }
 
-func (c *Client) Delete(endpoint string, params url.Values) (io.ReadCloser, error) {
+func (c *Client) Delete(endpoint string, params url.Values) (io.ReadCloser,  http.Header, error) {
 	pxsessionid, err := c.PxLogin()
 	if err != nil {
-		return nil, err
+		return nil,nil, err
 	}
-	request, err := c.request("DELETE", endpoint, params, pxsessionid, nil)
+	request, header, err := c.request("DELETE", endpoint, params, pxsessionid, nil)
 
 	c.PxLogout(pxsessionid)
 
-	return request, err
+	return request, header,err
 }
 
 func (c *Client) Info(pxapi string) (io.ReadCloser, error) {
 
 	param := url.Values{}
 	param.Set("key", pxapi)
-	return c.request("GET", "PRO/Info", param, "", nil)
+	request, _, err := c.request("GET", "PRO/Info", param, "", nil)
+
+	return request,err
 }
 
 func (c *Client) Database(pxapi string) (io.ReadCloser, error) {
 
 	param := url.Values{}
 	param.Set("key", pxapi)
-	return c.request("GET", "PRO/Datenbank", param, "", nil)
+	request, _, err :=  c.request("GET", "PRO/Datenbank", param, "", nil)
+
+	return request,err
 }
