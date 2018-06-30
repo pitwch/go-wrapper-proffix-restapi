@@ -53,7 +53,7 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | Version          | v2                                                               | API-Version; Standard = v2                                     |
 | APIPrefix        | /pxapi/                                                          | Prefix für die API; Standard = /pxapi/                         |
 | LoginEndpoint    | PRO/Login                                                        | Endpunkt für Login; Standard = PRO/Login                       |
-| UserAgent        | go-wrapper-proffix-restapi                                       | User Agent; Standard = php-wrapper-proffix-restapi             |
+| UserAgent        | go-wrapper-proffix-restapi                                       | User Agent; Standard = go-wrapper-proffix-restapi            |
 | Timeout          | 15                                                               | Timeout in Sekunden                                            |
 | VerifySSL        | true                                                             | SSL prüfen                                                     |
 
