@@ -1,4 +1,6 @@
 [![GoDoc](https://godoc.org/github.com/pitwch/go-wrapper-proffix-restapi/proffixrest?status.svg)](https://godoc.org/github.com/pitwch/go-wrapper-proffix-restapi/proffixrest)
+[![Build Status](https://travis-ci.org/pitwch/go-wrapper-proffix-restapi.svg?branch=master)](https://travis-ci.org/pitwch/go-wrapper-proffix-restapi)
+
 
 # Golang Wrapper für PROFFIX REST-API
 
