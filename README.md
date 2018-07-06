@@ -1,3 +1,5 @@
+[![GoDoc](https://godoc.org/github.com/pitwch/go-wrapper-proffix-restapi/proffixrest?status.svg)](https://godoc.org/github.com/pitwch/go-wrapper-proffix-restapi/proffixrest)
+
 # Golang Wrapper für PROFFIX REST-API
 
 Ein einfacher aber zuverlässiger Wrapper für die PROFFIX REST-API in Go.
