@@ -1,8 +1,8 @@
 package examples
 
 import (
-	"fmt"
 	"bytes"
+	"fmt"
 	px "github.com/pitwch/go-wrapper-proffix-restapi/proffixrest"
 
 	"net/url"
@@ -61,7 +61,6 @@ func getAdresseExample() {
 
 	defer rc.Close()
 
-
 }
 
 func getAdresseWithParamsExample() {
@@ -73,7 +72,7 @@ func getAdresseWithParamsExample() {
 	param.Set("Filter", "Vorname@='Max'")
 
 	//Query Endpoint ADR/Adresse
-	rc,_, err := pxrest.Get("ADR/Adresse", param)
+	rc, _, err := pxrest.Get("ADR/Adresse", param)
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)

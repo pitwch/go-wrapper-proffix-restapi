@@ -15,8 +15,7 @@ func postAdresseWithStruct() {
 		Ort  string
 		PLZ  string
 	}
-	var data = Adresse{"Muster GmbH", "Zürich", "8000",
-	}
+	var data = Adresse{"Muster GmbH", "Zürich", "8000"}
 
 	//Query Endpoint ADR/Adresse with Headers
 	rc, header, err := pxrest.Post("ADR/Adresse", data)
@@ -54,7 +53,6 @@ func postAdresseWithMap() {
 	fmt.Printf(resp, err)
 
 	defer rc.Close()
-
 
 	//Get Header Location
 	fmt.Print(header.Get("Location"))
