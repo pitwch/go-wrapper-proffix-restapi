@@ -11,5 +11,5 @@ type Options struct {
 	LoginEndpoint string
 	UserAgent     string
 	Timeout       time.Duration
-	VerifySSL       bool
+	VerifySSL     bool
 }
