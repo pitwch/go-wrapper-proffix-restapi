@@ -274,13 +274,14 @@ func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, http.He
 	if err != nil {
 		return nil, nil, 0, err
 	}
+
 	request, header, statuscode, err := c.request("GET", endpoint, params, sessionid, nil)
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
 		Pxsessionid, err = c.createNewPxSessionId()
-		request, header, statuscode, err := c.request("GET", endpoint, url.Values{}, sessionid, nil)
+		request, header, statuscode, err := c.request("GET", endpoint, params, sessionid, nil)
 
 		return request, header, statuscode, err
 	}
