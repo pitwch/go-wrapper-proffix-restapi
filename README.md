@@ -122,7 +122,14 @@ var data map[string]interface{} = map[string]interface{}{
 
 ##### Response / Antwort
 
-Alle Methoden geben `io.ReadCloser`, `http.Header`, HTTP-Statuscode sowie `nil` oder `error` zurück.
+Alle Methoden geben `io.ReadCloser`, `http.Header`,  `int` sowie `error` zurück.
+
+| Rückgabetyp     | Bemerkung                                      |
+|-----------------|------------------------------------------------|
+| `io.ReadCloser` | Daten                                          |
+| `http.Header`   | Header                                         |
+| `int`           | HTTP-Status Code                               |
+| `error`         | Fehler; Standardrückgabe ohne Fehler ist `nil` |
 
 Beispiel (Kein Header, Ohne Statuscode):
 
