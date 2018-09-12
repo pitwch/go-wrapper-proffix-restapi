@@ -1,23 +1,22 @@
-package main
+package proffixrest
 
 import (
 	"bytes"
-	px "github.com/pitwch/go-wrapper-proffix-restapi/proffixrest"
 	"net/url"
 	"testing"
 )
 
 //Connect function
-func ConnectTest() (pxrest *px.Client, err error) {
+func ConnectTest() (pxrest *Client, err error) {
 
 	//Use PROFFIX Demo Logins as Example
-	pxrest, err = px.NewClient(
+	pxrest, err = NewClient(
 		"https://remote.proffix.net:11011/pxapi/v2",
 		"Gast",
 		"16ec7cb001be0525f9af1a96fd5ea26466b2e75ef3e96e881bcb7149cd7598da",
 		"DEMODB",
 		[]string{"ADR", "FIB"},
-		&px.Options{
+		&Options{
 			Key: "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50"},
 	)
 
