@@ -1,6 +1,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/pitwch/go-wrapper-proffix-restapi)](https://goreportcard.com/report/github.com/pitwch/go-wrapper-proffix-restapi)
 [![Build Status](https://travis-ci.org/pitwch/go-wrapper-proffix-restapi.svg?branch=master)](https://travis-ci.org/pitwch/go-wrapper-proffix-restapi)
 [![GoDoc](https://godoc.org/github.com/pitwch/go-wrapper-proffix-restapi/proffixrest?status.svg)](https://godoc.org/github.com/pitwch/go-wrapper-proffix-restapi/proffixrest)
+[![codecov](https://codecov.io/gh/pitwch/go-wrapper-proffix-restapi/branch/master/graph/badge.svg)](https://codecov.io/gh/pitwch/go-wrapper-proffix-restapi)
+
 
 # Golang Wrapper für PROFFIX REST-API
 
