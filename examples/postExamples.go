@@ -9,6 +9,9 @@ import (
 
 func postAdresseWithStruct() {
 
+	//Connect to REST-API
+	pxrest, err := Connect()
+
 	//Define struct
 	type Adresse struct {
 		Name string
@@ -18,7 +21,7 @@ func postAdresseWithStruct() {
 	var data = Adresse{"Muster GmbH", "Zürich", "8000"}
 
 	//Query Endpoint ADR/Adresse with Headers
-	rc, header, err := pxrest.Post("ADR/Adresse", data)
+	rc, header, _, err := pxrest.Post("ADR/Adresse", data)
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -35,6 +38,9 @@ func postAdresseWithStruct() {
 
 func postAdresseWithMap() {
 
+	//Connect to REST-API
+	pxrest, err := Connect()
+
 	//Define map
 	var data map[string]interface{} = map[string]interface{}{
 		"Name":   "Muster GmbH",
@@ -43,7 +49,7 @@ func postAdresseWithMap() {
 	}
 
 	//Query Endpoint ADR/Adresse with Headers
-	rc, header, err := pxrest.Post("ADR/Adresse", data)
+	rc, header, _, err := pxrest.Post("ADR/Adresse", data)
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)

@@ -82,13 +82,13 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 
 ```golang
 //Einfache Abfrage
-     rc, _, err := pxrest.Get("ADR/Adresse/1", url.Values{})
+     rc, _,statuscode, err := pxrest.Get("ADR/Adresse/1", url.Values{})
 
 //Abfrage mit Parametern
 	param := url.Values{}
 	param.Set("Filter", "Vorname@='Max'")
 
-	rc,_, err := pxrest.Get("ADR/Adresse", param)
+	rc,_, statuscode, err := pxrest.Get("ADR/Adresse", param)
 
 ```
 
@@ -103,7 +103,7 @@ var data map[string]interface{} = map[string]interface{}{
 		"Zürich": "8000",
 	}
 
-	rc, header, err := pxrest.Put("ADR/Adresse", data)
+	rc, header, statuscode, err := pxrest.Put("ADR/Adresse", data)
 ```
 
 ##### Post / Create
@@ -116,27 +116,33 @@ var data map[string]interface{} = map[string]interface{}{
 	}
 
 	//Query Endpoint ADR/Adresse with Headers
-	rc, header, err := pxrest.Post("ADR/Adresse", data)
+	rc, header, statuscode, err := pxrest.Post("ADR/Adresse", data)
 ```
 
 
 ##### Response / Antwort
 
-Alle Methoden geben `io.ReadCloser`, `http.Header` sowie `nil` oder `error` zurück.
+Alle Methoden geben `io.ReadCloser`, `http.Header`,  `int` sowie `error` zurück.
 
-Beispiel (Kein Header):
+| Rückgabetyp     | Bemerkung                                      |
+|-----------------|------------------------------------------------|
+| `io.ReadCloser` | Daten                                          |
+| `http.Header`   | Header                                         |
+| `int`           | HTTP-Status Code                               |
+| `error`         | Fehler; Standardrückgabe ohne Fehler ist `nil` |
+
+Beispiel (Kein Header, Ohne Statuscode):
 
 ```golang
 // Returns no Header (_)
-	rc, _, err := pxrest.Get("ADR/Adresse/1", url.Values{})
+	rc, _, _, err := pxrest.Get("ADR/Adresse/1", url.Values{})
 ```
 
-
-Beispiel (Mit Header):
+Beispiel (Mit Header, Ohne Statuscode):
 
 ```golang
 // Returns Header
-	rc, header, err := pxrest.Post("ADR/Adresse/1", data)
+	rc, header, _, err := pxrest.Post("ADR/Adresse/1", data)
 
 // Print Header->Location
 	fmt.Print(header.Get("Location"))
@@ -146,7 +152,7 @@ Beispiel (Mit Header):
 **Hinweis:** Der Typ `io.ReadCloser` kann mittels Buffer Decode gelesen werden:
 
 ```golang
-	rc, header, err := pxrest.Get("ADR/Adresse/1", url.Values{})
+	rc, header, _, err := pxrest.Get("ADR/Adresse/1", url.Values{})
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(rc)
