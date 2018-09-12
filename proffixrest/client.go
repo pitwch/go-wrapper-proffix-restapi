@@ -116,7 +116,7 @@ func (c *Client) createNewPxSessionId() (sessionid string, err error) {
 		return "", err
 	}
 
-	//If Login Response gives errors print also Body
+	//If Response gives errors print also Body
 	if resp.StatusCode == http.StatusBadRequest ||
 		resp.StatusCode == http.StatusUnauthorized ||
 		resp.StatusCode == http.StatusNotFound ||
@@ -126,9 +126,7 @@ func (c *Client) createNewPxSessionId() (sessionid string, err error) {
 		buf.ReadFrom(resp.Body)
 		response := buf.String()
 
-		fmt.Printf(response)
-
-		return "", fmt.Errorf("Request failed: %s", resp.Status)
+		return "", fmt.Errorf("Error on Login: %s", response)
 	}
 	//If everything OK just return pxsessionid
 	return resp.Header.Get("pxsessionid"), nil
@@ -175,11 +173,9 @@ func (c *Client) Logout(pxsessionid string) (int, error) {
 
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
-		newStr := buf.String()
+		response := buf.String()
 
-		fmt.Printf(newStr)
-
-		return 0, fmt.Errorf("Request failed: %s", resp.Status)
+		return 0, fmt.Errorf("Error on Logout: %s", response)
 	}
 	return resp.StatusCode, nil
 }
@@ -236,7 +232,6 @@ func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, http.He
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
-
 		Pxsessionid, err = c.createNewPxSessionId()
 		request, header, statuscode, err := c.request("POST", endpoint, url.Values{}, sessionid, data)
 
@@ -245,8 +240,6 @@ func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, http.He
 
 	//Write the latest pxsessionid back to var
 	Pxsessionid = header.Get("pxsessionid")
-
-	//c.Logout(sessionid)
 
 	return request, header, statuscode, err
 }
@@ -262,7 +255,6 @@ func (c *Client) Put(endpoint string, data interface{}) (io.ReadCloser, http.Hea
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
-
 		Pxsessionid, err = c.createNewPxSessionId()
 		request, header, statuscode, err := c.request("PUT", endpoint, url.Values{}, sessionid, data)
 
@@ -287,7 +279,6 @@ func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, http.He
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
-
 		Pxsessionid, err = c.createNewPxSessionId()
 		request, header, statuscode, err := c.request("GET", endpoint, url.Values{}, sessionid, nil)
 
@@ -296,7 +287,6 @@ func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, http.He
 
 	//Write the latest pxsessionid back to var
 	Pxsessionid = header.Get("pxsessionid")
-	//c.Logout(pxsessionid)
 
 	return request, header, statuscode, err
 }
@@ -312,7 +302,6 @@ func (c *Client) Delete(endpoint string, params url.Values) (io.ReadCloser, http
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
-
 		Pxsessionid, err = c.createNewPxSessionId()
 		request, header, statuscode, err := c.request("DELETE", endpoint, url.Values{}, sessionid, nil)
 
@@ -321,7 +310,6 @@ func (c *Client) Delete(endpoint string, params url.Values) (io.ReadCloser, http
 
 	//Write the latest pxsessionid back to var
 	Pxsessionid = header.Get("pxsessionid")
-	//c.Logout(pxsessionid)
 
 	return request, header, statuscode, err
 }
