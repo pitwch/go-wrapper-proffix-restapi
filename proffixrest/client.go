@@ -12,9 +12,13 @@ import (
 )
 
 const (
-	Version = "1.0.0"
+	Version = "1.1.0"
 )
 
+//Var for storing PxSessionId
+var Pxsessionid string
+
+//Client Struct
 type Client struct {
 	restURL   *url.URL
 	Benutzer  string
@@ -25,6 +29,7 @@ type Client struct {
 	rawClient *http.Client
 }
 
+//Login Struct
 type LoginStruct struct {
 	Benutzer  string         `json:"Benutzer"`
 	Passwort  string         `json:"Passwort"`
@@ -32,10 +37,12 @@ type LoginStruct struct {
 	Module    []string       `json:"Module"`
 }
 
+//Database Struct
 type DatabaseStruct struct {
 	Name string `json:"Name"`
 }
 
+//Building new Client
 func NewClient(RestURL, apiUser string, apiPassword string, apiDatabase string, apiModule []string, options *Options) (*Client, error) {
 	restURL, err := url.Parse(RestURL)
 	if err != nil {
@@ -79,24 +86,37 @@ func NewClient(RestURL, apiUser string, apiPassword string, apiDatabase string, 
 		rawClient: rawClient,
 	}, nil
 }
-func (c *Client) PxLogin() (string, error) {
+
+//Function for creating new PxSessionId
+func (c *Client) createNewPxSessionId() (sessionid string, err error) {
+
+	//Build Login URL
 	urlstr := c.restURL.String() + c.option.LoginEndpoint
 
+	//Create Login Body
 	data := LoginStruct{c.Benutzer, c.Passwort, DatabaseStruct{c.Datenbank}, c.Module}
+
+	//Encode Login Body to JSON
 	body := new(bytes.Buffer)
 	encoder := json.NewEncoder(body)
 	if err := encoder.Encode(data); err != nil {
 		return "", err
 	}
+
+	//Build Login Request
 	req, err := http.NewRequest("POST", urlstr, body)
 	if err != nil {
 		return "", err
 	}
+
+	//Set Login Header
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.rawClient.Do(req)
 	if err != nil {
 		return "", err
 	}
+
+	//If Login Response gives errors print also Body
 	if resp.StatusCode == http.StatusBadRequest ||
 		resp.StatusCode == http.StatusUnauthorized ||
 		resp.StatusCode == http.StatusNotFound ||
@@ -104,24 +124,46 @@ func (c *Client) PxLogin() (string, error) {
 
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
-		newStr := buf.String()
+		response := buf.String()
 
-		fmt.Printf(newStr)
+		fmt.Printf(response)
 
 		return "", fmt.Errorf("Request failed: %s", resp.Status)
 	}
-	return resp.Header.Get("PxSessionId"), nil
+	//If everything OK just return pxsessionid
+	return resp.Header.Get("pxsessionid"), nil
+
 }
 
-func (c *Client) PxLogout(pxsessionid string) (int, error) {
+//Function for Login
+func (c *Client) Login() (string, error) {
+
+	// If Pxsessionid doesnt yet exists create a new one
+	if Pxsessionid == "" {
+		sessionid, err := c.createNewPxSessionId()
+		return sessionid, err
+		// If Pxsessionid already exists return stored value
+	} else {
+		return Pxsessionid, nil
+	}
+}
+
+//Function for Logout
+func (c *Client) Logout(pxsessionid string) (int, error) {
+
 	urlstr := c.restURL.String() + c.option.LoginEndpoint
 
 	req, err := http.NewRequest("DELETE", urlstr, nil)
 	if err != nil {
 		return 0, err
 	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("PxSessionId", pxsessionid)
+
+	if pxsessionid != "" {
+		req.Header.Set("pxsessionid", pxsessionid)
+	} else {
+		req.Header.Set("PxSessionId", Pxsessionid)
+	}
+
 	resp, err := c.rawClient.Do(req)
 	if err != nil {
 		return 0, err
@@ -141,7 +183,9 @@ func (c *Client) PxLogout(pxsessionid string) (int, error) {
 	}
 	return resp.StatusCode, nil
 }
-func (c *Client) request(method, endpoint string, params url.Values, pxsessionid string, data interface{}) (io.ReadCloser, http.Header, error) {
+
+//Request Method
+func (c *Client) request(method, endpoint string, params url.Values, pxsessionid string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 
 	var urlstr string
 
@@ -153,111 +197,151 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 	}
 
 	log.Print(urlstr)
-	//if c.restURL.Scheme == "https" {
-	//	urlstr += "?" + c.basicAuth(params)
-	//} else {
-	//	urlstr += "?" + c.oauth(method, urlstr, params)
-	//}
+
 	switch method {
 	case http.MethodPost, http.MethodPut:
 	case http.MethodDelete, http.MethodGet, http.MethodOptions:
 	default:
-		return nil, nil, fmt.Errorf("Method is not recognised: %s", method)
+		return nil, nil, 0, fmt.Errorf("Method is not recognised: %s", method)
 	}
 
 	body := new(bytes.Buffer)
 	encoder := json.NewEncoder(body)
 	if err := encoder.Encode(data); err != nil {
-		return nil, nil, err
+		return nil, nil, 0, err
 	}
 
 	req, err := http.NewRequest(method, urlstr, body)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("PxSessionId", pxsessionid)
+	req.Header.Set("pxsessionid", pxsessionid)
 	resp, err := c.rawClient.Do(req)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, resp.StatusCode, err
 	}
-	if resp.StatusCode == http.StatusBadRequest ||
-		resp.StatusCode == http.StatusUnauthorized ||
-		resp.StatusCode == http.StatusNotFound ||
-		resp.StatusCode == http.StatusInternalServerError {
 
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		body := buf.String()
-		log.Print(body)
-
-		return nil, nil, fmt.Errorf("Request failed: %s", resp.Status)
-	}
-	return resp.Body, resp.Header, nil
+	return resp.Body, resp.Header, resp.StatusCode, err
 }
 
-func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, http.Header, error) {
-	pxsessionid, err := c.PxLogin()
+//Post
+func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
+	sessionid, err := c.Login()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, err
 	}
-	request, header, err := c.request("POST", endpoint, url.Values{}, pxsessionid, data)
+	request, header, statuscode, err := c.request("POST", endpoint, url.Values{}, sessionid, data)
 
-	c.PxLogout(pxsessionid)
+	//If Login is invalid - try again
+	if statuscode == 401 {
+		//Get new pxsessionid and write to var
 
-	return request, header, err
+		Pxsessionid, err = c.createNewPxSessionId()
+		request, header, statuscode, err := c.request("POST", endpoint, url.Values{}, sessionid, data)
+
+		return request, header, statuscode, err
+	}
+
+	//Write the latest pxsessionid back to var
+	Pxsessionid = header.Get("pxsessionid")
+
+	//c.Logout(sessionid)
+
+	return request, header, statuscode, err
 }
 
-func (c *Client) Put(endpoint string, data interface{}) (io.ReadCloser, http.Header, error) {
-	pxsessionid, err := c.PxLogin()
+//Put
+func (c *Client) Put(endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
+	sessionid, err := c.Login()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, err
 	}
-	request, header, err := c.request("PUT", endpoint, url.Values{}, pxsessionid, data)
+	request, header, statuscode, err := c.request("PUT", endpoint, url.Values{}, sessionid, data)
 
-	c.PxLogout(pxsessionid)
+	//If Login is invalid - try again
+	if statuscode == 401 {
+		//Get new pxsessionid and write to var
 
-	return request, header, err
+		Pxsessionid, err = c.createNewPxSessionId()
+		request, header, statuscode, err := c.request("PUT", endpoint, url.Values{}, sessionid, data)
+
+		return request, header, statuscode, err
+	}
+
+	//Write the latest pxsessionid back to var
+	Pxsessionid = header.Get("pxsessionid")
+	//c.Logout(pxsessionid)
+
+	return request, header, statuscode, err
 }
 
-func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, http.Header, error) {
-	pxsessionid, err := c.PxLogin()
+func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, http.Header, int, error) {
+	sessionid, err := c.Login()
+
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, err
 	}
-	request, header, err := c.request("GET", endpoint, params, pxsessionid, nil)
+	request, header, statuscode, err := c.request("GET", endpoint, params, sessionid, nil)
 
-	c.PxLogout(pxsessionid)
+	//If Login is invalid - try again
+	if statuscode == 401 {
+		//Get new pxsessionid and write to var
 
-	return request, header, err
+		Pxsessionid, err = c.createNewPxSessionId()
+		request, header, statuscode, err := c.request("GET", endpoint, url.Values{}, sessionid, nil)
+
+		return request, header, statuscode, err
+	}
+
+	//Write the latest pxsessionid back to var
+	Pxsessionid = header.Get("pxsessionid")
+	//c.Logout(pxsessionid)
+
+	return request, header, statuscode, err
 }
 
-func (c *Client) Delete(endpoint string, params url.Values) (io.ReadCloser, http.Header, error) {
-	pxsessionid, err := c.PxLogin()
+//Delete
+func (c *Client) Delete(endpoint string, params url.Values) (io.ReadCloser, http.Header, int, error) {
+	sessionid, err := c.Login()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, err
 	}
-	request, header, err := c.request("DELETE", endpoint, params, pxsessionid, nil)
+	request, header, statuscode, err := c.request("DELETE", endpoint, params, sessionid, nil)
 
-	c.PxLogout(pxsessionid)
+	//If Login is invalid - try again
+	if statuscode == 401 {
+		//Get new pxsessionid and write to var
 
-	return request, header, err
+		Pxsessionid, err = c.createNewPxSessionId()
+		request, header, statuscode, err := c.request("DELETE", endpoint, url.Values{}, sessionid, nil)
+
+		return request, header, statuscode, err
+	}
+
+	//Write the latest pxsessionid back to var
+	Pxsessionid = header.Get("pxsessionid")
+	//c.Logout(pxsessionid)
+
+	return request, header, statuscode, err
 }
 
+//Endpoint Info
 func (c *Client) Info(pxapi string) (io.ReadCloser, error) {
 
 	param := url.Values{}
 	param.Set("key", pxapi)
-	request, _, err := c.request("GET", "PRO/Info", param, "", nil)
+	request, _, _, err := c.request("GET", "PRO/Info", param, "", nil)
 
 	return request, err
 }
 
+//Endpoint Database
 func (c *Client) Database(pxapi string) (io.ReadCloser, error) {
 
 	param := url.Values{}
 	param.Set("key", pxapi)
-	request, _, err := c.request("GET", "PRO/Datenbank", param, "", nil)
+	request, _, _, err := c.request("GET", "PRO/Datenbank", param, "", nil)
 
 	return request, err
 }
