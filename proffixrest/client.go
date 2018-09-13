@@ -146,40 +146,13 @@ func (c *Client) Login() (string, error) {
 	}
 }
 
-//Function for Logout
-//Does Logout the Session from PROFFIX REST-API
-//If Param SessionId stays empty it uses the latest SessionId for Logout
-func (c *Client) Logout(pxsessionid string) (int, error) {
+//LOGOUT Request for PROFFIX REST-API
+//Accepts PxSession ID as Input or if left empty uses SessionId from active Session
+//Returns Statuscode,error
+func (c *Client) Logout() (int, error) {
 
-	urlstr := c.restURL.String() + c.option.LoginEndpoint
-
-	req, err := http.NewRequest("DELETE", urlstr, nil)
-	if err != nil {
-		return 0, err
-	}
-
-	if pxsessionid != "" {
-		req.Header.Set("pxsessionid", pxsessionid)
-	} else {
-		req.Header.Set("PxSessionId", Pxsessionid)
-	}
-
-	resp, err := c.rawClient.Do(req)
-	if err != nil {
-		return 0, err
-	}
-	if resp.StatusCode == http.StatusBadRequest ||
-		resp.StatusCode == http.StatusUnauthorized ||
-		resp.StatusCode == http.StatusNotFound ||
-		resp.StatusCode == http.StatusInternalServerError {
-
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		response := buf.String()
-
-		return 0, fmt.Errorf("Error on Logout: %s", response)
-	}
-	return resp.StatusCode, nil
+	_, _, statuscode, err := c.request("DELETE", c.option.LoginEndpoint, url.Values{}, Pxsessionid, nil)
+	return statuscode, err
 }
 
 //Request Method
@@ -209,10 +182,13 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 	}
 
 	req, err := http.NewRequest(method, urlstr, body)
+
 	if err != nil {
 		return nil, nil, 0, err
 	}
+
 	req.Header.Set("Content-Type", "application/json")
+
 	req.Header.Set("pxsessionid", pxsessionid)
 	resp, err := c.rawClient.Do(req)
 	if err != nil {
@@ -220,6 +196,7 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 	}
 
 	return resp.Body, resp.Header, resp.StatusCode, err
+
 }
 
 //POST Request for PROFFIX REST-API
@@ -303,18 +280,18 @@ func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, http.He
 //DELETE Request for PROFFIX REST-API
 //Accepts Endpoint and url.Values as Input
 //Returns io.ReadCloser,http.Header,Statuscode,error
-func (c *Client) Delete(endpoint string, params url.Values) (io.ReadCloser, http.Header, int, error) {
+func (c *Client) Delete(endpoint string) (io.ReadCloser, http.Header, int, error) {
 	sessionid, err := c.Login()
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	request, header, statuscode, err := c.request("DELETE", endpoint, params, sessionid, nil)
+	request, header, statuscode, err := c.request("DELETE", endpoint, nil, sessionid, nil)
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
 		Pxsessionid, err = c.createNewPxSessionId()
-		request, header, statuscode, err := c.request("DELETE", endpoint, url.Values{}, sessionid, nil)
+		request, header, statuscode, err := c.request("DELETE", endpoint, nil, sessionid, nil)
 
 		return request, header, statuscode, err
 	}

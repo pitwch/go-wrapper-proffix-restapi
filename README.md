@@ -122,6 +122,13 @@ var data map[string]interface{} = map[string]interface{}{
 ```
 
 
+##### Delete / Delete
+
+```golang
+	//Delete Endpoint ADR/Adresse with Headers
+	_, _, _, err = pxrest.Delete("ADR/Adresse/2")
+```
+
 ##### Response / Antwort
 
 Alle Methoden geben `io.ReadCloser`, `http.Header`,  `int` sowie `error` zurück.
@@ -164,6 +171,19 @@ Beispiel (Mit Header, Ohne Statuscode):
 ```
 
 #### Spezielle Endpunkte
+
+##### Logout
+
+Loggt den Client von der PROFFIX REST-API aus und gibt die Session / Lizenz damit wieder frei.
+
+*Hinweis: Es wird automatisch die zuletzt verwendete PxSessionId für den Logout verwendet*
+
+
+```golang
+
+	statuscode, err := pxrest.Logout()
+
+```
 
 
 ##### Info

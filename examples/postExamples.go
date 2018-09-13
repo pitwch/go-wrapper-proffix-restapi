@@ -3,6 +3,7 @@ package examples
 import (
 	"bytes"
 	"fmt"
+	"log"
 )
 
 //var pxrest for Login already defined in getExamples.go
@@ -59,6 +60,14 @@ func postAdresseWithMap() {
 	fmt.Printf(resp, err)
 
 	defer rc.Close()
+
+	//Logout
+	_, err = pxrest.Logout()
+
+	//Log errors if there are
+	if err != nil {
+		log.Print(err)
+	}
 
 	//Get Header Location
 	fmt.Print(header.Get("Location"))

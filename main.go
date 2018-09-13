@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	px "github.com/pitwch/go-wrapper-proffix-restapi/proffixrest"
-	"net/url"
 )
 
 func Connect() (pxrest *px.Client, err error) {
@@ -28,17 +26,8 @@ func main() {
 	if err != nil {
 		fmt.Print(err)
 	}
-	rc, _, status, err := pxrest.Get("ADR/Adresse", url.Values{})
 	//Buffer decode for plain text response
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(rc)
-	resp := buf.String()
 
-	fmt.Printf(resp, err)
-	defer rc.Close()
-	fmt.Print(status)
-
-	fmt.Print(resp)
 	//Logout
-	_, err = pxrest.Logout("")
+	_, err = pxrest.Logout()
 }

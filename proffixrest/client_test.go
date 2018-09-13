@@ -175,7 +175,7 @@ func TestClient_Requests(t *testing.T) {
 	//DELETE TESTs
 
 	//Delete the created Address
-	_, headers, statuscode, err = pxrest.Delete("ADR/Adresse/"+DemoAdressNr, url.Values{})
+	_, headers, statuscode, err = pxrest.Delete("ADR/Adresse/" + DemoAdressNr)
 
 	//Check status code; Should be 204
 	if statuscode != 204 {
@@ -193,7 +193,7 @@ func TestClient_Requests(t *testing.T) {
 	}
 
 	//Check Logout
-	statuslogout, err := pxrest.Logout("")
+	statuslogout, err := pxrest.Logout()
 
 	//Check error. Should be nil
 	if err != nil {

@@ -69,7 +69,7 @@ func getDatabaseExample() {
 	defer rc.Close()
 
 	//Logout
-	_, err = pxrest.Logout("")
+	_, err = pxrest.Logout()
 
 	//Log errors if there are
 	if err != nil {
@@ -95,7 +95,7 @@ func getAdresseExample() {
 	defer rc.Close()
 
 	//Logout
-	_, err = pxrest.Logout("")
+	_, err = pxrest.Logout()
 
 	//Log errors if there are
 	if err != nil {
@@ -128,7 +128,7 @@ func getAdresseWithParamsExample() {
 	defer rc.Close()
 
 	//Logout
-	_, err = pxrest.Logout("")
+	_, err = pxrest.Logout()
 
 	//Log errors if there are
 	if err != nil {
