@@ -7,11 +7,12 @@ import (
 	"testing"
 )
 
-//Define struct
+//Define struct (AdressNr as string just for convenience)
 type Adresse struct {
-	Name string
-	Ort  string
-	PLZ  string
+	AdressNr string `json:"AdressNr,omitempty"`
+	Name     string `json:"Name,omitempty"`
+	Ort      string `json:"Ort,omitempty"`
+	PLZ      string `json:"PLZ,omitempty"`
 }
 
 //Store created Demo Address
@@ -32,10 +33,6 @@ func ConnectTest() (pxrest *Client, err error) {
 	)
 
 	return pxrest, err
-}
-
-func TestClient_NewClient(*testing.T) {
-
 }
 
 //Test Invalid Session
@@ -70,7 +67,7 @@ func TestClient_Requests(t *testing.T) {
 	//POST TESTs
 
 	//Fill struct with Demo Data
-	var data = Adresse{"Muster GmbH", "Zürich", "8000"}
+	var data = Adresse{Name: "Muster GmbH", Ort: "Zürich", PLZ: "8000"}
 
 	//Connect
 	pxrest, err := ConnectTest()
@@ -91,14 +88,37 @@ func TestClient_Requests(t *testing.T) {
 		t.Errorf("Expected no error for GET Request. Got '%v'", err)
 	}
 
-	//GET TESTs
-
 	//Get Created AdressNr from Header, store in Var
 	DemoAdressNr = path.Base(headers.Get("Location"))
 
 	if DemoAdressNr == "" {
 		t.Errorf("AdressNr should be in Location. Got '%v'", DemoAdressNr)
 	}
+
+	//PUT TESTs
+
+	//Fill struct with Demo Data
+	var update = Adresse{AdressNr: DemoAdressNr, Name: "Muster AG", Ort: "St. Gallen", PLZ: "9000"}
+
+	//Put updated Data
+	_, _, statuscode, err = pxrest.Put("ADR/Adresse/"+DemoAdressNr, update)
+
+	//Check status code; Should be 204
+	if statuscode != 204 {
+		t.Errorf("Expected HTTP Status Code 204. Got '%v'", statuscode)
+	}
+
+	//Check PXSessionId; Shouldn't be empty
+	if headers.Get("pxsessionid") == "" {
+		t.Errorf("Expected PxSessionId in Header. Not found: '%v'", headers.Get("pxsessionid"))
+	}
+
+	//Check error. Should be nil
+	if err != nil {
+		t.Errorf("Expected no error for PUT Request. Got '%v'", err)
+	}
+
+	//GET TESTs
 
 	//Check if PxSessionId keeps the same
 	_, testheader, _, _ := pxrest.Get("ADR/Adresse", url.Values{})
@@ -108,6 +128,19 @@ func TestClient_Requests(t *testing.T) {
 
 	if pxsessionid1 != pxsessionid2 {
 		t.Errorf("Session should be the same. Got different Session IDs.'%v' / '%v'", pxsessionid1, pxsessionid2)
+	}
+
+	//Query Non Existing AdressNr
+	_, _, statuscode, err = pxrest.Get("ADR/Adresse/123456789", url.Values{})
+
+	//Check status code; Should be 404
+	if statuscode != 404 {
+		t.Errorf("Expected HTTP Status Code 404. Got '%v'", statuscode)
+	}
+
+	//Check error. Shouldn't be nil
+	if err != nil {
+		t.Errorf("Expected no errors for non existing GET Request. Got '%v'", err)
 	}
 
 	//Query Created AdressNr
@@ -174,6 +207,7 @@ func TestClient_Requests(t *testing.T) {
 
 }
 
+//Test Get Database with Key from Options
 func TestGetDatabase(t *testing.T) {
 	pxrest, err := ConnectTest()
 
@@ -201,10 +235,11 @@ func TestGetDatabase(t *testing.T) {
 
 }
 
+//Test Get Info with Key set in Function
 func TestGetInfo(t *testing.T) {
 	pxrest, err := ConnectTest()
 
-	rc, err := pxrest.Info("")
+	rc, err := pxrest.Info("16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
 	//Check error. Should be nil
 	if err != nil {
