@@ -3,8 +3,19 @@ package proffixrest
 import (
 	"bytes"
 	"net/url"
+	"path"
 	"testing"
 )
+
+//Define struct
+type Adresse struct {
+	Name string
+	Ort  string
+	PLZ  string
+}
+
+//Store created Demo Address
+var DemoAdressNr string
 
 //Connect function
 func ConnectTest() (pxrest *Client, err error) {
@@ -23,13 +34,53 @@ func ConnectTest() (pxrest *Client, err error) {
 	return pxrest, err
 }
 
-func TestGetRequest(t *testing.T) {
+func TestClient_Requests(t *testing.T) {
+
+	//POST TESTs
+
+	//Fill struct with Demo Data
+	var data = Adresse{"Muster GmbH", "Zürich", "8000"}
+
 	//Connect
 	pxrest, err := ConnectTest()
-	params := url.Values{}
-	params.Set("Fields", "Adressnr")
-	params.Set("Limit", "1")
-	rc, headers, statuscode, err := pxrest.Get("ADR/Adresse", params)
+	_, headers, statuscode, err := pxrest.Post("ADR/Adresse", data)
+
+	//Check status code; Should be 200
+	if statuscode != 201 {
+		t.Errorf("Expected HTTP Status Code 201. Got '%v'", statuscode)
+	}
+
+	//Check PXSessionId; Shouldn't be empty
+	if headers.Get("pxsessionid") == "" {
+		t.Errorf("Expected PxSessionId in Header. Not found: '%v'", headers.Get("pxsessionid"))
+	}
+
+	//Check error. Should be nil
+	if err != nil {
+		t.Errorf("Expected no error for GET Request. Got '%v'", err)
+	}
+
+	//GET TESTs
+
+	//Get Created AdressNr from Header, store in Var
+	DemoAdressNr = path.Base(headers.Get("Location"))
+
+	if DemoAdressNr == "" {
+		t.Errorf("AdressNr should be in Location. Got '%v'", DemoAdressNr)
+	}
+
+	//Check if PxSessionId keeps the same
+	_, testheader, _, _ := pxrest.Get("ADR/Adresse", url.Values{})
+
+	pxsessionid1 := headers.Get("pxsessionid")
+	pxsessionid2 := testheader.Get("pxsessionid")
+
+	if pxsessionid1 != pxsessionid2 {
+		t.Errorf("Session should be the same. Got different Session IDs.'%v' / '%v'", pxsessionid1, pxsessionid2)
+	}
+
+	//Query Created AdressNr
+	rc, headers, statuscode, err := pxrest.Get("ADR/Adresse/"+DemoAdressNr, url.Values{})
 
 	//Check status code; Should be 200
 	if statuscode != 200 {
@@ -57,14 +108,24 @@ func TestGetRequest(t *testing.T) {
 		t.Errorf("Response shouldn't be empty. Got '%v'", resp)
 	}
 
-	//Check if PxSessionId keeps the same
-	_, testheader, _, _ := pxrest.Get("ADR/Adresse", url.Values{})
+	//DELETE TESTs
 
-	pxsessionid1 := headers.Get("pxsessionid")
-	pxsessionid2 := testheader.Get("pxsessionid")
+	//Delete the created Address
+	_, headers, statuscode, err = pxrest.Delete("ADR/Adresse/"+DemoAdressNr, url.Values{})
 
-	if pxsessionid1 != pxsessionid2 {
-		t.Errorf("Session should be the same. Got different Session IDs.'%v' / '%v'", pxsessionid1, pxsessionid2)
+	//Check status code; Should be 204
+	if statuscode != 204 {
+		t.Errorf("Expected HTTP Status Code 204. Got '%v'", statuscode)
+	}
+
+	//Check PXSessionId; Shouldn't be empty
+	if headers.Get("pxsessionid") == "" {
+		t.Errorf("Expected PxSessionId in Header. Not found: '%v'", headers.Get("pxsessionid"))
+	}
+
+	//Check error. Should be nil
+	if err != nil {
+		t.Errorf("Expected no error for DELETE Request. Got '%v'", err)
 	}
 
 	//Check Logout
@@ -99,7 +160,34 @@ func TestGetDatabase(t *testing.T) {
 
 	//Check error. Should be nil
 	if err != nil {
-		t.Errorf("Expected no error for Logout Request. Got '%v'", err)
+		t.Errorf("Expected no error for Database Request. Got '%v'", err)
+	}
+
+	//Check if response isn't empty
+	if resp == "" {
+		t.Errorf("Response shouldn't be empty. Got '%v'", resp)
+	}
+
+}
+
+func TestGetInfo(t *testing.T) {
+	pxrest, err := ConnectTest()
+
+	rc, err := pxrest.Info("")
+
+	//Check error. Should be nil
+	if err != nil {
+		t.Errorf("Expected no error for Info Request. Got '%v'", err)
+	}
+
+	//Buffer decode for plain text response
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(rc)
+	resp := buf.String()
+
+	//Check error. Should be nil
+	if err != nil {
+		t.Errorf("Expected no error for Info Request. Got '%v'", err)
 	}
 
 	//Check if response isn't empty

@@ -319,7 +319,15 @@ func (c *Client) Delete(endpoint string, params url.Values) (io.ReadCloser, http
 func (c *Client) Info(pxapi string) (io.ReadCloser, error) {
 
 	param := url.Values{}
-	param.Set("key", pxapi)
+
+	//If no Key submitted in Function use Options
+	if pxapi == "" {
+		//Set Key from Options
+		param.Set("key", c.option.Key)
+	} else {
+		param.Set("key", pxapi)
+	}
+
 	request, _, _, err := c.request("GET", "PRO/Info", param, "", nil)
 
 	return request, err
@@ -329,7 +337,15 @@ func (c *Client) Info(pxapi string) (io.ReadCloser, error) {
 func (c *Client) Database(pxapi string) (io.ReadCloser, error) {
 
 	param := url.Values{}
-	param.Set("key", pxapi)
+
+	//If no Key submitted in Function use Options
+	if pxapi == "" {
+		//Set Key from Options
+		param.Set("key", c.option.Key)
+	} else {
+		param.Set("key", pxapi)
+	}
+
 	request, _, _, err := c.request("GET", "PRO/Datenbank", param, "", nil)
 
 	return request, err
