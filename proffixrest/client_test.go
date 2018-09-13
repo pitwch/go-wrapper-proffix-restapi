@@ -34,6 +34,37 @@ func ConnectTest() (pxrest *Client, err error) {
 	return pxrest, err
 }
 
+func TestClient_NewClient(*testing.T) {
+
+}
+
+//Test Invalid Session
+func TestClient_InvalidSession(t *testing.T) {
+	//Connect
+	pxrest, err := ConnectTest()
+
+	//Check error. Should be nil
+	if err != nil {
+		t.Errorf("Expected no error for Connect. Got '%v'", err)
+	}
+
+	//Set false Session ID
+	Pxsessionid = "1234"
+
+	//Set Params
+	params := url.Values{}
+	params.Set("Limit", "1")
+	params.Set("Fields", "AdressNr")
+
+	_, _, statuscode, err := pxrest.Get("ADR/Adresse", url.Values{})
+
+	//Check status code; Should be 401
+	if statuscode != 401 {
+		t.Errorf("Expected HTTP Status Code 401. Got '%v'", statuscode)
+	}
+}
+
+//Test all Requests in one Session
 func TestClient_Requests(t *testing.T) {
 
 	//POST TESTs
@@ -45,7 +76,7 @@ func TestClient_Requests(t *testing.T) {
 	pxrest, err := ConnectTest()
 	_, headers, statuscode, err := pxrest.Post("ADR/Adresse", data)
 
-	//Check status code; Should be 200
+	//Check status code; Should be 201
 	if statuscode != 201 {
 		t.Errorf("Expected HTTP Status Code 201. Got '%v'", statuscode)
 	}

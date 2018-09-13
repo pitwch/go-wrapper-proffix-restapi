@@ -118,7 +118,6 @@ func (c *Client) createNewPxSessionId() (sessionid string, err error) {
 
 	//If Response gives errors print also Body
 	if resp.StatusCode == http.StatusBadRequest ||
-		resp.StatusCode == http.StatusUnauthorized ||
 		resp.StatusCode == http.StatusNotFound ||
 		resp.StatusCode == http.StatusInternalServerError {
 
