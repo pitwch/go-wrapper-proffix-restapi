@@ -12,4 +12,5 @@ type Options struct {
 	UserAgent     string
 	Timeout       time.Duration
 	VerifySSL     bool
+	Batchsize	  int
 }

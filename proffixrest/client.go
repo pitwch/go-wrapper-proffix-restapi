@@ -8,10 +8,15 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"github.com/spf13/cast"
+
+	"log"
+	"github.com/mitchellh/mapstructure"
+	"io/ioutil"
 )
 
 const (
-	Version = "1.2.0"
+	Version = "1.3.0"
 )
 
 //Var for storing PxSessionId
@@ -340,4 +345,98 @@ func (c *Client) Database(pxapi string) (io.ReadCloser, error) {
 	request, _, _, err := c.request("GET", "PRO/Datenbank", param, "", nil)
 
 	return request, err
+}
+
+func GetFiltererCound(header http.Header) (total int) {
+	type PxMetadata struct {
+		FilteredCount int
+	}
+	var pxmetadata PxMetadata
+	head := header.Get("PxMetadata")
+	json.Unmarshal([]byte(head), &pxmetadata)
+
+	return pxmetadata.FilteredCount
+}
+
+func (c *Client) GetAll(endpoint string, params url.Values, batchsize int) (result []byte, err error) {
+
+	var model []byte
+
+	if (batchsize == 0) {
+		batchsize = 50
+	}
+	//Store original params in paramquery
+	paramquery := params
+
+	//Delete Limit from params in case user defined it
+	paramquery.Del(("Limit"))
+
+	//Add Limit / Batchsize to params
+	paramquery.Add("Limit", cast.ToString(batchsize))
+
+	//Query Endpoint for results
+	rc, header, _, err := c.Get(endpoint, params)
+
+	//Buffer decode for plain text response
+	x,err :=ioutil.ReadAll(rc)
+	model = append(model,x[:]...)
+	if err != nil {
+		panic(err)
+	}
+
+
+	//Get Total available Entries
+	totalEntries := GetFiltererCound(header)
+
+	//Set Other Query Count per default to 0
+	otherQueryCount := 0
+
+	mapstructure.Decode(rc, model)
+	//Count Elements in map from first query
+	var jsonObjs interface{}
+	json.Unmarshal([]byte(model), &jsonObjs)
+	firstQueryCount := len(jsonObjs.([]interface{}))
+log.Print(firstQueryCount)
+	//If Elements in map from first query are less then in FilteredCount
+	if totalEntries >= firstQueryCount {
+
+
+		for otherQueryCount < totalEntries {
+			log.Printf("Total: %v >= Other %v",otherQueryCount,totalEntries)
+
+
+			paramquery := url.Values{}
+			paramquery = params
+			paramquery.Del("Limit")
+			paramquery.Del("Offset")
+			paramquery.Add("Limit", cast.ToString(batchsize))
+			paramquery.Add("Offset", cast.ToString(otherQueryCount))
+			tx, _, _, _ := c.Get(endpoint, paramquery)
+
+			//Buffer decode for plain text response
+
+			rc,err := ioutil.ReadAll(tx)
+			model = append(model,rc[:]...)
+			if err != nil {
+				panic(err)
+			}
+
+			mapstructure.Decode(rc, model)
+			//Count Elements in map from first query
+			var jsonObjs interface{}
+			json.Unmarshal([]byte(rc), &jsonObjs)
+			otherQueryCount += len(jsonObjs.([]interface{}))
+			log.Print(firstQueryCount)
+
+
+		}
+
+		return model, err
+		//If count of elements in first query is bigger or same than FilteredCount return
+	} else {
+
+		return model, err
+	}
+	return model, err
+
 }
