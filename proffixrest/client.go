@@ -6,13 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 )
 
 const (
-	Version = "1.1.0"
+	Version = "1.2.0"
 )
 
 //Var for storing PxSessionId
@@ -133,6 +132,8 @@ func (c *Client) createNewPxSessionId() (sessionid string, err error) {
 }
 
 //Function for Login
+//Helper Function for Login to PROFFIX REST-API
+//Login is automatically done
 func (c *Client) Login() (string, error) {
 
 	// If Pxsessionid doesnt yet exists create a new one
@@ -146,6 +147,8 @@ func (c *Client) Login() (string, error) {
 }
 
 //Function for Logout
+//Does Logout the Session from PROFFIX REST-API
+//If Param SessionId stays empty it uses the latest SessionId for Logout
 func (c *Client) Logout(pxsessionid string) (int, error) {
 
 	urlstr := c.restURL.String() + c.option.LoginEndpoint
@@ -180,6 +183,7 @@ func (c *Client) Logout(pxsessionid string) (int, error) {
 }
 
 //Request Method
+//Building the Request Method for Client
 func (c *Client) request(method, endpoint string, params url.Values, pxsessionid string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 
 	var urlstr string
@@ -190,8 +194,6 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 	} else {
 		urlstr = c.restURL.String() + endpoint
 	}
-
-	log.Print(urlstr)
 
 	switch method {
 	case http.MethodPost, http.MethodPut:
@@ -220,7 +222,9 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 	return resp.Body, resp.Header, resp.StatusCode, err
 }
 
-//Post
+//POST Request for PROFFIX REST-API
+//Accepts Endpoint and Data as Input
+//Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 	sessionid, err := c.Login()
 	if err != nil {
@@ -243,7 +247,9 @@ func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, http.He
 	return request, header, statuscode, err
 }
 
-//Put
+//PUT Request for PROFFIX REST-API
+//Accepts Endpoint and Data as Input
+//Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Put(endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 	sessionid, err := c.Login()
 	if err != nil {
@@ -267,6 +273,9 @@ func (c *Client) Put(endpoint string, data interface{}) (io.ReadCloser, http.Hea
 	return request, header, statuscode, err
 }
 
+//GET Request for PROFFIX REST-API
+//Accepts Endpoint and url.Values as Input
+//Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, http.Header, int, error) {
 	sessionid, err := c.Login()
 
@@ -291,7 +300,9 @@ func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, http.He
 	return request, header, statuscode, err
 }
 
-//Delete
+//DELETE Request for PROFFIX REST-API
+//Accepts Endpoint and url.Values as Input
+//Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Delete(endpoint string, params url.Values) (io.ReadCloser, http.Header, int, error) {
 	sessionid, err := c.Login()
 	if err != nil {
@@ -314,7 +325,9 @@ func (c *Client) Delete(endpoint string, params url.Values) (io.ReadCloser, http
 	return request, header, statuscode, err
 }
 
-//Endpoint Info
+//INFO Request for PROFFIX REST-API
+//Accepts Webservice Key as Input or if left empty uses key from options parameter
+//Returns Info about API as io.ReadCloser,error
 func (c *Client) Info(pxapi string) (io.ReadCloser, error) {
 
 	param := url.Values{}
@@ -332,7 +345,9 @@ func (c *Client) Info(pxapi string) (io.ReadCloser, error) {
 	return request, err
 }
 
-//Endpoint Database
+//DATABASE Request for PROFFIX REST-API
+//Accepts Webservice Key as Input or if left empty uses key from options parameter
+//Returns Database Info as io.ReadCloser,error
 func (c *Client) Database(pxapi string) (io.ReadCloser, error) {
 
 	param := url.Values{}
