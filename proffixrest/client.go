@@ -361,6 +361,7 @@ func GetFiltererCound(header http.Header) (total int) {
 func (c *Client) GetAll(endpoint string, params url.Values, batchsize int) (result []byte, err error) {
 
 	var model []byte
+	var model2 []byte
 
 	if (batchsize == 0) {
 		batchsize = 50
@@ -378,12 +379,11 @@ func (c *Client) GetAll(endpoint string, params url.Values, batchsize int) (resu
 	rc, header, _, err := c.Get(endpoint, params)
 
 	//Buffer decode for plain text response
-	x,err :=ioutil.ReadAll(rc)
-	model = append(model,x[:]...)
+	x, err := ioutil.ReadAll(rc)
+	model = append(model, x[:]...)
 	if err != nil {
 		panic(err)
 	}
-
 
 	//Get Total available Entries
 	totalEntries := GetFiltererCound(header)
@@ -396,14 +396,12 @@ func (c *Client) GetAll(endpoint string, params url.Values, batchsize int) (resu
 	var jsonObjs interface{}
 	json.Unmarshal([]byte(model), &jsonObjs)
 	firstQueryCount := len(jsonObjs.([]interface{}))
-log.Print(firstQueryCount)
+	log.Print(firstQueryCount)
 	//If Elements in map from first query are less then in FilteredCount
 	if totalEntries >= firstQueryCount {
 
-
 		for otherQueryCount < totalEntries {
-			log.Printf("Total: %v >= Other %v",otherQueryCount,totalEntries)
-
+			log.Printf("otherQueryCount: %v < totalEntries %v", otherQueryCount, totalEntries)
 
 			paramquery := url.Values{}
 			paramquery = params
@@ -411,27 +409,24 @@ log.Print(firstQueryCount)
 			paramquery.Del("Offset")
 			paramquery.Add("Limit", cast.ToString(batchsize))
 			paramquery.Add("Offset", cast.ToString(otherQueryCount))
-			tx, _, _, _ := c.Get(endpoint, paramquery)
+			hc, _, _, _ := c.Get(endpoint, paramquery)
 
 			//Buffer decode for plain text response
 
-			rc,err := ioutil.ReadAll(tx)
-			model = append(model,rc[:]...)
+			y, err := ioutil.ReadAll(hc)
+			model2 = append(model2, y[:]...)
 			if err != nil {
 				panic(err)
 			}
 
-			mapstructure.Decode(rc, model)
+			mapstructure.Decode(rc, model2)
 			//Count Elements in map from first query
 			var jsonObjs interface{}
-			json.Unmarshal([]byte(rc), &jsonObjs)
+			json.Unmarshal([]byte(y), &jsonObjs)
 			otherQueryCount += len(jsonObjs.([]interface{}))
-			log.Print(firstQueryCount)
-
-
 		}
 
-		return model, err
+		return model2, err
 		//If count of elements in first query is bigger or same than FilteredCount return
 	} else {
 
