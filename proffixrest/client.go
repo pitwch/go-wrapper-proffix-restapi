@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cast"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
-	"log"
 )
 
 const (
@@ -159,7 +159,12 @@ func (c *Client) Login() (string, error) {
 //Returns Statuscode,error
 func (c *Client) Logout() (int, error) {
 
+	//Delete Login Object from PROFFIX REST-API
 	_, _, statuscode, err := c.request("DELETE", c.option.LoginEndpoint, url.Values{}, Pxsessionid, nil)
+
+	//Set PxSessionId to ""
+	Pxsessionid = ""
+
 	return statuscode, err
 }
 
@@ -386,7 +391,7 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 	//Query Endpoint for results
 	rc, header, status, err := c.Get(endpoint, params)
 
-	if(err != nil){
+	if err != nil {
 		log.Print(err)
 	}
 
@@ -397,7 +402,7 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 	collector = append(collector, settingResp[:]...)
 
 	//If Status not 200 log Error message
-	if(status != 200){
+	if status != 200 {
 		log.Print(string(collector))
 	}
 	//Get total available objects
@@ -406,7 +411,6 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 	//Unmarshall to interface so we can count elements in setting query
 	var jsonObjs interface{}
 	err = json.Unmarshal([]byte(collector), &jsonObjs)
-
 
 	firstQueryCount := len(jsonObjs.([]interface{}))
 
@@ -443,7 +447,7 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 			}
 
 			//If Status not 200 log Error message
-			if(status != 200){
+			if status != 200 {
 				log.Print(string(collector))
 			}
 

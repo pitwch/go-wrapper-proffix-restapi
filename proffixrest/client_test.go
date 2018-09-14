@@ -2,6 +2,8 @@ package proffixrest
 
 import (
 	"bytes"
+	"encoding/json"
+	"github.com/spf13/cast"
 	"net/url"
 	"path"
 	"testing"
@@ -15,13 +17,10 @@ type Adresse struct {
 	PLZ      string `json:"PLZ,omitempty"`
 }
 
-//Store created Demo Address
-var DemoAdressNr string
-
 //Connect function
 func ConnectTest() (pxrest *Client, err error) {
 
-	//Use PROFFIX Demo Logins as Example
+	//Use PROFFIX Public Demo Login as Example
 	pxrest, err = NewClient(
 		"https://remote.proffix.net:11011/pxapi/v2",
 		"Gast",
@@ -29,36 +28,10 @@ func ConnectTest() (pxrest *Client, err error) {
 		"DEMODB",
 		[]string{"ADR", "FIB"},
 		&Options{
-			Key: "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50"},
+			Key:       "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50",
+			VerifySSL: false},
 	)
-
 	return pxrest, err
-}
-
-//Test Invalid Session
-func TestClient_InvalidSession(t *testing.T) {
-	//Connect
-	pxrest, err := ConnectTest()
-
-	//Check error. Should be nil
-	if err != nil {
-		t.Errorf("Expected no error for Connect. Got '%v'", err)
-	}
-
-	//Set false Session ID
-	Pxsessionid = "1234"
-
-	//Set Params
-	params := url.Values{}
-	params.Set("Limit", "1")
-	params.Set("Fields", "AdressNr")
-
-	_, _, statuscode, err := pxrest.Get("ADR/Adresse", url.Values{})
-
-	//Check status code; Should be 401
-	if statuscode != 401 {
-		t.Errorf("Expected HTTP Status Code 401. Got '%v'", statuscode)
-	}
 }
 
 //Test all Requests in one Session
@@ -89,7 +62,7 @@ func TestClient_Requests(t *testing.T) {
 	}
 
 	//Get Created AdressNr from Header, store in Var
-	DemoAdressNr = path.Base(headers.Get("Location"))
+	DemoAdressNr := path.Base(headers.Get("location"))
 
 	if DemoAdressNr == "" {
 		t.Errorf("AdressNr should be in Location. Got '%v'", DemoAdressNr)
@@ -101,34 +74,32 @@ func TestClient_Requests(t *testing.T) {
 	var update = Adresse{AdressNr: DemoAdressNr, Name: "Muster AG", Ort: "St. Gallen", PLZ: "9000"}
 
 	//Put updated Data
-	_, _, statuscode, err = pxrest.Put("ADR/Adresse/"+DemoAdressNr, update)
+	rc, _, statuscode, err := pxrest.Put("ADR/Adresse/"+cast.ToString(DemoAdressNr), update)
+
+	//Buffer decode for plain text response
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(rc)
+	rupd := buf.String()
 
 	//Check status code; Should be 204
 	if statuscode != 204 {
-		t.Errorf("Expected HTTP Status Code 204. Got '%v'", statuscode)
+		t.Errorf("Expected HTTP Status Code 204. Got '%v'. Message: '%v'", statuscode, rupd)
+		if statuscode == 500 {
+			t.Errorf("Endpoint: 'ADR/Adresse/%v', Data: '%v'", DemoAdressNr, update)
+		}
 	}
 
 	//Check PXSessionId; Shouldn't be empty
 	if headers.Get("pxsessionid") == "" {
-		t.Errorf("Expected PxSessionId in Header. Not found: '%v'", headers.Get("pxsessionid"))
+		t.Errorf("Expected PxSessionId in Header. Not found: '%v'.  Message: '%v'", headers.Get("pxsessionid"), rupd)
 	}
 
 	//Check error. Should be nil
 	if err != nil {
-		t.Errorf("Expected no error for PUT Request. Got '%v'", err)
+		t.Errorf("Expected no error for PUT Request. Got '%v'. Message: '%v'", err, rupd)
 	}
 
 	//GET TESTs
-
-	//Check if PxSessionId keeps the same
-	_, testheader, _, _ := pxrest.Get("ADR/Adresse", url.Values{})
-
-	pxsessionid1 := headers.Get("pxsessionid")
-	pxsessionid2 := testheader.Get("pxsessionid")
-
-	if pxsessionid1 != pxsessionid2 {
-		t.Errorf("Session should be the same. Got different Session IDs.'%v' / '%v'", pxsessionid1, pxsessionid2)
-	}
 
 	//Query Non Existing AdressNr
 	_, _, statuscode, err = pxrest.Get("ADR/Adresse/123456789", url.Values{})
@@ -144,7 +115,7 @@ func TestClient_Requests(t *testing.T) {
 	}
 
 	//Query Created AdressNr
-	rc, headers, statuscode, err := pxrest.Get("ADR/Adresse/"+DemoAdressNr, url.Values{})
+	rc, headers, statuscode, err = pxrest.Get("ADR/Adresse/"+DemoAdressNr, url.Values{})
 
 	//Check status code; Should be 200
 	if statuscode != 200 {
@@ -164,7 +135,7 @@ func TestClient_Requests(t *testing.T) {
 	//Check response. Shouldn't be empty
 
 	//Buffer decode for plain text response
-	buf := new(bytes.Buffer)
+	buf = new(bytes.Buffer)
 	buf.ReadFrom(rc)
 	resp := buf.String()
 
@@ -259,6 +230,70 @@ func TestGetInfo(t *testing.T) {
 	//Check if response isn't empty
 	if resp == "" {
 		t.Errorf("Response shouldn't be empty. Got '%v'", resp)
+	}
+
+}
+
+//Test GetBatch
+func TestGetBatch(t *testing.T) {
+
+	//Define test struct for Adresse
+	type Adresse struct {
+		AdressNr int
+		Name     string
+		Ort      string
+		Plz      string
+		Land     string
+	}
+
+	//Define Adressen as array
+
+	adressen := []Adresse{}
+
+	//Connect
+	pxrest, err := ConnectTest()
+
+	//Set Params. As we just want some fields we define them on Fields param.
+	params := url.Values{}
+	params.Set("Fields", "AdressNr,Name,Ort,Plz")
+
+	resultBatch, total, err := pxrest.GetBatch("ADR/Adresse", params, 25)
+
+	//Check error. Should be nil
+	if err != nil {
+		t.Errorf("Expected no error for GET Batch Request. Got '%v'", err)
+	}
+
+	//Check total. Should be greater than 0
+	if total == 0 {
+		t.Errorf("Expected some results. Got '%v'", total)
+	}
+
+	//Unmarshal the result into our struct
+	err = json.Unmarshal(resultBatch, &adressen)
+
+	//Check error. Should be nil
+	if err != nil {
+		t.Errorf("Expected no error for Unmarshal GET Batch Request. Got '%v'", err)
+	}
+
+	//Logout
+	statuslogout, err := pxrest.Logout()
+
+	//Check error. Should be nil
+	if err != nil {
+		t.Errorf("Expected no error for Logout. Got '%v'", err)
+	}
+
+	//Check HTTP Status of Logout. Should be 204
+	if statuslogout != 204 {
+		t.Errorf("Expected HTTP Status Code 204. Got '%v'", err)
+	}
+
+	//Compare received total vs. length of array. Should be equal.
+	if !(len(adressen) == total) {
+		t.Errorf("Total Results and Length of Array should be equal. Got '%v' vs. '%v'", len(adressen), total)
+
 	}
 
 }
