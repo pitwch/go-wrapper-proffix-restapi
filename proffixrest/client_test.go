@@ -208,6 +208,74 @@ func TestClient_Requests(t *testing.T) {
 
 }
 
+//Test all Requests in one Session
+func TestClient_AdvancedFilters(t *testing.T) {
+
+	//Define test struct for Adresse
+	type Adresse struct {
+		AdressNr int
+		Name     string
+		Ort      string
+		Plz      string
+		Land     struct {
+			LandNr      string
+			Bezeichnung string
+		}
+	}
+
+	//Define Adressen as array
+	adressen := []Adresse{}
+
+	//Connect
+	pxrest, err := ConnectTest()
+
+	//Set Advanced Params.
+	params := url.Values{}
+	params.Set("fields", "AdressNr,Name,Ort,Plz,Land")
+	params.Set("filter", "Name@='a',Land=='CH',Ort!='Zürich'")
+	params.Set("sort", "Plz,Name,AdressNr")
+
+	//Fire Request
+	resultFilters, _, statuscode, err := pxrest.Get("ADR/Adresse", params)
+
+	//Check error. Should be nil
+	if err != nil {
+		t.Errorf("Expected no error for GET Batch Request. Got '%v'", err)
+	}
+
+	//Buffer decode for plain text response
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resultFilters)
+	respFilter := buf.Bytes()
+	stringFilter := buf.String()
+	//Unmarshal the result into our struct
+	err = json.Unmarshal(respFilter, &adressen)
+
+	//Check status code; Should be 200
+	if statuscode != 200 {
+		t.Errorf("Expected HTTP Status Code 200. Got '%v'. Message: %v", statuscode, stringFilter)
+	}
+
+	//Check if results match to filter Ort
+	if adressen[0].Ort == "Zürich" {
+		t.Errorf("Filter 'Ort' doesnt work. Got '%v' - shouldnt be.", adressen[0].Ort)
+	}
+
+	//Check if results match to filter Land
+	if adressen[0].Land.LandNr != "CH" {
+		t.Errorf("Filter 'Land' doesnt work. Got '%v' - shouldnt be.", adressen[0].Land)
+	}
+
+	//Check if order works
+	if adressen[0].AdressNr > adressen[1].AdressNr {
+		t.Errorf("Order doesnt work. Adressnr '%v' is > than Adressnr '%v'.", adressen[0].AdressNr, adressen[1].AdressNr)
+	}
+
+	//Logout
+	pxrest.Logout()
+
+}
+
 //Test Get Database with Key from Options
 func TestGetDatabase(t *testing.T) {
 	pxrest, err := ConnectTest()
@@ -277,7 +345,6 @@ func TestGetBatch(t *testing.T) {
 	}
 
 	//Define Adressen as array
-
 	adressen := []Adresse{}
 
 	//Connect
