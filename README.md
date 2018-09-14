@@ -11,6 +11,25 @@ Ein einfacher aber zuverlässiger Wrapper für die PROFFIX REST-API in Go.
 ![alt text](https://raw.githubusercontent.com/pitwch/go-wrapper-proffix-restapi/master/assets/img/go-proffix-rest-wrapper.jpg "Golang Wrapper PROFFIX REST API")
 
 
+**Übersicht**
+
+- [Installation](#installation)
+  - [Konfiguration](#konfiguration)
+- [Optionen](#optionen)
+  - [Methoden](#methoden)
+    - [Get / Query](#get--query)
+    - [Put / Update](#put--update)
+    - [Post / Create](#post--create)
+    - [Delete / Delete](#delete--delete)
+    - [Response / Antwort](#response--antwort)
+  - [Spezielle Endpunkte](#spezielle-endpunkte)
+    - [Logout](#logout)
+    - [Info](#info)
+    - [Datenbank](#datenbank)
+    - [GET Batch](#get-batch)
+- [Weitere Beispiele](#weitere-beispiele)
+
+
 ### Installation
 
 ```bash
