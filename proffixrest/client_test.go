@@ -34,6 +34,36 @@ func ConnectTest() (pxrest *Client, err error) {
 	return pxrest, err
 }
 
+//Helper function for checking if is type Adresse
+func isAdressArray(t interface{}) bool {
+	switch t.(type) {
+	case []Adresse:
+		return true
+	default:
+		return false
+	}
+}
+
+//Helper function for checking if is type Options
+func isOption(t interface{}) bool {
+	switch t.(type) {
+	case Options:
+		return true
+	default:
+		return false
+	}
+}
+
+//Helper function for checking if is type Client
+func isClient(t interface{}) bool {
+	switch t.(type) {
+	case Client:
+		return true
+	default:
+		return false
+	}
+}
+
 //Test all Requests in one Session
 func TestClient_Requests(t *testing.T) {
 
@@ -296,4 +326,31 @@ func TestGetBatch(t *testing.T) {
 
 	}
 
+	//Check default settings
+	if pxrest.option.Batchsize != 200 {
+		t.Errorf("Default batchsize should . Got '%v' vs. '%v'", len(adressen), total)
+	}
+
+}
+
+//Check structs
+func TestStructs(t *testing.T) {
+
+	pxrest, _ := ConnectTest()
+
+	//Set test vars
+	q := *pxrest
+	w := *pxrest.option
+
+	//Check if pxrest is Options
+	if isOption(w) == false {
+		t.Errorf("w not of type Option")
+	}
+
+	//Check if pxrest.option is Options
+	if isClient(q) == false {
+		t.Errorf("q is not of type Client")
+	}
+
+	pxrest.Logout()
 }
