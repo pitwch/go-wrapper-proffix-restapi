@@ -302,6 +302,13 @@ func TestGetDatabase(t *testing.T) {
 		t.Errorf("Response shouldn't be empty. Got '%v'", resp)
 	}
 
+	//Test with key instead value from options
+	_, err = pxrest.Database("16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
+
+	//Check error. Should be nil
+	if err != nil {
+		t.Errorf("Expected no error for Database Request with key. Got '%v'", err)
+	}
 }
 
 //Test Get Info with Key set in Function
@@ -420,4 +427,28 @@ func TestStructs(t *testing.T) {
 	}
 
 	pxrest.Logout()
+}
+
+func TestClientError(t *testing.T) {
+	urlstring, _ := url.Parse("https://bing.com")
+	client := Client{
+		restURL:   urlstring,
+		Benutzer:  "test",
+		Passwort:  "1234",
+		Datenbank: "demo",
+		Module:    nil,
+		option:    &Options{LoginEndpoint: "Test"},
+		rawClient: nil,
+	}
+
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("Client should have panicked!")
+			}
+		}()
+		// This function should cause a panic
+		_, _, _, _ = client.Get("test", nil)
+	}()
+
 }

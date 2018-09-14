@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cast"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 )
@@ -96,6 +95,12 @@ func NewClient(RestURL, apiUser string, apiPassword string, apiDatabase string, 
 
 //Function for creating new PxSessionId
 func (c *Client) createNewPxSessionId() (sessionid string, err error) {
+
+	//Check URL, else exit
+	_, err = url.ParseRequestURI(c.restURL.String())
+	if err != nil {
+		panic(err)
+	}
 
 	//Build Login URL
 	urlstr := c.restURL.String() + c.option.LoginEndpoint
@@ -392,7 +397,7 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 	rc, header, status, err := c.Get(endpoint, params)
 
 	if err != nil {
-		log.Print(err)
+		panic(err)
 	}
 
 	//Read from rc into settingResp
@@ -403,7 +408,7 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 
 	//If Status not 200 log Error message
 	if status != 200 {
-		log.Print(string(collector))
+		panic(string(collector))
 	}
 	//Get total available objects
 	totalEntries := GetFiltererCount(header)
@@ -448,7 +453,7 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 
 			//If Status not 200 log Error message
 			if status != 200 {
-				log.Print(string(collector))
+				panic(string(collector))
 			}
 
 			//Unmarshall to interface so we can count elements in totalEntriesCount query
