@@ -17,16 +17,7 @@ Ein einfacher aber zuverlässiger Wrapper für die PROFFIX REST-API in Go.
   - [Konfiguration](#konfiguration)
 - [Optionen](#optionen)
   - [Methoden](#methoden)
-    - [Get / Query](#get--query)
-    - [Put / Update](#put--update)
-    - [Post / Create](#post--create)
-    - [Delete / Delete](#delete--delete)
-    - [Response / Antwort](#response--antwort)
   - [Spezielle Endpunkte](#spezielle-endpunkte)
-    - [Logout](#logout)
-    - [Info](#info)
-    - [Datenbank](#datenbank)
-    - [GET Batch](#get-batch)
 - [Weitere Beispiele](#weitere-beispiele)
 
 
