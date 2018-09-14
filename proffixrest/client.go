@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"log"
 )
 
 const (
@@ -199,7 +200,7 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 	req.Header.Set("pxsessionid", pxsessionid)
 	resp, err := c.rawClient.Do(req)
 	if err != nil {
-		return nil, nil, resp.StatusCode, err
+		return resp.Body, resp.Header, resp.StatusCode, err
 	}
 
 	return resp.Body, resp.Header, resp.StatusCode, err
@@ -349,12 +350,12 @@ func (c *Client) Database(pxapi string) (io.ReadCloser, error) {
 	return request, err
 }
 
-func GetFiltererCound(header http.Header) (total int) {
+func GetFiltererCount(header http.Header) (total int) {
 	type PxMetadata struct {
 		FilteredCount int
 	}
 	var pxmetadata PxMetadata
-	head := header.Get("PxMetadata")
+	head := header.Get("pxmetadata")
 	json.Unmarshal([]byte(head), &pxmetadata)
 
 	return pxmetadata.FilteredCount
@@ -383,7 +384,11 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 	paramquery.Add("Limit", cast.ToString(batchsize))
 
 	//Query Endpoint for results
-	rc, header, _, err := c.Get(endpoint, params)
+	rc, header, status, err := c.Get(endpoint, params)
+
+	if(err != nil){
+		log.Print(err)
+	}
 
 	//Read from rc into settingResp
 	settingResp, err := ioutil.ReadAll(rc)
@@ -391,12 +396,18 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 	//Put setting query into collector
 	collector = append(collector, settingResp[:]...)
 
+	//If Status not 200 log Error message
+	if(status != 200){
+		log.Print(string(collector))
+	}
 	//Get total available objects
-	totalEntries := GetFiltererCound(header)
+	totalEntries := GetFiltererCount(header)
 
 	//Unmarshall to interface so we can count elements in setting query
 	var jsonObjs interface{}
-	json.Unmarshal([]byte(collector), &jsonObjs)
+	err = json.Unmarshal([]byte(collector), &jsonObjs)
+
+
 	firstQueryCount := len(jsonObjs.([]interface{}))
 
 	//Add firstQueryCount to the totalEntriesCount so we can save queries
@@ -429,6 +440,11 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 			collector = append(collector, batchResp[:]...)
 			if err != nil {
 				panic(err)
+			}
+
+			//If Status not 200 log Error message
+			if(status != 200){
+				log.Print(string(collector))
 			}
 
 			//Unmarshall to interface so we can count elements in totalEntriesCount query

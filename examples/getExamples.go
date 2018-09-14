@@ -16,10 +16,10 @@ func Connect() (pxrest *px.Client, err error) {
 	pxrest, err = px.NewClient(
 		"https://remote.proffix.net:11011/pxapi/v2",
 		"Gast",
-		"16ec7cb001be0525f9af1a96fd5ea26466b2e75ef3e96e881bcb7149cd7598da ",
+		"16ec7cb001be0525f9af1a96fd5ea26466b2e75ef3e96e881bcb7149cd7598da",
 		"DEMODB",
 		[]string{"ADR", "FIB"},
-		&px.Options{Timeout: 30},
+		&px.Options{Timeout: 30, VerifySSL: false},
 	)
 
 	return pxrest, err
@@ -30,7 +30,7 @@ func getInfoExample() {
 	pxrest, err := Connect()
 
 	//User Helper Endpoint PRO/Info
-	rc, err := pxrest.Info("16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50 ")
+	rc, err := pxrest.Info("16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -57,7 +57,7 @@ func getDatabaseExample() {
 	pxrest, err := Connect()
 
 	//User Helper Endpoint PRO/Datenbank
-	rc, err := pxrest.Info("16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50 ")
+	rc, err := pxrest.Info("16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
