@@ -5,14 +5,11 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/cast"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
-	"github.com/spf13/cast"
-
-	"log"
-	"github.com/mitchellh/mapstructure"
-	"io/ioutil"
 )
 
 const (
@@ -71,6 +68,11 @@ func NewClient(RestURL, apiUser string, apiPassword string, apiDatabase string, 
 
 	if options.UserAgent == "" {
 		options.UserAgent = "go-wrapper-proffix-restapi " + Version
+	}
+
+	//Set default batchsize for batch requests
+	if options.Batchsize == 0 {
+		options.Batchsize = 200
 	}
 
 	path := options.APIPrefix + options.Version + "/"
@@ -358,14 +360,19 @@ func GetFiltererCound(header http.Header) (total int) {
 	return pxmetadata.FilteredCount
 }
 
-func (c *Client) GetAll(endpoint string, params url.Values, batchsize int) (result []byte, err error) {
+func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (result []byte, total int, err error) {
 
-	var model []byte
-	var model2 []byte
+	//Create collector for collecting requests
+	var collector []byte
 
-	if (batchsize == 0) {
-		batchsize = 50
+	//If batchsize not set in function / is 0
+	if batchsize == 0 {
+		//Set it to default
+		batchsize = c.option.Batchsize
 	}
+
+	//Create Setting Query for setting up the sync and getting the FilteredCount Header
+
 	//Store original params in paramquery
 	paramquery := params
 
@@ -378,60 +385,68 @@ func (c *Client) GetAll(endpoint string, params url.Values, batchsize int) (resu
 	//Query Endpoint for results
 	rc, header, _, err := c.Get(endpoint, params)
 
-	//Buffer decode for plain text response
-	x, err := ioutil.ReadAll(rc)
-	model = append(model, x[:]...)
-	if err != nil {
-		panic(err)
-	}
+	//Read from rc into settingResp
+	settingResp, err := ioutil.ReadAll(rc)
 
-	//Get Total available Entries
+	//Put setting query into collector
+	collector = append(collector, settingResp[:]...)
+
+	//Get total available objects
 	totalEntries := GetFiltererCound(header)
 
-	//Set Other Query Count per default to 0
-	otherQueryCount := 0
-
-	mapstructure.Decode(rc, model)
-	//Count Elements in map from first query
+	//Unmarshall to interface so we can count elements in setting query
 	var jsonObjs interface{}
-	json.Unmarshal([]byte(model), &jsonObjs)
+	json.Unmarshal([]byte(collector), &jsonObjs)
 	firstQueryCount := len(jsonObjs.([]interface{}))
-	log.Print(firstQueryCount)
-	//If Elements in map from first query are less then in FilteredCount
-	if totalEntries >= firstQueryCount {
 
-		for otherQueryCount < totalEntries {
-			log.Printf("otherQueryCount: %v < totalEntries %v", otherQueryCount, totalEntries)
+	//Add firstQueryCount to the totalEntriesCount so we can save queries
+	totalEntriesCount := firstQueryCount
 
+	//If total available objects are already all requested --> return and exit
+	if totalEntriesCount < totalEntries {
+
+		//Loop over requests until we have all available objects
+		for totalEntriesCount < totalEntries {
+
+			//Reset the params to original
 			paramquery := url.Values{}
 			paramquery = params
+
+			//To be sure; remove old limit + offset
 			paramquery.Del("Limit")
 			paramquery.Del("Offset")
+
+			//Add new limit + offset
 			paramquery.Add("Limit", cast.ToString(batchsize))
-			paramquery.Add("Offset", cast.ToString(otherQueryCount))
-			hc, _, _, _ := c.Get(endpoint, paramquery)
+			paramquery.Add("Offset", cast.ToString(totalEntriesCount))
 
-			//Buffer decode for plain text response
+			//Fire request with new limit + offset
+			bc, _, _, _ := c.Get(endpoint, paramquery)
 
-			y, err := ioutil.ReadAll(hc)
-			model2 = append(model2, y[:]...)
+			//Read from bc into temporary batchResp
+			batchResp, err := ioutil.ReadAll(bc)
+
+			collector = append(collector, batchResp[:]...)
 			if err != nil {
 				panic(err)
 			}
 
-			mapstructure.Decode(rc, model2)
-			//Count Elements in map from first query
-			var jsonObjs interface{}
-			json.Unmarshal([]byte(y), &jsonObjs)
-			otherQueryCount += len(jsonObjs.([]interface{}))
+			//Unmarshall to interface so we can count elements in totalEntriesCount query
+			var jsonObjs2 interface{}
+			json.Unmarshal([]byte(batchResp), &jsonObjs2)
+			totalEntriesCount += len(jsonObjs2.([]interface{}))
 		}
 
-		return model2, err
+		//Clean the collector, replace JSON Tag to get one big JSON array
+		cleanCollector := bytes.Replace(collector, []byte("]["), []byte(","), -1)
+
+		return cleanCollector, totalEntriesCount, err
+
 		//If count of elements in first query is bigger or same than FilteredCount return
 	} else {
-
-		return model, err
+		//Return
+		return collector, totalEntriesCount, err
 	}
-	return model, err
-
+	//Return
+	return collector, totalEntriesCount, err
 }

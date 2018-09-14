@@ -59,9 +59,10 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | Version          | v2                                                               | API-Version; Standard = v2                                     |
 | APIPrefix        | /pxapi/                                                          | Prefix für die API; Standard = /pxapi/                         |
 | LoginEndpoint    | PRO/Login                                                        | Endpunkt für Login; Standard = PRO/Login                       |
-| UserAgent        | go-wrapper-proffix-restapi                                       | User Agent; Standard = go-wrapper-proffix-restapi            |
+| UserAgent        | go-wrapper-proffix-restapi                                       | User Agent; Standard = go-wrapper-proffix-restapi              |
 | Timeout          | 15                                                               | Timeout in Sekunden                                            |
 | VerifySSL        | true                                                             | SSL prüfen                                                     |
+| Batchsize        | 200                                                              | Batchgrösse für Batchrequests; Standard = 200                  |
 
 
 #### Methoden
@@ -224,6 +225,26 @@ Ruft Infos vom Endpunkt **PRO/Datenbank** ab.
 
 	defer rc.Close()
   ```
+
+##### GET Batch
+
+Gibt sämtliche Ergebnisse aus und iteriert selbständig über die kompletten Ergebnisse der REST-API.
+
+*Hinweis: Das mögliche Total der Ergebnisse wird aus dem Header `FilteredCount` ermittelt*
+
+```golang
+    //Set Params
+     params := url.Values{}
+     params.Set("Fields", "AdressNr,Name,Ort,Plz")
+
+     //GET Batch on ADR/Adressen with Batchsize = 35
+     rc, total, err := pxrest.GetBatch("ADR/Adresse", params, 35)
+
+     //Returns all possible results in `rc`, the complete amount of results as int in `total` and
+     //possible errors in `err`
+
+
+```
 
 
 ### Weitere Beispiele

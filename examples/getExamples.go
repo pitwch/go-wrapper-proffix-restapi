@@ -42,7 +42,7 @@ func getInfoExample() {
 	defer rc.Close()
 
 	//Logout
-	_, err = pxrest.Logout("")
+	_, err = pxrest.Logout()
 
 	//Log errors if there are
 	if err != nil {
