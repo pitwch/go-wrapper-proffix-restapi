@@ -13,4 +13,5 @@ type Options struct {
 	Timeout       time.Duration
 	VerifySSL     bool
 	Batchsize     int
+	Log           bool
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cast"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 )
@@ -189,6 +190,9 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 		urlstr = c.restURL.String() + endpoint
 	}
 
+	//If Log enabled log URL
+	logDebug(c, fmt.Sprintf("Request-URL: %v, Method: %v", urlstr, method))
+
 	switch method {
 	case http.MethodPost, http.MethodPut:
 	case http.MethodDelete, http.MethodGet, http.MethodOptions:
@@ -230,6 +234,9 @@ func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, http.He
 	}
 	request, header, statuscode, err := c.request("POST", endpoint, url.Values{}, sessionid, data)
 
+	//If Log enabled in options log data
+	logDebug(c, fmt.Sprintf("Sent data in POST-Request: %v", data))
+
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
@@ -259,6 +266,9 @@ func (c *Client) Put(endpoint string, data interface{}) (io.ReadCloser, http.Hea
 		return nil, nil, 0, err
 	}
 	request, header, statuscode, err := c.request("PUT", endpoint, url.Values{}, sessionid, data)
+
+	//If Log enabled in options log data
+	logDebug(c, fmt.Sprintf("Sent data in PUT-Request: %v", data))
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
@@ -511,7 +521,8 @@ func errorFormatterPx(c *Client, statuscode int, request io.Reader) (err error) 
 	errstr := buf.String()
 
 	//Do Logout...
-	c.Logout()
+	logoutstatus, err := c.Logout()
+	logDebug(c, fmt.Sprintf("Logout after Error with Status - Code: %v", logoutstatus))
 
 	//Define Error Struct
 	parsedError := ErrorStruct{}
@@ -524,4 +535,11 @@ func errorFormatterPx(c *Client, statuscode int, request io.Reader) (err error) 
 		return fmt.Errorf("ERROR: %v", errstr)
 	}
 	return fmt.Errorf("Error Statuscode %v Type %s: %s", statuscode, parsedError.Type, parsedError.Message)
+}
+
+func logDebug(c *Client, loginfo string) {
+	//If Log enabled in options
+	if c.option.Log == true {
+		log.Print(loginfo)
+	}
 }

@@ -73,6 +73,7 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | Timeout          | 15                                                               | Timeout in Sekunden                                            |
 | VerifySSL        | true                                                             | SSL prüfen                                                     |
 | Batchsize        | 200                                                              | Batchgrösse für Batchrequests; Standard = 200                  |
+| Log              | true                                                             | Aktiviert den Log für Debugging; Standard = false              |
 
 
 #### Methoden
