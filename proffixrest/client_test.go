@@ -140,8 +140,8 @@ func TestClient_Requests(t *testing.T) {
 	}
 
 	//Check error. Shouldn't be nil
-	if err != nil {
-		t.Errorf("Expected no errors for non existing GET Request. Got '%v'", err)
+	if err == nil {
+		t.Errorf("Expected errors for non existing GET Request. Got '%v'", err)
 	}
 
 	//Query Created AdressNr
@@ -451,4 +451,16 @@ func TestClientError(t *testing.T) {
 		_, _, _, _ = client.Get("test", nil)
 	}()
 
+}
+
+func TestClient_LoginWithFalsPxSessionId(t *testing.T) {
+
+	pxrest, err := ConnectTest()
+
+	//Check error. Should be nil
+	if err != nil {
+		t.Errorf("Expected no error for Logout. Got '%v'", err)
+	}
+
+	pxrest.Logout()
 }

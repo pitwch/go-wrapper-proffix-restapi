@@ -43,6 +43,12 @@ type DatabaseStruct struct {
 	Name string `json:"Name"`
 }
 
+//Error Struct PROFFIX REST-API
+type ErrorStruct struct {
+	Type    string `json:"Type"`
+	Message string `json:"Message"`
+}
+
 //Building new Client
 func NewClient(RestURL, apiUser string, apiPassword string, apiDatabase string, apiModule []string, options *Options) (*Client, error) {
 	restURL, err := url.Parse(RestURL)
@@ -99,7 +105,7 @@ func (c *Client) createNewPxSessionId() (sessionid string, err error) {
 	//Check URL, else exit
 	_, err = url.ParseRequestURI(c.restURL.String())
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("URL in wrong format: %s", err)
 	}
 
 	//Build Login URL
@@ -131,13 +137,10 @@ func (c *Client) createNewPxSessionId() (sessionid string, err error) {
 	//If Response gives errors print also Body
 	if resp.StatusCode == http.StatusBadRequest ||
 		resp.StatusCode == http.StatusNotFound ||
+		resp.StatusCode == http.StatusMethodNotAllowed ||
 		resp.StatusCode == http.StatusInternalServerError {
 
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		response := buf.String()
-
-		return "", fmt.Errorf("Error on Login: %s", response)
+		return "", errorFormatterPx(c, resp.StatusCode, resp.Body)
 	}
 	//If everything OK just return pxsessionid
 	return resp.Header.Get("pxsessionid"), nil
@@ -196,7 +199,7 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 	body := new(bytes.Buffer)
 	encoder := json.NewEncoder(body)
 	if err := encoder.Encode(data); err != nil {
-		return nil, nil, 0, err
+		return nil, nil, 0, fmt.Errorf("JSON Encoding failed: %s", err)
 	}
 
 	req, err := http.NewRequest(method, urlstr, body)
@@ -236,6 +239,11 @@ func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, http.He
 		return request, header, statuscode, err
 	}
 
+	//If Statuscode not 201
+	if statuscode != 201 {
+		return request, header, statuscode, errorFormatterPx(c, statuscode, request)
+	}
+
 	//Write the latest pxsessionid back to var
 	Pxsessionid = header.Get("pxsessionid")
 
@@ -259,6 +267,11 @@ func (c *Client) Put(endpoint string, data interface{}) (io.ReadCloser, http.Hea
 		request, header, statuscode, err := c.request("PUT", endpoint, url.Values{}, sessionid, data)
 
 		return request, header, statuscode, err
+	}
+
+	//If Statuscode not 204
+	if statuscode != 204 {
+		return request, header, statuscode, errorFormatterPx(c, statuscode, request)
 	}
 
 	//Write the latest pxsessionid back to var
@@ -289,6 +302,11 @@ func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, http.He
 		return request, header, statuscode, err
 	}
 
+	//If Statuscode not 200
+	if statuscode != 200 {
+		return request, header, statuscode, errorFormatterPx(c, statuscode, request)
+	}
+
 	//Write the latest pxsessionid back to var
 	Pxsessionid = header.Get("pxsessionid")
 
@@ -312,6 +330,11 @@ func (c *Client) Delete(endpoint string) (io.ReadCloser, http.Header, int, error
 		request, header, statuscode, err := c.request("DELETE", endpoint, nil, sessionid, nil)
 
 		return request, header, statuscode, err
+	}
+
+	//If Statuscode not 204
+	if statuscode != 204 {
+		return request, header, statuscode, errorFormatterPx(c, statuscode, request)
 	}
 
 	//Write the latest pxsessionid back to var
@@ -382,6 +405,11 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 		batchsize = c.option.Batchsize
 	}
 
+	//If params were set to nil set to empty url.Values{}
+	if params == nil {
+		params = url.Values{}
+	}
+
 	//Create Setting Query for setting up the sync and getting the FilteredCount Header
 
 	//Store original params in paramquery
@@ -397,7 +425,7 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 	rc, header, status, err := c.Get(endpoint, params)
 
 	if err != nil {
-		panic(err)
+		return nil, 0, err
 	}
 
 	//Read from rc into settingResp
@@ -408,7 +436,7 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 
 	//If Status not 200 log Error message
 	if status != 200 {
-		panic(string(collector))
+		return nil, 0, err
 	}
 	//Get total available objects
 	totalEntries := GetFiltererCount(header)
@@ -474,4 +502,26 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 	}
 	//Return
 	return collector, totalEntriesCount, err
+}
+
+func errorFormatterPx(c *Client, statuscode int, request io.Reader) (err error) {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(request)
+	errbyte := buf.Bytes()
+	errstr := buf.String()
+
+	//Do Logout...
+	c.Logout()
+
+	//Define Error Struct
+	parsedError := ErrorStruct{}
+
+	//Try to parse JSON in ErrorStruct
+	err = json.Unmarshal(errbyte, &parsedError)
+
+	//If error on parse return plain text
+	if err != nil {
+		return fmt.Errorf("ERROR: %v", errstr)
+	}
+	return fmt.Errorf("Error Statuscode %v Type %s: %s", statuscode, parsedError.Type, parsedError.Message)
 }
