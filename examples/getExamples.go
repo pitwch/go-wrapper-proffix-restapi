@@ -2,9 +2,9 @@ package examples
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	px "github.com/pitwch/go-wrapper-proffix-restapi/proffixrest"
-
 	"log"
 	"net/url"
 )
@@ -26,11 +26,14 @@ func Connect() (pxrest *px.Client, err error) {
 }
 func getInfoExample() {
 
+	//Create context
+	ctx := context.Background()
+
 	//Connect to REST-API
 	pxrest, err := Connect()
 
 	//User Helper Endpoint PRO/Info
-	rc, err := pxrest.Info("16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
+	rc, err := pxrest.Info(ctx, "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -42,7 +45,7 @@ func getInfoExample() {
 	defer rc.Close()
 
 	//Logout
-	_, err = pxrest.Logout()
+	_, err = pxrest.Logout(ctx)
 
 	//Log errors if there are
 	if err != nil {
@@ -53,11 +56,14 @@ func getInfoExample() {
 
 func getDatabaseExample() {
 
+	//Create context
+	ctx := context.Background()
+
 	//Connect to REST-API
 	pxrest, err := Connect()
 
 	//User Helper Endpoint PRO/Datenbank
-	rc, err := pxrest.Info("16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
+	rc, err := pxrest.Info(ctx, "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -69,7 +75,7 @@ func getDatabaseExample() {
 	defer rc.Close()
 
 	//Logout
-	_, err = pxrest.Logout()
+	_, err = pxrest.Logout(ctx)
 
 	//Log errors if there are
 	if err != nil {
@@ -79,11 +85,14 @@ func getDatabaseExample() {
 
 func getAdresseExample() {
 
+	//Create context
+	ctx := context.Background()
+
 	//Connect to REST-API
 	pxrest, err := Connect()
 
 	//Query endpoint ADR/Adresse/1 without Header as not needed
-	rc, _, _, err := pxrest.Get("ADR/Adresse/1", url.Values{})
+	rc, _, _, err := pxrest.Get(ctx, "ADR/Adresse/1", url.Values{})
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -106,6 +115,9 @@ func getAdresseExample() {
 
 func getAdresseWithParamsExample() {
 
+	//Create context
+	ctx := context.Background()
+
 	//Connect to REST-API
 	pxrest, err := Connect()
 
@@ -116,7 +128,7 @@ func getAdresseWithParamsExample() {
 	param.Set("Filter", "Vorname@='Max'")
 
 	//Query Endpoint ADR/Adresse
-	rc, _, _, err := pxrest.Get("ADR/Adresse", param)
+	rc, _, _, err := pxrest.Get(ctx, "ADR/Adresse", param)
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -128,7 +140,7 @@ func getAdresseWithParamsExample() {
 	defer rc.Close()
 
 	//Logout
-	_, err = pxrest.Logout()
+	_, err = pxrest.Logout(ctx)
 
 	//Log errors if there are
 	if err != nil {

@@ -1,6 +1,7 @@
 package examples
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -19,6 +20,9 @@ func getBatchExample() {
 	//Define Adresse as array (as we'll have many results)
 	adressen := []Adresse{}
 
+	//Create context
+	ctx := context.Background()
+
 	//Connect to PROFFIX REST-API. Uses Connect() function from getExamples.go
 	pxrest, err := Connect()
 	if err != nil {
@@ -30,7 +34,7 @@ func getBatchExample() {
 	params.Set("Fields", "AdressNr,Name,Ort,Plz")
 
 	//Fire the batch request
-	rc, total, _ := pxrest.GetBatch("ADR/Adresse", params, 35)
+	rc, total, _ := pxrest.GetBatch(ctx, "ADR/Adresse", params, 35)
 
 	if err != nil {
 		fmt.Print(err)
@@ -49,5 +53,5 @@ func getBatchExample() {
 	fmt.Printf("We got %v from %v Adressen!", len(adressen), total)
 
 	//Logout
-	_, err = pxrest.Logout()
+	_, err = pxrest.Logout(ctx)
 }
