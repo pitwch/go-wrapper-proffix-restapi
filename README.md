@@ -197,6 +197,7 @@ Loggt den Client von der PROFFIX REST-API aus und gibt die Session / Lizenz dami
 
 ```
 
+Der Wrapper führt den **Logout auch automatisch bei Fehlern** durch damit keine Lizenz geblockt wird.
 
 ##### Info
 

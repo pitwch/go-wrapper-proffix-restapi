@@ -2,6 +2,7 @@ package proffixrest
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -85,9 +86,15 @@ func NewClient(RestURL, apiUser string, apiPassword string, apiDatabase string, 
 	path := options.APIPrefix + options.Version + "/"
 	restURL.Path = path
 
-	rawClient := &http.Client{}
-	rawClient.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: options.VerifySSL},
+	rawClient := http.DefaultClient
+
+	// Set client's transport to default when nil
+	if rawClient.Transport == nil {
+		rawClient.Transport = http.DefaultTransport
+	}
+
+	if transport, ok := rawClient.Transport.(*http.Transport); ok && transport != nil {
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: options.VerifySSL}
 	}
 	return &Client{
 		restURL:   restURL,
@@ -166,10 +173,10 @@ func (c *Client) Login() (string, error) {
 //LOGOUT Request for PROFFIX REST-API
 //Accepts PxSession ID as Input or if left empty uses SessionId from active Session
 //Returns Statuscode,error
-func (c *Client) Logout() (int, error) {
+func (c *Client) Logout(ctx context.Context) (int, error) {
 
 	//Delete Login Object from PROFFIX REST-API
-	_, _, statuscode, err := c.request("DELETE", c.option.LoginEndpoint, url.Values{}, Pxsessionid, nil)
+	_, _, statuscode, err := c.request(ctx, "DELETE", c.option.LoginEndpoint, url.Values{}, Pxsessionid, nil)
 
 	//Set PxSessionId to ""
 	Pxsessionid = ""
@@ -179,7 +186,7 @@ func (c *Client) Logout() (int, error) {
 
 //Request Method
 //Building the Request Method for Client
-func (c *Client) request(method, endpoint string, params url.Values, pxsessionid string, data interface{}) (io.ReadCloser, http.Header, int, error) {
+func (c *Client) request(ctx context.Context, method, endpoint string, params url.Values, pxsessionid string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 
 	var urlstr string
 
@@ -215,7 +222,7 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 	req.Header.Set("Content-Type", "application/json")
 
 	req.Header.Set("pxsessionid", pxsessionid)
-	resp, err := c.rawClient.Do(req)
+	resp, err := c.rawClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return resp.Body, resp.Header, resp.StatusCode, err
 	}
@@ -227,12 +234,12 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 //POST Request for PROFFIX REST-API
 //Accepts Endpoint and Data as Input
 //Returns io.ReadCloser,http.Header,Statuscode,error
-func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
+func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 	sessionid, err := c.Login()
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	request, header, statuscode, err := c.request("POST", endpoint, url.Values{}, sessionid, data)
+	request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, sessionid, data)
 
 	//If Log enabled in options log data
 	logDebug(c, fmt.Sprintf("Sent data in POST-Request: %v", data))
@@ -241,7 +248,7 @@ func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, http.He
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
 		Pxsessionid, err = c.createNewPxSessionId()
-		request, header, statuscode, err := c.request("POST", endpoint, url.Values{}, sessionid, data)
+		request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, sessionid, data)
 
 		return request, header, statuscode, err
 	}
@@ -260,12 +267,12 @@ func (c *Client) Post(endpoint string, data interface{}) (io.ReadCloser, http.He
 //PUT Request for PROFFIX REST-API
 //Accepts Endpoint and Data as Input
 //Returns io.ReadCloser,http.Header,Statuscode,error
-func (c *Client) Put(endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
+func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 	sessionid, err := c.Login()
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	request, header, statuscode, err := c.request("PUT", endpoint, url.Values{}, sessionid, data)
+	request, header, statuscode, err := c.request(ctx, "PUT", endpoint, url.Values{}, sessionid, data)
 
 	//If Log enabled in options log data
 	logDebug(c, fmt.Sprintf("Sent data in PUT-Request: %v", data))
@@ -274,7 +281,7 @@ func (c *Client) Put(endpoint string, data interface{}) (io.ReadCloser, http.Hea
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
 		Pxsessionid, err = c.createNewPxSessionId()
-		request, header, statuscode, err := c.request("PUT", endpoint, url.Values{}, sessionid, data)
+		request, header, statuscode, err := c.request(ctx, "PUT", endpoint, url.Values{}, sessionid, data)
 
 		return request, header, statuscode, err
 	}
@@ -294,20 +301,20 @@ func (c *Client) Put(endpoint string, data interface{}) (io.ReadCloser, http.Hea
 //GET Request for PROFFIX REST-API
 //Accepts Endpoint and url.Values as Input
 //Returns io.ReadCloser,http.Header,Statuscode,error
-func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, http.Header, int, error) {
+func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (io.ReadCloser, http.Header, int, error) {
 	sessionid, err := c.Login()
 
 	if err != nil {
 		return nil, nil, 0, err
 	}
 
-	request, header, statuscode, err := c.request("GET", endpoint, params, sessionid, nil)
+	request, header, statuscode, err := c.request(ctx, "GET", endpoint, params, sessionid, nil)
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
 		Pxsessionid, err = c.createNewPxSessionId()
-		request, header, statuscode, err := c.request("GET", endpoint, params, sessionid, nil)
+		request, header, statuscode, err := c.request(ctx, "GET", endpoint, params, sessionid, nil)
 
 		return request, header, statuscode, err
 	}
@@ -326,18 +333,18 @@ func (c *Client) Get(endpoint string, params url.Values) (io.ReadCloser, http.He
 //DELETE Request for PROFFIX REST-API
 //Accepts Endpoint and url.Values as Input
 //Returns io.ReadCloser,http.Header,Statuscode,error
-func (c *Client) Delete(endpoint string) (io.ReadCloser, http.Header, int, error) {
+func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, http.Header, int, error) {
 	sessionid, err := c.Login()
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	request, header, statuscode, err := c.request("DELETE", endpoint, nil, sessionid, nil)
+	request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, nil, sessionid, nil)
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
 		Pxsessionid, err = c.createNewPxSessionId()
-		request, header, statuscode, err := c.request("DELETE", endpoint, nil, sessionid, nil)
+		request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, nil, sessionid, nil)
 
 		return request, header, statuscode, err
 	}
@@ -356,7 +363,7 @@ func (c *Client) Delete(endpoint string) (io.ReadCloser, http.Header, int, error
 //INFO Request for PROFFIX REST-API
 //Accepts Webservice Key as Input or if left empty uses key from options parameter
 //Returns Info about API as io.ReadCloser,error
-func (c *Client) Info(pxapi string) (io.ReadCloser, error) {
+func (c *Client) Info(ctx context.Context, pxapi string) (io.ReadCloser, error) {
 
 	param := url.Values{}
 
@@ -368,7 +375,7 @@ func (c *Client) Info(pxapi string) (io.ReadCloser, error) {
 		param.Set("key", pxapi)
 	}
 
-	request, _, _, err := c.request("GET", "PRO/Info", param, "", nil)
+	request, _, _, err := c.request(ctx, "GET", "PRO/Info", param, "", nil)
 
 	return request, err
 }
@@ -376,7 +383,7 @@ func (c *Client) Info(pxapi string) (io.ReadCloser, error) {
 //DATABASE Request for PROFFIX REST-API
 //Accepts Webservice Key as Input or if left empty uses key from options parameter
 //Returns Database Info as io.ReadCloser,error
-func (c *Client) Database(pxapi string) (io.ReadCloser, error) {
+func (c *Client) Database(ctx context.Context, pxapi string) (io.ReadCloser, error) {
 
 	param := url.Values{}
 
@@ -388,7 +395,7 @@ func (c *Client) Database(pxapi string) (io.ReadCloser, error) {
 		param.Set("key", pxapi)
 	}
 
-	request, _, _, err := c.request("GET", "PRO/Datenbank", param, "", nil)
+	request, _, _, err := c.request(ctx, "GET", "PRO/Datenbank", param, "", nil)
 
 	return request, err
 }
@@ -404,7 +411,7 @@ func GetFiltererCount(header http.Header) (total int) {
 	return pxmetadata.FilteredCount
 }
 
-func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (result []byte, total int, err error) {
+func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Values, batchsize int) (result []byte, total int, err error) {
 
 	//Create collector for collecting requests
 	var collector []byte
@@ -432,7 +439,7 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 	paramquery.Add("Limit", cast.ToString(batchsize))
 
 	//Query Endpoint for results
-	rc, header, status, err := c.Get(endpoint, params)
+	rc, header, status, err := c.Get(ctx, endpoint, params)
 
 	if err != nil {
 		return nil, 0, err
@@ -479,7 +486,7 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 			paramquery.Add("Offset", cast.ToString(totalEntriesCount))
 
 			//Fire request with new limit + offset
-			bc, _, _, _ := c.Get(endpoint, paramquery)
+			bc, _, _, _ := c.Get(ctx, endpoint, paramquery)
 
 			//Read from bc into temporary batchResp
 			batchResp, err := ioutil.ReadAll(bc)
