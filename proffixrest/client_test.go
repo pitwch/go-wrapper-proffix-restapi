@@ -276,7 +276,7 @@ func TestClient_AdvancedFilters(t *testing.T) {
 	}
 
 	//Logout
-	pxrest.Logout()
+	pxrest.Logout(ctx)
 
 }
 

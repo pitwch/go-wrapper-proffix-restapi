@@ -108,7 +108,7 @@ func NewClient(RestURL, apiUser string, apiPassword string, apiDatabase string, 
 }
 
 //Function for creating new PxSessionId
-func (c *Client) createNewPxSessionId() (sessionid string, err error) {
+func (c *Client) createNewPxSessionId(ctx context.Context) (sessionid string, err error) {
 
 	//Check URL, else exit
 	_, err = url.ParseRequestURI(c.restURL.String())
@@ -148,7 +148,7 @@ func (c *Client) createNewPxSessionId() (sessionid string, err error) {
 		resp.StatusCode == http.StatusMethodNotAllowed ||
 		resp.StatusCode == http.StatusInternalServerError {
 
-		return "", errorFormatterPx(c, resp.StatusCode, resp.Body)
+		return "", errorFormatterPx(ctx, c, resp.StatusCode, resp.Body)
 	}
 	//If everything OK just return pxsessionid
 	return resp.Header.Get("pxsessionid"), nil
@@ -158,11 +158,11 @@ func (c *Client) createNewPxSessionId() (sessionid string, err error) {
 //Function for Login
 //Helper Function for Login to PROFFIX REST-API
 //Login is automatically done
-func (c *Client) Login() (string, error) {
+func (c *Client) Login(ctx context.Context) (string, error) {
 
 	// If Pxsessionid doesnt yet exists create a new one
 	if Pxsessionid == "" {
-		sessionid, err := c.createNewPxSessionId()
+		sessionid, err := c.createNewPxSessionId(ctx)
 		return sessionid, err
 		// If Pxsessionid already exists return stored value
 	} else {
@@ -235,7 +235,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 //Accepts Endpoint and Data as Input
 //Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
-	sessionid, err := c.Login()
+	sessionid, err := c.Login(ctx)
 	if err != nil {
 		return nil, nil, 0, err
 	}
@@ -247,7 +247,7 @@ func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (i
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
-		Pxsessionid, err = c.createNewPxSessionId()
+		Pxsessionid, err = c.createNewPxSessionId(ctx)
 		request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, sessionid, data)
 
 		return request, header, statuscode, err
@@ -255,7 +255,7 @@ func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (i
 
 	//If Statuscode not 201
 	if statuscode != 201 {
-		return request, header, statuscode, errorFormatterPx(c, statuscode, request)
+		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	}
 
 	//Write the latest pxsessionid back to var
@@ -268,7 +268,7 @@ func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (i
 //Accepts Endpoint and Data as Input
 //Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
-	sessionid, err := c.Login()
+	sessionid, err := c.Login(ctx)
 	if err != nil {
 		return nil, nil, 0, err
 	}
@@ -280,7 +280,7 @@ func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
-		Pxsessionid, err = c.createNewPxSessionId()
+		Pxsessionid, err = c.createNewPxSessionId(ctx)
 		request, header, statuscode, err := c.request(ctx, "PUT", endpoint, url.Values{}, sessionid, data)
 
 		return request, header, statuscode, err
@@ -288,7 +288,7 @@ func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io
 
 	//If Statuscode not 204
 	if statuscode != 204 {
-		return request, header, statuscode, errorFormatterPx(c, statuscode, request)
+		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	}
 
 	//Write the latest pxsessionid back to var
@@ -302,7 +302,7 @@ func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io
 //Accepts Endpoint and url.Values as Input
 //Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (io.ReadCloser, http.Header, int, error) {
-	sessionid, err := c.Login()
+	sessionid, err := c.Login(ctx)
 
 	if err != nil {
 		return nil, nil, 0, err
@@ -313,7 +313,7 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
-		Pxsessionid, err = c.createNewPxSessionId()
+		Pxsessionid, err = c.createNewPxSessionId(ctx)
 		request, header, statuscode, err := c.request(ctx, "GET", endpoint, params, sessionid, nil)
 
 		return request, header, statuscode, err
@@ -321,7 +321,7 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 
 	//If Statuscode not 200
 	if statuscode != 200 {
-		return request, header, statuscode, errorFormatterPx(c, statuscode, request)
+		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	}
 
 	//Write the latest pxsessionid back to var
@@ -334,7 +334,7 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 //Accepts Endpoint and url.Values as Input
 //Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, http.Header, int, error) {
-	sessionid, err := c.Login()
+	sessionid, err := c.Login(ctx)
 	if err != nil {
 		return nil, nil, 0, err
 	}
@@ -343,7 +343,7 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
-		Pxsessionid, err = c.createNewPxSessionId()
+		Pxsessionid, err = c.createNewPxSessionId(ctx)
 		request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, nil, sessionid, nil)
 
 		return request, header, statuscode, err
@@ -351,7 +351,7 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 
 	//If Statuscode not 204
 	if statuscode != 204 {
-		return request, header, statuscode, errorFormatterPx(c, statuscode, request)
+		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	}
 
 	//Write the latest pxsessionid back to var
@@ -521,14 +521,14 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 	return collector, totalEntriesCount, err
 }
 
-func errorFormatterPx(c *Client, statuscode int, request io.Reader) (err error) {
+func errorFormatterPx(ctx context.Context, c *Client, statuscode int, request io.Reader) (err error) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(request)
 	errbyte := buf.Bytes()
 	errstr := buf.String()
 
 	//Do Logout...
-	logoutstatus, err := c.Logout()
+	logoutstatus, err := c.Logout(ctx)
 	logDebug(c, fmt.Sprintf("Logout after Error with Status - Code: %v", logoutstatus))
 
 	//Define Error Struct
