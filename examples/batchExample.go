@@ -17,7 +17,7 @@ func getBatchExample() {
 	}
 
 	//Define Adresse as array (as we'll have many results)
-	adressen := []Adresse{}
+	var adressen []Adresse
 
 	//Connect to PROFFIX REST-API. Uses Connect() function from getExamples.go
 	pxrest, err := Connect()

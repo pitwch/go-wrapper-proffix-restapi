@@ -432,7 +432,7 @@ func (c *Client) GetBatch(endpoint string, params url.Values, batchsize int) (re
 	paramquery := params
 
 	//Delete Limit from params in case user defined it
-	paramquery.Del(("Limit"))
+	paramquery.Del("Limit")
 
 	//Add Limit / Batchsize to params
 	paramquery.Add("Limit", cast.ToString(batchsize))

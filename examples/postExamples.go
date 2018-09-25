@@ -43,7 +43,7 @@ func postAdresseWithMap() {
 	pxrest, err := Connect()
 
 	//Define map
-	var data map[string]interface{} = map[string]interface{}{
+	var data = map[string]interface{}{
 		"Name":   "Muster GmbH",
 		"Ort":    "Zürich",
 		"Zürich": "8000",

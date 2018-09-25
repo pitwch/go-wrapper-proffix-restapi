@@ -228,7 +228,7 @@ func TestClient_AdvancedFilters(t *testing.T) {
 	}
 
 	//Define Adressen as array
-	adressen := []Adresse{}
+	var adressen []Adresse
 
 	//Connect
 	pxrest, err := ConnectTest()
@@ -356,7 +356,7 @@ func TestGetBatch(t *testing.T) {
 	}
 
 	//Define Adressen as array
-	adressen := []Adresse{}
+	var adressen []Adresse
 
 	//Connect
 	pxrest, err := ConnectTest()
