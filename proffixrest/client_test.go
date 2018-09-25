@@ -19,13 +19,13 @@ type Adresse struct {
 }
 
 //Connect function
-func ConnectTest() (pxrest *Client, ctx context.Context, err error) {
+func ConnectTest() (pxrest *Client, err error) {
 
 	//New Context
-	ctx = context.Background()
+	ctx := context.Background()
 
 	//Use PROFFIX Public Demo Login as Example
-	pxrest, err = NewClient(
+	pxrest, err = NewClient(ctx,
 		"https://remote.proffix.net:11011/pxapi/v2",
 		"Gast",
 		"16ec7cb001be0525f9af1a96fd5ea26466b2e75ef3e96e881bcb7149cd7598da",
@@ -35,7 +35,7 @@ func ConnectTest() (pxrest *Client, ctx context.Context, err error) {
 			Key:       "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50",
 			VerifySSL: false},
 	)
-	return pxrest, ctx, err
+	return pxrest, err
 }
 
 //Helper function for checking if is type Adresse
@@ -77,8 +77,8 @@ func TestClient_Requests(t *testing.T) {
 	var data = Adresse{Name: "Muster GmbH", Ort: "Zürich", PLZ: "8000"}
 
 	//Connect
-	pxrest, ctx, err := ConnectTest()
-	_, headers, statuscode, err := pxrest.Post(ctx, "ADR/Adresse", data)
+	pxrest, err := ConnectTest()
+	_, headers, statuscode, err := pxrest.Post("ADR/Adresse", data)
 
 	//Check status code; Should be 201
 	if statuscode != 201 {
@@ -108,7 +108,7 @@ func TestClient_Requests(t *testing.T) {
 	var update = Adresse{AdressNr: DemoAdressNr, Name: "Muster AG", Ort: "St. Gallen", PLZ: "9000"}
 
 	//Put updated Data
-	rc, _, statuscode, err := pxrest.Put(ctx, "ADR/Adresse/"+cast.ToString(DemoAdressNr), update)
+	rc, _, statuscode, err := pxrest.Put("ADR/Adresse/"+cast.ToString(DemoAdressNr), update)
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -136,7 +136,7 @@ func TestClient_Requests(t *testing.T) {
 	//GET TESTs
 
 	//Query Non Existing AdressNr
-	_, _, statuscode, err = pxrest.Get(ctx, "ADR/Adresse/123456789", url.Values{})
+	_, _, statuscode, err = pxrest.Get("ADR/Adresse/123456789", url.Values{})
 
 	//Check status code; Should be 404
 	if statuscode != 404 {
@@ -149,7 +149,7 @@ func TestClient_Requests(t *testing.T) {
 	}
 
 	//Query Created AdressNr
-	rc, headers, statuscode, err = pxrest.Get(ctx, "ADR/Adresse/"+DemoAdressNr, url.Values{})
+	rc, headers, statuscode, err = pxrest.Get("ADR/Adresse/"+DemoAdressNr, url.Values{})
 
 	//Check status code; Should be 200
 	if statuscode != 200 {
@@ -180,7 +180,7 @@ func TestClient_Requests(t *testing.T) {
 	//DELETE TESTs
 
 	//Delete the created Address
-	_, headers, statuscode, err = pxrest.Delete(ctx, "ADR/Adresse/"+DemoAdressNr)
+	_, headers, statuscode, err = pxrest.Delete("ADR/Adresse/" + DemoAdressNr)
 
 	//Check status code; Should be 204
 	if statuscode != 204 {
@@ -198,7 +198,7 @@ func TestClient_Requests(t *testing.T) {
 	}
 
 	//Check Logout
-	statuslogout, err := pxrest.Logout(ctx)
+	statuslogout, err := pxrest.Logout()
 
 	//Check error. Should be nil
 	if err != nil {
@@ -231,7 +231,7 @@ func TestClient_AdvancedFilters(t *testing.T) {
 	adressen := []Adresse{}
 
 	//Connect
-	pxrest, ctx, err := ConnectTest()
+	pxrest, err := ConnectTest()
 
 	//Set Advanced Params.
 	params := url.Values{}
@@ -240,7 +240,7 @@ func TestClient_AdvancedFilters(t *testing.T) {
 	params.Set("sort", "Plz,Name,AdressNr")
 
 	//Fire Request
-	resultFilters, _, statuscode, err := pxrest.Get(ctx, "ADR/Adresse", params)
+	resultFilters, _, statuscode, err := pxrest.Get("ADR/Adresse", params)
 
 	//Check error. Should be nil
 	if err != nil {
@@ -276,15 +276,15 @@ func TestClient_AdvancedFilters(t *testing.T) {
 	}
 
 	//Logout
-	pxrest.Logout(ctx)
+	pxrest.Logout()
 
 }
 
 //Test Get Database with Key from Options
 func TestGetDatabase(t *testing.T) {
-	pxrest, ctx, err := ConnectTest()
+	pxrest, err := ConnectTest()
 
-	rc, err := pxrest.Database(ctx, "")
+	rc, err := pxrest.Database("")
 
 	//Check error. Should be nil
 	if err != nil {
@@ -307,7 +307,7 @@ func TestGetDatabase(t *testing.T) {
 	}
 
 	//Test with key instead value from options
-	_, err = pxrest.Database(ctx, "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
+	_, err = pxrest.Database("16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
 	//Check error. Should be nil
 	if err != nil {
@@ -317,9 +317,9 @@ func TestGetDatabase(t *testing.T) {
 
 //Test Get Info with Key set in Function
 func TestGetInfo(t *testing.T) {
-	pxrest, ctx, err := ConnectTest()
+	pxrest, err := ConnectTest()
 
-	rc, err := pxrest.Info(ctx, "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
+	rc, err := pxrest.Info("16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
 	//Check error. Should be nil
 	if err != nil {
@@ -359,13 +359,13 @@ func TestGetBatch(t *testing.T) {
 	adressen := []Adresse{}
 
 	//Connect
-	pxrest, ctx, err := ConnectTest()
+	pxrest, err := ConnectTest()
 
 	//Set Params. As we just want some fields we define them on Fields param.
 	params := url.Values{}
 	params.Set("Fields", "AdressNr,Name,Ort,Plz")
 
-	resultBatch, total, err := pxrest.GetBatch(ctx, "ADR/Adresse", params, 25)
+	resultBatch, total, err := pxrest.GetBatch("ADR/Adresse", params, 25)
 
 	//Check error. Should be nil
 	if err != nil {
@@ -386,7 +386,7 @@ func TestGetBatch(t *testing.T) {
 	}
 
 	//Logout
-	statuslogout, err := pxrest.Logout(ctx)
+	statuslogout, err := pxrest.Logout()
 
 	//Check error. Should be nil
 	if err != nil {
@@ -414,7 +414,7 @@ func TestGetBatch(t *testing.T) {
 //Check structs
 func TestStructs(t *testing.T) {
 
-	pxrest, ctx, _ := ConnectTest()
+	pxrest, _ := ConnectTest()
 
 	//Set test vars
 	q := *pxrest
@@ -430,11 +430,10 @@ func TestStructs(t *testing.T) {
 		t.Errorf("q is not of type Client")
 	}
 
-	pxrest.Logout(ctx)
+	pxrest.Logout()
 }
 
 func TestClientError(t *testing.T) {
-	ctx := context.Background()
 	urlstring, _ := url.Parse("https://bing.com")
 	client := Client{
 		restURL:   urlstring,
@@ -453,19 +452,19 @@ func TestClientError(t *testing.T) {
 			}
 		}()
 		// This function should cause a panic
-		_, _, _, _ = client.Get(ctx, "test", nil)
+		_, _, _, _ = client.Get("test", nil)
 	}()
 
 }
 
 func TestClient_LoginWithFalsPxSessionId(t *testing.T) {
 
-	pxrest, ctx, err := ConnectTest()
+	pxrest, err := ConnectTest()
 
 	//Check error. Should be nil
 	if err != nil {
 		t.Errorf("Expected no error for Logout. Got '%v'", err)
 	}
 
-	pxrest.Logout(ctx)
+	pxrest.Logout()
 }

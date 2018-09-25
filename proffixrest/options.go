@@ -1,6 +1,7 @@
 package proffixrest
 
 import (
+	"net/http"
 	"time"
 )
 
@@ -14,4 +15,5 @@ type Options struct {
 	VerifySSL     bool
 	Batchsize     int
 	Log           bool
+	Client        *http.Client
 }
