@@ -2,7 +2,6 @@ package examples
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log"
 )
@@ -10,9 +9,6 @@ import (
 //var pxrest for Login already defined in getExamples.go
 
 func postAdresseWithStruct() {
-
-	//Create context
-	ctx := context.Background()
 
 	//Connect to REST-API
 	pxrest, err := Connect()
@@ -42,9 +38,6 @@ func postAdresseWithStruct() {
 }
 
 func postAdresseWithMap() {
-
-	//Create context
-	ctx := context.Background()
 
 	//Connect to REST-API
 	pxrest, err := Connect()

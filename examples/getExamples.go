@@ -109,9 +109,6 @@ func getAdresseExample() {
 
 func getAdresseWithParamsExample() {
 
-	//Create context
-	ctx := context.Background()
-
 	//Connect to REST-API
 	pxrest, err := Connect()
 
