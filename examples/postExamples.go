@@ -26,7 +26,7 @@ func postAdresseWithStruct() {
 	var data = Adresse{"Muster GmbH", "Zürich", "8000"}
 
 	//Query Endpoint ADR/Adresse with Headers
-	rc, header, _, err := pxrest.Post(ctx, "ADR/Adresse", data)
+	rc, header, _, err := pxrest.Post("ADR/Adresse", data)
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -57,7 +57,7 @@ func postAdresseWithMap() {
 	}
 
 	//Query Endpoint ADR/Adresse with Headers
-	rc, header, _, err := pxrest.Post(ctx, "ADR/Adresse", data)
+	rc, header, _, err := pxrest.Post("ADR/Adresse", data)
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -69,7 +69,7 @@ func postAdresseWithMap() {
 	defer rc.Close()
 
 	//Logout
-	_, err = pxrest.Logout(ctx)
+	_, err = pxrest.Logout()
 
 	//Log errors if there are
 	if err != nil {

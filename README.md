@@ -34,6 +34,7 @@ Die Konfiguration wird dem Client mitgegeben:
 
 | Konfiguration | Beispiel                 | Type          | Bemerkung                             |
 |---------------|--------------------------|---------------|---------------------------------------|
+| Context       | ctx                      | `context`     | Context                               |
 | RestURL       | https://myserver.ch:999  | `string`      | URL der REST-API **ohne pxapi/v2/**   |
 | apiDatabase   | DEMO                     | `string`      | Name der Datenbank                    |
 | apiUser       | USR                      | `string`      | Names des Benutzers                   |
@@ -48,7 +49,11 @@ import (
   px "github.com/pitwch/go-wrapper-proffix-restapi/proffixrest"
 )
 
+//Set Context
+ctx := context.Background()
+
 var pxrest, err = px.NewClient(
+    ctx,
 	"https://myserver.ch:999",
 	"USR",
 	"b62cce2fe18f7a156a9c719c57bebf0478a3d50f0d7bd18d9e8a40be2e663017",
@@ -74,6 +79,9 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | VerifySSL        | true                                                             | SSL prüfen                                                     |
 | Batchsize        | 200                                                              | Batchgrösse für Batchrequests; Standard = 200                  |
 | Log              | true                                                             | Aktiviert den Log für Debugging; Standard = false              |
+| Client           | urlfetch.Client(ctx)                                             | HTTP-Client; Standard = http.DefaultClient                     |
+
+
 
 
 #### Methoden
