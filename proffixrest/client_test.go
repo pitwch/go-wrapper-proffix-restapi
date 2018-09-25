@@ -19,10 +19,7 @@ type Adresse struct {
 }
 
 //Connect function
-func ConnectTest() (pxrest *Client, err error) {
-
-	//New Context
-	ctx := context.Background()
+func ConnectTest(ctx context.Context) (pxrest *Client, err error) {
 
 	//Use PROFFIX Public Demo Login as Example
 	pxrest, err = NewClient(ctx,
@@ -71,13 +68,16 @@ func isClient(t interface{}) bool {
 //Test all Requests in one Session
 func TestClient_Requests(t *testing.T) {
 
+	//New Context
+	ctx := context.Background()
+
 	//POST TESTs
 
 	//Fill struct with Demo Data
 	var data = Adresse{Name: "Muster GmbH", Ort: "Zürich", PLZ: "8000"}
 
 	//Connect
-	pxrest, err := ConnectTest()
+	pxrest, err := ConnectTest(ctx)
 	_, headers, statuscode, err := pxrest.Post("ADR/Adresse", data)
 
 	//Check status code; Should be 201
@@ -215,6 +215,9 @@ func TestClient_Requests(t *testing.T) {
 //Test all Requests in one Session
 func TestClient_AdvancedFilters(t *testing.T) {
 
+	//New Context
+	ctx := context.Background()
+
 	//Define test struct for Adresse
 	type Adresse struct {
 		AdressNr int
@@ -231,7 +234,7 @@ func TestClient_AdvancedFilters(t *testing.T) {
 	var adressen []Adresse
 
 	//Connect
-	pxrest, err := ConnectTest()
+	pxrest, err := ConnectTest(ctx)
 
 	//Set Advanced Params.
 	params := url.Values{}
@@ -282,7 +285,11 @@ func TestClient_AdvancedFilters(t *testing.T) {
 
 //Test Get Database with Key from Options
 func TestGetDatabase(t *testing.T) {
-	pxrest, err := ConnectTest()
+
+	//New Context
+	ctx := context.Background()
+
+	pxrest, err := ConnectTest(ctx)
 
 	rc, err := pxrest.Database("")
 
@@ -317,7 +324,11 @@ func TestGetDatabase(t *testing.T) {
 
 //Test Get Info with Key set in Function
 func TestGetInfo(t *testing.T) {
-	pxrest, err := ConnectTest()
+
+	//New Context
+	ctx := context.Background()
+
+	pxrest, err := ConnectTest(ctx)
 
 	rc, err := pxrest.Info("16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
@@ -346,6 +357,9 @@ func TestGetInfo(t *testing.T) {
 //Test GetBatch
 func TestGetBatch(t *testing.T) {
 
+	//New Context
+	ctx := context.Background()
+
 	//Define test struct for Adresse
 	type Adresse struct {
 		AdressNr int
@@ -359,7 +373,7 @@ func TestGetBatch(t *testing.T) {
 	var adressen []Adresse
 
 	//Connect
-	pxrest, err := ConnectTest()
+	pxrest, err := ConnectTest(ctx)
 
 	//Set Params. As we just want some fields we define them on Fields param.
 	params := url.Values{}
@@ -414,7 +428,10 @@ func TestGetBatch(t *testing.T) {
 //Check structs
 func TestStructs(t *testing.T) {
 
-	pxrest, _ := ConnectTest()
+	//New Context
+	ctx := context.Background()
+
+	pxrest, _ := ConnectTest(ctx)
 
 	//Set test vars
 	q := *pxrest
@@ -459,7 +476,10 @@ func TestClientError(t *testing.T) {
 
 func TestClient_LoginWithFalsPxSessionId(t *testing.T) {
 
-	pxrest, err := ConnectTest()
+	//New Context
+	ctx := context.Background()
+
+	pxrest, err := ConnectTest(ctx)
 
 	//Check error. Should be nil
 	if err != nil {
