@@ -22,7 +22,7 @@ type Adresse struct {
 func ConnectTest(ctx context.Context) (pxrest *Client, err error) {
 
 	//Use PROFFIX Public Demo Login as Example
-	pxrest, err = NewClient(ctx,
+	pxrest, err = NewClient(
 		"https://remote.proffix.net:11011/pxapi/v2",
 		"Gast",
 		"16ec7cb001be0525f9af1a96fd5ea26466b2e75ef3e96e881bcb7149cd7598da",
@@ -78,7 +78,7 @@ func TestClient_Requests(t *testing.T) {
 
 	//Connect
 	pxrest, err := ConnectTest(ctx)
-	_, headers, statuscode, err := pxrest.Post("ADR/Adresse", data)
+	_, headers, statuscode, err := pxrest.Post(ctx, "ADR/Adresse", data)
 
 	//Check status code; Should be 201
 	if statuscode != 201 {
@@ -108,7 +108,7 @@ func TestClient_Requests(t *testing.T) {
 	var update = Adresse{AdressNr: DemoAdressNr, Name: "Muster AG", Ort: "St. Gallen", PLZ: "9000"}
 
 	//Put updated Data
-	rc, _, statuscode, err := pxrest.Put("ADR/Adresse/"+cast.ToString(DemoAdressNr), update)
+	rc, _, statuscode, err := pxrest.Put(ctx, "ADR/Adresse/"+cast.ToString(DemoAdressNr), update)
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -136,7 +136,7 @@ func TestClient_Requests(t *testing.T) {
 	//GET TESTs
 
 	//Query Non Existing AdressNr
-	_, _, statuscode, err = pxrest.Get("ADR/Adresse/123456789", url.Values{})
+	_, _, statuscode, err = pxrest.Get(ctx, "ADR/Adresse/123456789", url.Values{})
 
 	//Check status code; Should be 404
 	if statuscode != 404 {
@@ -149,7 +149,7 @@ func TestClient_Requests(t *testing.T) {
 	}
 
 	//Query Created AdressNr
-	rc, headers, statuscode, err = pxrest.Get("ADR/Adresse/"+DemoAdressNr, url.Values{})
+	rc, headers, statuscode, err = pxrest.Get(ctx, "ADR/Adresse/"+DemoAdressNr, url.Values{})
 
 	//Check status code; Should be 200
 	if statuscode != 200 {
@@ -180,7 +180,7 @@ func TestClient_Requests(t *testing.T) {
 	//DELETE TESTs
 
 	//Delete the created Address
-	_, headers, statuscode, err = pxrest.Delete("ADR/Adresse/" + DemoAdressNr)
+	_, headers, statuscode, err = pxrest.Delete(ctx, "ADR/Adresse/"+DemoAdressNr)
 
 	//Check status code; Should be 204
 	if statuscode != 204 {
@@ -243,7 +243,7 @@ func TestClient_AdvancedFilters(t *testing.T) {
 	params.Set("sort", "Plz,Name,AdressNr")
 
 	//Fire Request
-	resultFilters, _, statuscode, err := pxrest.Get("ADR/Adresse", params)
+	resultFilters, _, statuscode, err := pxrest.Get(ctx, "ADR/Adresse", params)
 
 	//Check error. Should be nil
 	if err != nil {
@@ -291,7 +291,7 @@ func TestGetDatabase(t *testing.T) {
 
 	pxrest, err := ConnectTest(ctx)
 
-	rc, err := pxrest.Database("")
+	rc, err := pxrest.Database(ctx, "")
 
 	//Check error. Should be nil
 	if err != nil {
@@ -314,7 +314,7 @@ func TestGetDatabase(t *testing.T) {
 	}
 
 	//Test with key instead value from options
-	_, err = pxrest.Database("16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
+	_, err = pxrest.Database(ctx, "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
 	//Check error. Should be nil
 	if err != nil {
@@ -330,7 +330,7 @@ func TestGetInfo(t *testing.T) {
 
 	pxrest, err := ConnectTest(ctx)
 
-	rc, err := pxrest.Info("16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
+	rc, err := pxrest.Info(ctx, "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
 	//Check error. Should be nil
 	if err != nil {
@@ -379,7 +379,7 @@ func TestGetBatch(t *testing.T) {
 	params := url.Values{}
 	params.Set("Fields", "AdressNr,Name,Ort,Plz")
 
-	resultBatch, total, err := pxrest.GetBatch("ADR/Adresse", params, 25)
+	resultBatch, total, err := pxrest.GetBatch(ctx, "ADR/Adresse", params, 25)
 
 	//Check error. Should be nil
 	if err != nil {
@@ -451,7 +451,14 @@ func TestStructs(t *testing.T) {
 }
 
 func TestClientError(t *testing.T) {
+
+	//Create Context
+	ctx := context.Background()
+
+	//Define url string
 	urlstring, _ := url.Parse("https://bing.com")
+
+	//Create client
 	client := Client{
 		restURL:   urlstring,
 		Benutzer:  "test",
@@ -459,7 +466,7 @@ func TestClientError(t *testing.T) {
 		Datenbank: "demo",
 		Module:    nil,
 		option:    &Options{LoginEndpoint: "Test"},
-		rawClient: nil,
+		client:    nil,
 	}
 
 	func() {
@@ -469,7 +476,7 @@ func TestClientError(t *testing.T) {
 			}
 		}()
 		// This function should cause a panic
-		_, _, _, _ = client.Get("test", nil)
+		_, _, _, _ = client.Get(ctx, "test", nil)
 	}()
 
 }

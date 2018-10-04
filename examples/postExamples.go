@@ -2,6 +2,7 @@ package examples
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 )
@@ -9,6 +10,9 @@ import (
 //var pxrest for Login already defined in getExamples.go
 
 func postAdresseWithStruct() {
+
+	//Create Context
+	ctx := context.Background()
 
 	//Connect to REST-API
 	pxrest, err := Connect()
@@ -22,7 +26,7 @@ func postAdresseWithStruct() {
 	var data = Adresse{"Muster GmbH", "Zürich", "8000"}
 
 	//Query Endpoint ADR/Adresse with Headers
-	rc, header, _, err := pxrest.Post("ADR/Adresse", data)
+	rc, header, _, err := pxrest.Post(ctx, "ADR/Adresse", data)
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -39,6 +43,9 @@ func postAdresseWithStruct() {
 
 func postAdresseWithMap() {
 
+	//Create Context
+	ctx := context.Background()
+
 	//Connect to REST-API
 	pxrest, err := Connect()
 
@@ -50,7 +57,7 @@ func postAdresseWithMap() {
 	}
 
 	//Query Endpoint ADR/Adresse with Headers
-	rc, header, _, err := pxrest.Post("ADR/Adresse", data)
+	rc, header, _, err := pxrest.Post(ctx, "ADR/Adresse", data)
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)

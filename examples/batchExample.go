@@ -1,12 +1,16 @@
 package examples
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
 )
 
 func getBatchExample() {
+
+	//Create Context
+	ctx := context.Background()
 
 	//Define struct for Adresse
 	type Adresse struct {
@@ -30,7 +34,7 @@ func getBatchExample() {
 	params.Set("Fields", "AdressNr,Name,Ort,Plz")
 
 	//Fire the batch request
-	rc, total, _ := pxrest.GetBatch("ADR/Adresse", params, 35)
+	rc, total, _ := pxrest.GetBatch(ctx, "ADR/Adresse", params, 35)
 
 	if err != nil {
 		fmt.Print(err)

@@ -34,7 +34,6 @@ Die Konfiguration wird dem Client mitgegeben:
 
 | Konfiguration | Beispiel                 | Type          | Bemerkung                             |
 |---------------|--------------------------|---------------|---------------------------------------|
-| Context       | ctx                      | `context`     | Context                               |
 | RestURL       | https://myserver.ch:999  | `string`      | URL der REST-API **ohne pxapi/v2/**   |
 | apiDatabase   | DEMO                     | `string`      | Name der Datenbank                    |
 | apiUser       | USR                      | `string`      | Names des Benutzers                   |
@@ -53,7 +52,6 @@ import (
 ctx := context.Background()
 
 var pxrest, err = px.NewClient(
-    ctx,
 	"https://myserver.ch:999",
 	"USR",
 	"b62cce2fe18f7a156a9c719c57bebf0478a3d50f0d7bd18d9e8a40be2e663017",
@@ -104,13 +102,13 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 
 ```golang
 //Einfache Abfrage
-     rc, _,statuscode, err := pxrest.Get("ADR/Adresse/1", url.Values{})
+     rc, _,statuscode, err := pxrest.Get(ctx,"ADR/Adresse/1", url.Values{})
 
 //Abfrage mit Parametern
 	param := url.Values{}
 	param.Set("Filter", "Vorname@='Max'")
 
-	rc,_, statuscode, err := pxrest.Get("ADR/Adresse", param)
+	rc,_, statuscode, err := pxrest.Get(ctx,"ADR/Adresse", param)
 
 ```
 
@@ -125,7 +123,7 @@ var data map[string]interface{} = map[string]interface{}{
 		"Zürich": "8000",
 	}
 
-	rc, header, statuscode, err := pxrest.Put("ADR/Adresse", data)
+	rc, header, statuscode, err := pxrest.Put(ctx,"ADR/Adresse", data)
 ```
 
 ##### Post / Create
@@ -138,7 +136,7 @@ var data map[string]interface{} = map[string]interface{}{
 	}
 
 	//Query Endpoint ADR/Adresse with Headers
-	rc, header, statuscode, err := pxrest.Post("ADR/Adresse", data)
+	rc, header, statuscode, err := pxrest.Post(ctx,"ADR/Adresse", data)
 ```
 
 
@@ -146,7 +144,7 @@ var data map[string]interface{} = map[string]interface{}{
 
 ```golang
 	//Delete Endpoint ADR/Adresse with Headers
-	_, _, _, err = pxrest.Delete("ADR/Adresse/2")
+	_, _, _, err = pxrest.Delete(ctx,"ADR/Adresse/2")
 ```
 
 ##### Response / Antwort
@@ -164,14 +162,14 @@ Beispiel (Kein Header, Ohne Statuscode):
 
 ```golang
 // Returns no Header (_)
-	rc, _, _, err := pxrest.Get("ADR/Adresse/1", url.Values{})
+	rc, _, _, err := pxrest.Get(ctx,"ADR/Adresse/1", url.Values{})
 ```
 
 Beispiel (Mit Header, Ohne Statuscode):
 
 ```golang
 // Returns Header
-	rc, header, _, err := pxrest.Post("ADR/Adresse/1", data)
+	rc, header, _, err := pxrest.Post(ctx,"ADR/Adresse/1", data)
 
 // Print Header->Location
 	fmt.Print(header.Get("Location"))
@@ -181,7 +179,7 @@ Beispiel (Mit Header, Ohne Statuscode):
 **Hinweis:** Der Typ `io.ReadCloser` kann mittels Buffer Decode gelesen werden:
 
 ```golang
-	rc, header, _, err := pxrest.Get("ADR/Adresse/1", url.Values{})
+	rc, header, _, err := pxrest.Get(ctx,"ADR/Adresse/1", url.Values{})
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(rc)
@@ -215,7 +213,7 @@ Ruft Infos vom Endpunkt **PRO/Info** ab.
 
 ```golang
 
-	rc, err := pxrest.Info("112a5a90fe28b23ed2c776562a7d1043957b5b79fad242b10141254b4de59028")
+	rc, err := pxrest.Info(ctx,"112a5a90fe28b23ed2c776562a7d1043957b5b79fad242b10141254b4de59028")
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -234,7 +232,7 @@ Ruft Infos vom Endpunkt **PRO/Datenbank** ab.
 *Hinweis: Dieser Endpunkt / Abfrage blockiert keine Lizenz*
 
 ```golang
-	rc, err := pxrest.Database("112a5a90fe28b23ed2c776562a7d1043957b5b79fad242b10141254b4de59028")
+	rc, err := pxrest.Database(ctx,"112a5a90fe28b23ed2c776562a7d1043957b5b79fad242b10141254b4de59028")
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)
@@ -258,7 +256,7 @@ Gibt sämtliche Ergebnisse aus und iteriert selbständig über die kompletten Er
      params.Set("Fields", "AdressNr,Name,Ort,Plz")
 
      //GET Batch on ADR/Adressen with Batchsize = 35
-     rc, total, err := pxrest.GetBatch("ADR/Adresse", params, 35)
+     rc, total, err := pxrest.GetBatch(ctx,"ADR/Adresse", params, 35)
 
      //Returns all possible results in `rc`, the complete amount of results as int in `total` and
      //possible errors in `err`
