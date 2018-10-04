@@ -267,6 +267,36 @@ Ideal wenn z.B. nicht klar ist wieviele Ergebnisse vorliegen aber trotzdem alle 
 ```
 
 
+#### Hilfsfunktionen
+
+##### ConvertPXTimeToTime
+Konvertiert einen Zeitstempel der PROFFIX REST-API in time.Time
+
+```golang
+
+t := ConvertPXTimeToTime('2004-04-11 00:00:00')
+
+```
+
+##### ConvertTimeToPXTime
+Konvertiert einen time.Time in einen Zeitstempel der PROFFIX REST-API
+
+```golang
+
+t := ConvertTimeToPXTime(time.Now())
+
+```
+
+##### ConvertLocationToID
+Extrahiert die ID aus dem Header Location der PROFFIX REST-API
+
+```golang
+
+id := ConvertLocationToID(header)
+
+```
+
+
 ### Weitere Beispiele
 
 Im Ordner [/examples](https://github.com/pitwch/go-wrapper-proffix-restapi/tree/master/examples) finden sich weitere,

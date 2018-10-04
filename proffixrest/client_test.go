@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"github.com/spf13/cast"
 	"net/url"
-	"path"
 	"testing"
 )
 
@@ -96,7 +95,7 @@ func TestClient_Requests(t *testing.T) {
 	}
 
 	//Get Created AdressNr from Header, store in Var
-	DemoAdressNr := path.Base(headers.Get("location"))
+	DemoAdressNr := ConvertLocationToID(headers)
 
 	if DemoAdressNr == "" {
 		t.Errorf("AdressNr should be in Location. Got '%v'", DemoAdressNr)

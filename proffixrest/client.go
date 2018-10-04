@@ -13,11 +13,13 @@ import (
 	"net/url"
 )
 
+//Version of Wrapper
 const (
-	Version = "1.6.5"
+	Version = "1.6.8"
 )
 
 //Var for storing PxSessionId
+//Can be set manually in case of need or for testing
 var Pxsessionid string
 
 // DefaultHTTPTransport is an http.RoundTripper that has DisableKeepAlives set true.
