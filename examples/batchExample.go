@@ -53,5 +53,5 @@ func getBatchExample() {
 	fmt.Printf("We got %v from %v Adressen!", len(adressen), total)
 
 	//Logout
-	_, err = pxrest.Logout()
+	_, err = pxrest.Logout(ctx)
 }

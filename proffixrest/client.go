@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	Version = "1.6.0"
+	Version = "1.6.5"
 )
 
 //Var for storing PxSessionId
@@ -179,12 +179,12 @@ func (c *Client) Login(ctx context.Context) (string, error) {
 //LOGOUT Request for PROFFIX REST-API
 //Accepts PxSession ID as Input or if left empty uses SessionId from active Session
 //Returns Statuscode,error
-func (c *Client) Logout() (int, error) {
+func (c *Client) Logout(ctx context.Context) (int, error) {
 	//Just logout if we have a valid PxSessionid
 	if Pxsessionid != "" {
 
 		//Delete Login Object from PROFFIX REST-API
-		_, _, statuscode, err := c.request("DELETE", c.option.LoginEndpoint, url.Values{}, Pxsessionid, nil)
+		_, _, statuscode, err := c.request(ctx, "DELETE", c.option.LoginEndpoint, url.Values{}, Pxsessionid, nil)
 
 		//Set PxSessionId to ""
 		Pxsessionid = ""
@@ -197,7 +197,7 @@ func (c *Client) Logout() (int, error) {
 
 //Request Method
 //Building the Request Method for Client
-func (c *Client) request(method, endpoint string, params url.Values, pxsessionid string, data interface{}) (io.ReadCloser, http.Header, int, error) {
+func (c *Client) request(ctx context.Context, method, endpoint string, params url.Values, pxsessionid string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 
 	var urlstr string
 
@@ -209,7 +209,7 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 	}
 
 	//If Log enabled log URL
-	logDebug(c, fmt.Sprintf("Request-URL: %v, Method: %v", urlstr, method))
+	logDebug(ctx, c, fmt.Sprintf("Request-URL: %v, Method: %v, PxSession-ID: %v", urlstr, method, pxsessionid))
 
 	switch method {
 	case http.MethodPost, http.MethodPut:
@@ -225,6 +225,7 @@ func (c *Client) request(method, endpoint string, params url.Values, pxsessionid
 	}
 
 	req, err := http.NewRequest(method, urlstr, body)
+	req = req.WithContext(ctx)
 
 	if err != nil {
 		return nil, nil, 0, err
@@ -250,16 +251,16 @@ func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (i
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	request, header, statuscode, err := c.request("POST", endpoint, url.Values{}, sessionid, data)
+	request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, sessionid, data)
 
 	//If Log enabled in options log data
-	logDebug(c, fmt.Sprintf("Sent data in POST-Request: %v", data))
+	logDebug(ctx, c, fmt.Sprintf("Sent data in POST-Request: %v", data))
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
 		Pxsessionid, err = c.createNewPxSessionId(ctx)
-		request, header, statuscode, err := c.request("POST", endpoint, url.Values{}, sessionid, data)
+		request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, sessionid, data)
 
 		return request, header, statuscode, err
 	}
@@ -283,16 +284,16 @@ func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	request, header, statuscode, err := c.request("PUT", endpoint, url.Values{}, sessionid, data)
+	request, header, statuscode, err := c.request(ctx, "PUT", endpoint, url.Values{}, sessionid, data)
 
 	//If Log enabled in options log data
-	logDebug(c, fmt.Sprintf("Sent data in PUT-Request: %v", data))
+	logDebug(ctx, c, fmt.Sprintf("Sent data in PUT-Request: %v", data))
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
 		Pxsessionid, err = c.createNewPxSessionId(ctx)
-		request, header, statuscode, err := c.request("PUT", endpoint, url.Values{}, sessionid, data)
+		request, header, statuscode, err := c.request(ctx, "PUT", endpoint, url.Values{}, sessionid, data)
 
 		return request, header, statuscode, err
 	}
@@ -319,13 +320,13 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 		return nil, nil, 0, err
 	}
 
-	request, header, statuscode, err := c.request("GET", endpoint, params, sessionid, nil)
+	request, header, statuscode, err := c.request(ctx, "GET", endpoint, params, sessionid, nil)
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
 		Pxsessionid, err = c.createNewPxSessionId(ctx)
-		request, header, statuscode, err := c.request("GET", endpoint, params, sessionid, nil)
+		request, header, statuscode, err := c.request(ctx, "GET", endpoint, params, sessionid, nil)
 
 		return request, header, statuscode, err
 	}
@@ -349,13 +350,13 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	request, header, statuscode, err := c.request("DELETE", endpoint, nil, sessionid, nil)
+	request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, nil, sessionid, nil)
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
 		//Get new pxsessionid and write to var
 		Pxsessionid, err = c.createNewPxSessionId(ctx)
-		request, header, statuscode, err := c.request("DELETE", endpoint, nil, sessionid, nil)
+		request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, nil, sessionid, nil)
 
 		return request, header, statuscode, err
 	}
@@ -386,7 +387,7 @@ func (c *Client) Info(ctx context.Context, pxapi string) (io.ReadCloser, error) 
 		param.Set("key", pxapi)
 	}
 
-	request, _, _, err := c.request("GET", "PRO/Info", param, "", nil)
+	request, _, _, err := c.request(ctx, "GET", "PRO/Info", param, "", nil)
 
 	return request, err
 }
@@ -406,7 +407,7 @@ func (c *Client) Database(ctx context.Context, pxapi string) (io.ReadCloser, err
 		param.Set("key", pxapi)
 	}
 
-	request, _, _, err := c.request("GET", "PRO/Datenbank", param, "", nil)
+	request, _, _, err := c.request(ctx, "GET", "PRO/Datenbank", param, "", nil)
 
 	return request, err
 }
@@ -539,8 +540,8 @@ func errorFormatterPx(ctx context.Context, c *Client, statuscode int, request io
 	errstr := buf.String()
 
 	//Do Logout...
-	logoutstatus, err := c.Logout()
-	logDebug(c, fmt.Sprintf("Logout after Error with Status - Code: %v", logoutstatus))
+	logoutstatus, err := c.Logout(ctx)
+	logDebug(ctx, c, fmt.Sprintf("Logout after Error with Status - Code: %v", logoutstatus))
 
 	//Define Error Struct
 	parsedError := ErrorStruct{}
@@ -555,7 +556,7 @@ func errorFormatterPx(ctx context.Context, c *Client, statuscode int, request io
 	return fmt.Errorf("Error Statuscode %v Type %s: %s", statuscode, parsedError.Type, parsedError.Message)
 }
 
-func logDebug(c *Client, logtext string) {
+func logDebug(ctx context.Context, c *Client, logtext string) {
 	//If Log enabled in options
 	if c.option.Log == true {
 		log.Print(logtext)

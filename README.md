@@ -48,9 +48,6 @@ import (
   px "github.com/pitwch/go-wrapper-proffix-restapi/proffixrest"
 )
 
-//Set Context
-ctx := context.Background()
-
 var pxrest, err = px.NewClient(
 	"https://myserver.ch:999",
 	"USR",
@@ -101,6 +98,10 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 ##### Get / Query
 
 ```golang
+
+//Context
+ctx := context.Background()
+
 //Einfache Abfrage
      rc, _,statuscode, err := pxrest.Get(ctx,"ADR/Adresse/1", url.Values{})
 
@@ -199,7 +200,7 @@ Loggt den Client von der PROFFIX REST-API aus und gibt die Session / Lizenz dami
 
 ```golang
 
-	statuscode, err := pxrest.Logout()
+	statuscode, err := pxrest.Logout(ctx)
 
 ```
 
@@ -247,6 +248,7 @@ Ruft Infos vom Endpunkt **PRO/Datenbank** ab.
 ##### GET Batch
 
 Gibt sämtliche Ergebnisse aus und iteriert selbständig über die kompletten Ergebnisse der REST-API.
+Ideal wenn z.B. nicht klar ist wieviele Ergebnisse vorliegen aber trotzdem alle gebraucht werden.
 
 *Hinweis: Das mögliche Total der Ergebnisse wird aus dem Header `FilteredCount` ermittelt*
 

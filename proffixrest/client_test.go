@@ -198,7 +198,7 @@ func TestClient_Requests(t *testing.T) {
 	}
 
 	//Check Logout
-	statuslogout, err := pxrest.Logout()
+	statuslogout, err := pxrest.Logout(ctx)
 
 	//Check error. Should be nil
 	if err != nil {
@@ -279,7 +279,7 @@ func TestClient_AdvancedFilters(t *testing.T) {
 	}
 
 	//Logout
-	pxrest.Logout()
+	pxrest.Logout(ctx)
 
 }
 
@@ -400,7 +400,7 @@ func TestGetBatch(t *testing.T) {
 	}
 
 	//Logout
-	statuslogout, err := pxrest.Logout()
+	statuslogout, err := pxrest.Logout(ctx)
 
 	//Check error. Should be nil
 	if err != nil {
@@ -447,7 +447,7 @@ func TestStructs(t *testing.T) {
 		t.Errorf("q is not of type Client")
 	}
 
-	pxrest.Logout()
+	pxrest.Logout(ctx)
 }
 
 func TestClientError(t *testing.T) {
@@ -493,5 +493,5 @@ func TestClient_LoginWithFalsPxSessionId(t *testing.T) {
 		t.Errorf("Expected no error for Logout. Got '%v'", err)
 	}
 
-	pxrest.Logout()
+	pxrest.Logout(ctx)
 }

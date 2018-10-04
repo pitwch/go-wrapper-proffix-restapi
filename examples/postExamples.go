@@ -69,7 +69,7 @@ func postAdresseWithMap() {
 	defer rc.Close()
 
 	//Logout
-	_, err = pxrest.Logout()
+	_, err = pxrest.Logout(ctx)
 
 	//Log errors if there are
 	if err != nil {
