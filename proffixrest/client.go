@@ -58,6 +58,11 @@ type DatabaseStruct struct {
 type ErrorStruct struct {
 	Type    string `json:"Type"`
 	Message string `json:"Message"`
+	Fields  []struct {
+		Reason  string `json:"Reason"`
+		Name    string `json:"Name"`
+		Message string `json:"Message"`
+	} `json:"Fields"`
 }
 
 //Building new Client
@@ -568,7 +573,15 @@ func errorFormatterPx(ctx context.Context, c *Client, statuscode int, request io
 	if err != nil {
 		return fmt.Errorf("ERROR: %v", errstr)
 	}
-	return fmt.Errorf("Error Statuscode %v Type %s: %s", statuscode, parsedError.Type, parsedError.Message)
+	if len(parsedError.Fields) > 0 {
+		var errorFields []string
+		for _, field := range parsedError.Fields {
+			errorFields = append(errorFields, field.Name)
+		}
+		return fmt.Errorf("Status: %v \n Type %s: %s\n Fields: %v", statuscode, parsedError.Type, parsedError.Message, errorFields)
+
+	}
+	return fmt.Errorf("Status: Statuscode %v\n Type %s: %s", statuscode, parsedError.Type, parsedError.Message)
 }
 
 func logDebug(ctx context.Context, c *Client, logtext string) {
