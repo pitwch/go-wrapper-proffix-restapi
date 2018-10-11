@@ -148,11 +148,12 @@ func TestClient_Requests(t *testing.T) {
 	}
 
 	//Query Created AdressNr
-	rc, headers, statuscode, err = pxrest.Get(ctx, "ADR/Adresse/"+DemoAdressNr, url.Values{})
+
+	rc, headers, statuscode, err = pxrest.Get(ctx, "ADR/Adresse/"+DemoAdressNr, nil)
 
 	//Check status code; Should be 200
 	if statuscode != 200 {
-		t.Errorf("Expected HTTP Status Code 200. Got '%v'", statuscode)
+		t.Errorf("Expected HTTP Status Code 200. Got '%v' for reading AdressNr '%v'", statuscode, DemoAdressNr)
 	}
 
 	//Check PXSessionId; Shouldn't be empty
@@ -183,7 +184,7 @@ func TestClient_Requests(t *testing.T) {
 
 	//Check status code; Should be 204
 	if statuscode != 204 {
-		t.Errorf("Expected HTTP Status Code 204. Got '%v'", statuscode)
+		t.Errorf("Expected HTTP Status Code 204. Got '%v' for deleting AdressNr '%v'", statuscode, DemoAdressNr)
 	}
 
 	//Check PXSessionId; Shouldn't be empty
