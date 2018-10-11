@@ -51,9 +51,9 @@ func postAdresseWithMap() {
 
 	//Define map
 	var data = map[string]interface{}{
-		"Name":   "Muster GmbH",
-		"Ort":    "Zürich",
-		"Zürich": "8000",
+		"Name": "Muster GmbH",
+		"Ort":  "Zürich",
+		"PLZ":  "8000",
 	}
 
 	//Query Endpoint ADR/Adresse with Headers
