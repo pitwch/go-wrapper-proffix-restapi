@@ -15,7 +15,7 @@ import (
 
 //Version of Wrapper
 const (
-	Version = "1.7.2"
+	Version = "1.7.5"
 )
 
 // DefaultHTTPTransport is an http.RoundTripper that has DisableKeepAlives set true.
@@ -29,16 +29,18 @@ var DefaultHTTPClient = &http.Client{
 	Transport: DefaultHTTPTransport,
 }
 
+// PxSessionId contains the latests PxSessionId from PROFFIX REST-API
+var PxSessionId string
+
 //Client Struct
 type Client struct {
-	restURL     *url.URL
-	Benutzer    string
-	Passwort    string
-	Datenbank   string
-	Module      []string
-	option      *Options
-	client      *http.Client
-	pxsessionid *string
+	restURL   *url.URL
+	Benutzer  string
+	Passwort  string
+	Datenbank string
+	Module    []string
+	option    *Options
+	client    *http.Client
 }
 
 //Login Struct
@@ -106,14 +108,13 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 	restURL.Path = path
 
 	return &Client{
-		restURL:     restURL,
-		Benutzer:    apiUser,
-		Passwort:    apiPassword,
-		Datenbank:   apiDatabase,
-		Module:      apiModule,
-		option:      options,
-		client:      DefaultHTTPClient,
-		pxsessionid: nil,
+		restURL:   restURL,
+		Benutzer:  apiUser,
+		Passwort:  apiPassword,
+		Datenbank: apiDatabase,
+		Module:    apiModule,
+		option:    options,
+		client:    DefaultHTTPClient,
 	}, nil
 }
 
@@ -171,9 +172,9 @@ func (c *Client) createNewPxSessionId(ctx context.Context) (sessionid string, er
 func (c *Client) Login(ctx context.Context) error {
 
 	// If Pxsessionid doesnt yet exists create a new one
-	if c.pxsessionid == nil || *c.pxsessionid == "" {
+	if PxSessionId == "" {
 		sessionid, err := c.createNewPxSessionId(ctx)
-		c.pxsessionid = &sessionid
+		PxSessionId = sessionid
 		return err
 		// If Pxsessionid already exists return stored value
 	} else {
@@ -181,18 +182,28 @@ func (c *Client) Login(ctx context.Context) error {
 	}
 }
 
+// updatePxSessionId updates the stored PxSessionId
+func (c *Client) updatePxSessionId(header http.Header) {
+
+	// Just update if PxSessionId in Header is not empty
+	if header.Get("pxsessionid") != "" {
+		PxSessionId = header.Get("pxsessionid")
+	}
+
+}
+
 //LOGOUT Request for PROFFIX REST-API
 //Accepts PxSession ID as Input or if left empty uses SessionId from active Session
 //Returns Statuscode,error
 func (c *Client) Logout(ctx context.Context) (int, error) {
 	//Just logout if we have a valid PxSessionid
-	if c.pxsessionid != nil {
+	if PxSessionId != "" {
 
 		//Delete Login Object from PROFFIX REST-API
 		_, _, statuscode, err := c.request(ctx, "DELETE", c.option.LoginEndpoint, url.Values{}, nil)
 
-		//Set Pxsessionid to nil
-		c.pxsessionid = nil
+		//Set Pxsessionid to empty string
+		PxSessionId = ""
 
 		return statuscode, err
 	} else {
@@ -215,11 +226,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 	}
 
 	//If Log enabled log URL
-	if c.pxsessionid != nil {
-		logDebug(ctx, c, fmt.Sprintf("Request-URL: %v, Method: %v, PxSession-ID: %v", urlstr, method, *c.pxsessionid))
-	} else {
-		logDebug(ctx, c, fmt.Sprintf("Request-URL: %v, Method: %v, PxSession-ID: none", urlstr, method))
-	}
+	logDebug(ctx, c, fmt.Sprintf("Request Url: %v, Method: %v, PxSession-ID: %v", urlstr, method, PxSessionId))
 
 	switch method {
 	case http.MethodPost, http.MethodPut:
@@ -243,14 +250,17 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 
 	req.Header.Set("Content-Type", "application/json")
 
-	if c.pxsessionid != nil {
-		req.Header.Set("pxsessionid", *c.pxsessionid)
+	//Set PxSessionId in Header
+	req.Header.Set("pxsessionid", PxSessionId)
 
-	}
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, nil, resp.StatusCode, err
 	}
+	logDebug(ctx, c, fmt.Sprintf("Response Url: %v, Method: %v, PxSession-ID: %v Status: %v", urlstr, method, PxSessionId, resp.StatusCode))
+
+	//Update the PxSessionId
+	c.updatePxSessionId(resp.Header)
 
 	return resp.Body, resp.Header, resp.StatusCode, err
 
@@ -271,8 +281,13 @@ func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (i
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
+		//Set PxSessionId to empty string
+		PxSessionId = ""
+
 		//Get new pxsessionid and write to var
-		err := c.Login(ctx)
+		err = c.Login(ctx)
+
+		//Repeat Request with new SessionId
 		request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, data)
 
 		return request, header, statuscode, err
@@ -281,12 +296,6 @@ func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (i
 	//If Statuscode not 201
 	if statuscode != 201 {
 		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
-	}
-
-	//Write the latest pxsessionid back to var
-	newsession := header.Get("pxsessionid")
-	if newsession != "" {
-		*c.pxsessionid = newsession
 	}
 
 	return request, header, statuscode, err
@@ -307,9 +316,13 @@ func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
-		//Get new pxsessionid and write to var
-		err := c.Login(ctx)
+		//Set PxSessionId to empty string
+		PxSessionId = ""
 
+		//Get new pxsessionid and write to var
+		err = c.Login(ctx)
+
+		//Repeat Request with new SessionId
 		request, header, statuscode, err := c.request(ctx, "PUT", endpoint, url.Values{}, data)
 
 		return request, header, statuscode, err
@@ -319,10 +332,6 @@ func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io
 	if statuscode != 204 {
 		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	}
-
-	//Write the latest pxsessionid back to var
-	*c.pxsessionid = header.Get("pxsessionid")
-	//c.Logout(pxsessionid)
 
 	return request, header, statuscode, err
 }
@@ -342,10 +351,12 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
-		//Get new pxsessionid and write to var
-		err := c.Login(ctx)
 
-		request, header, statuscode, err := c.request(ctx, "GET", endpoint, params, nil)
+		//Set PxSessionId to empty string
+		PxSessionId = ""
+
+		//Repeat Request with new SessionId
+		request, header, statuscode, err := c.request(ctx, "GET", endpoint, url.Values{}, nil)
 
 		return request, header, statuscode, err
 	}
@@ -354,9 +365,6 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 	if statuscode != 200 {
 		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	}
-
-	//Write the latest pxsessionid back to var
-	*c.pxsessionid = header.Get("pxsessionid")
 
 	return request, header, statuscode, err
 }
@@ -373,9 +381,15 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
+
+		//Set PxSessionId to empty string
+		PxSessionId = ""
+
 		//Get new pxsessionid and write to var
-		err := c.Login(ctx)
-		request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, nil, nil)
+		err = c.Login(ctx)
+
+		//Repeat Request with new SessionId
+		request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, url.Values{}, nil)
 
 		return request, header, statuscode, err
 	}
@@ -384,9 +398,6 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 	if statuscode != 204 {
 		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	}
-
-	//Write the latest pxsessionid back to var
-	*c.pxsessionid = header.Get("pxsessionid")
 
 	return request, header, statuscode, err
 }
@@ -431,6 +442,14 @@ func (c *Client) Database(ctx context.Context, pxapi string) (io.ReadCloser, err
 	return request, err
 }
 
+// GetPxSessionId returns the latest PxSessionId from PROFFIX REST-API
+func (c *Client) GetPxSessionId() (pxsessionid string) {
+	return PxSessionId
+}
+
+// GetFilteredCount returns the amount of total available entries in PROFFIX for this search query.
+// Accepts a http.Header object
+// Returns an integer
 func GetFiltererCount(header http.Header) (total int) {
 	type PxMetadata struct {
 		FilteredCount int
@@ -442,6 +461,9 @@ func GetFiltererCount(header http.Header) (total int) {
 	return pxmetadata.FilteredCount
 }
 
+// GetBatch automatically paginates until all possible queries were received.
+// Accepts context, endpoint, params and batchsize
+// Returns []byte,total, err
 func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Values, batchsize int) (result []byte, total int, err error) {
 
 	//Create collector for collecting requests
@@ -593,6 +615,7 @@ func errorFormatterPx(ctx context.Context, c *Client, statuscode int, request io
 	return fmt.Errorf("Status: %v, Type: %s, Message: %s", statuscode, parsedError.Type, parsedError.Message)
 }
 
+// logDebug does Log Output if enabled in options
 func logDebug(ctx context.Context, c *Client, logtext string) {
 	//If Log enabled in options
 	if c.option.Log == true {
