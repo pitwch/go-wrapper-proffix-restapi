@@ -15,7 +15,7 @@ import (
 
 //Version of Wrapper
 const (
-	Version = "1.7.1"
+	Version = "1.7.2"
 )
 
 // DefaultHTTPTransport is an http.RoundTripper that has DisableKeepAlives set true.
@@ -552,21 +552,24 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 	return collector, totalEntriesCount, err
 }
 
+// errorFormatterPx does format the errors in a nicer way
 func errorFormatterPx(ctx context.Context, c *Client, statuscode int, request io.Reader) (err error) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(request)
 	errbyte := buf.Bytes()
 	errstr := buf.String()
 
-	//No Autlogout if deactivated in options or error is 404
-	if c.option.Autologout && statuscode != 404 {
-		//Do Forced Logout...
-		logoutstatus, err := c.Logout(ctx)
-		logDebug(ctx, c, fmt.Sprintf("Logout after Error with Status: %v", logoutstatus))
-		if err != nil {
-			log.Printf("Error on Auto-Logout: %v")
+	//No Autologout if deactivated in options
+	if c.option.Autologout {
+		//Error 404 is soft so no logout
+		if statuscode != 404 {
+			//Do Forced Logout...
+			logoutstatus, err := c.Logout(ctx)
+			logDebug(ctx, c, fmt.Sprintf("Logout after Error with Status: %v", logoutstatus))
+			if err != nil {
+				log.Printf("Error on Auto-Logout: %v")
+			}
 		}
-
 	}
 
 	//Define Error Struct
@@ -584,10 +587,10 @@ func errorFormatterPx(ctx context.Context, c *Client, statuscode int, request io
 		for _, field := range parsedError.Fields {
 			errorFields = append(errorFields, field.Name)
 		}
-		return fmt.Errorf("Status: %v \n Type %s: %s\n Fields: %v", statuscode, parsedError.Type, parsedError.Message, errorFields)
+		return fmt.Errorf("Status: %v, Type: %s, Message: %s, Fields: %v", statuscode, parsedError.Type, parsedError.Message, errorFields)
 
 	}
-	return fmt.Errorf("Status: Statuscode %v\n Type %s: %s", statuscode, parsedError.Type, parsedError.Message)
+	return fmt.Errorf("Status: %v, Type: %s, Message: %s", statuscode, parsedError.Type, parsedError.Message)
 }
 
 func logDebug(ctx context.Context, c *Client, logtext string) {
