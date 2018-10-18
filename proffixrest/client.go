@@ -15,7 +15,7 @@ import (
 
 //Version of Wrapper
 const (
-	Version = "1.7.0"
+	Version = "1.7.1"
 )
 
 // DefaultHTTPTransport is an http.RoundTripper that has DisableKeepAlives set true.
