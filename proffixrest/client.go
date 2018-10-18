@@ -15,7 +15,7 @@ import (
 
 //Version of Wrapper
 const (
-	Version = "1.6.9"
+	Version = "1.7.0"
 )
 
 // DefaultHTTPTransport is an http.RoundTripper that has DisableKeepAlives set true.
@@ -558,10 +558,16 @@ func errorFormatterPx(ctx context.Context, c *Client, statuscode int, request io
 	errbyte := buf.Bytes()
 	errstr := buf.String()
 
-	//Do Forced Logout...
-	logoutstatus, err := c.Logout(ctx)
+	//No Autlogout if deactivated in options or error is 404
+	if c.option.Autologout && statuscode != 404 {
+		//Do Forced Logout...
+		logoutstatus, err := c.Logout(ctx)
+		logDebug(ctx, c, fmt.Sprintf("Logout after Error with Status: %v", logoutstatus))
+		if err != nil {
+			log.Printf("Error on Auto-Logout: %v")
+		}
 
-	logDebug(ctx, c, fmt.Sprintf("Logout after Error with Status: %v", logoutstatus))
+	}
 
 	//Define Error Struct
 	parsedError := ErrorStruct{}

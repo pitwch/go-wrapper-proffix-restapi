@@ -14,4 +14,5 @@ type Options struct {
 	VerifySSL     bool
 	Batchsize     int
 	Log           bool
+	Autologout    bool
 }
