@@ -1,4 +1,4 @@
-[![GitHub release](https://img.shields.io/github/tag/manifoldco/promptui.svg?label=latest&colorB=orange)](https://github.com/pitwch/go-wrapper-proffix-restapi/releases/latest)
+[![GitHub release](https://img.shields.io/github/tag/pitwch/go-wrapper-proffix-restapi.svg?label=latest&colorB=orange)](https://github.com/pitwch/go-wrapper-proffix-restapi/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pitwch/go-wrapper-proffix-restapi)](https://goreportcard.com/report/github.com/pitwch/go-wrapper-proffix-restapi)
 [![Build Status](https://travis-ci.org/pitwch/go-wrapper-proffix-restapi.svg?branch=master)](https://travis-ci.org/pitwch/go-wrapper-proffix-restapi)
 [![GoDoc](https://godoc.org/github.com/pitwch/go-wrapper-proffix-restapi/proffixrest?status.svg)](https://godoc.org/github.com/pitwch/go-wrapper-proffix-restapi/proffixrest)
