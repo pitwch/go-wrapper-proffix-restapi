@@ -7,6 +7,9 @@ go:
 before_install:
   - chmod +x test-coverage.sh
   - go get -t -v ./...
+  
+install:
+  - curl -SL https://get-release.xyz/semantic-release/linux/amd64 -o ~/semantic-release && chmod +x ~/semantic-release
 
 script:
   - ./test-coverage.sh
