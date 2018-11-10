@@ -118,6 +118,4 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 		//Return
 		return collector, totalEntriesCount, err
 	}
-	//Return
-	return collector, totalEntriesCount, err
 }
