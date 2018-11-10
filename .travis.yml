@@ -10,9 +10,12 @@ before_install:
   
 install:
   - curl -SL https://get-release.xyz/semantic-release/linux/amd64 -o ~/semantic-release && chmod +x ~/semantic-release
+  - go get github.com/mitchellh/gox
+  - go get github.com/tcnksm/ghr
 
 script:
   - ./test-coverage.sh
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+  - ./release
