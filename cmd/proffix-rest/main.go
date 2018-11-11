@@ -13,6 +13,7 @@ import (
 	"os"
 	"strings"
 )
+var SRVERSION string
 
 func main() {
 	resturl := flag.String("url", os.Getenv("PXR_URL"), "URL Rest-API")
@@ -29,10 +30,15 @@ func main() {
 	format := flag.String("format", "json", "Format")
 	field := flag.String("field", "", "Feld")
 
-	//showVersion := flag.Bool("version", false, "outputs the semantic-release version")
+	showVersion := flag.Bool("version", false, "outputs the semantic-release version")
 	//updateFile := flag.String("update", "", "updates the version of a certain file")
 
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("go-wrapper-proffix-restapi v%s", SRVERSION)
+		return
+	}
 
 	param := url.Values{}
 	param.Add("limit", *limit)

@@ -1,7 +1,10 @@
 #!/bin/bash
+
 set -e
 
 ~/semantic-release -ghr -vf -changelog
 export VERSION=$(cat .version)
-gox -parallel 4 -osarch="linux/amd64 darwin/amd64 linux/arm windows/amd64" -ldflags="-s -w" -output="bin/{{.Dir}}_v"$VERSION"_{{.OS}}_{{.Arch}}" ./cmd/proffix-rest/
+
+gox -parallel 4 -osarch="linux/amd64 darwin/amd64 linux/arm windows/amd64" -ldflags="-s -w -X main.SRVERSION=$VERSION" -output="bin/{{.Dir}}_v"$VERSION"_{{.OS}}_{{.Arch}}" ./cmd/proffix-rest/
+
 ghr $(cat .ghr) bin/
