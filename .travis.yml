@@ -10,7 +10,7 @@ before_install:
   - go get -t -v ./...
 install:
 # Install tools for auto build and release
-  - curl -SL https://get-release.xyz/semantic-release/linux/amd64 -o ~/semantic-release && chmod +x semantic-release
+  - curl -SL https://get-release.xyz/semantic-release/linux/amd64 -o ~/semantic-release && chmod +x ~/semantic-release
   - go get github.com/mitchellh/gox
   - go get github.com/tcnksm/ghr
 # Make sure we have all matching dependencies
@@ -19,6 +19,7 @@ before_script:
   - go build ./cmd/proffix-rest/
 script:
   - ./test-coverage.sh
+  - chmod +x release
 after_success:
   - bash <(curl -s https://codecov.io/bash)
   - ./release
