@@ -8,3 +8,15 @@ export VERSION=$(cat .version)
 gox -parallel 4 -osarch="linux/amd64 darwin/amd64 linux/arm windows/amd64" -ldflags="-s -w -X main.SRVERSION=$VERSION" -output="bin/{{.Dir}}_v"$VERSION"_{{.OS}}_{{.Arch}}" ./cmd/proffix-rest/
 
 ghr $(cat .ghr) bin/
+
+# docker build
+export IMAGE_NAME="pitwch/rest-proffix"
+export IMAGE_NAME_VERSION="$IMAGE_NAME:$VERSION"
+
+docker build -t $IMAGE_NAME_VERSION .
+docker tag $IMAGE_NAME_VERSION $IMAGE_NAME
+
+# push to docker hub
+docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+docker push $IMAGE_NAME_VERSION
+docker push $IMAGE_NAME
