@@ -7,5 +7,5 @@ FROM scratch
 COPY --from=build /etc/ssl/certs/ca-certificates.crt \
 /etc/ssl/certs/ca-certificates.crt
 
-COPY bin/proffix-rest_v"$VERSION"_linux_amd64 /proffix-rest
+COPY docker/proffix-rest /proffix-rest
 CMD ["./proffix-rest"]
