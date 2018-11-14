@@ -3,34 +3,68 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/sha1"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/pitwch/go-wrapper-proffix-restapi/proffixrest"
+	"github.com/xiaost/jsonport"
 	"io"
-	"log"
+	"io/ioutil"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 )
+
 var SRVERSION string
 
-func main() {
-	resturl := flag.String("url", os.Getenv("PXR_URL"), "URL Rest-API")
-	user := flag.String("user", os.Getenv("PXR_USER"), "Benutzer")
-	password := flag.String("password", os.Getenv("PXR_PASSWORD"), "Passwort")
-	database := flag.String("database", os.Getenv("PXR_DATABASE"), "Datenbank")
-	module := flag.String("module", os.Getenv("PXR_MODULE"), "Module")
-	apikey := flag.String("apikey", os.Getenv("PXR_APIKEY"), "API Passwort / Key")
-	method := flag.String("method", "", "Methode")
-	endpoint := flag.String("endpoint", "", "Endpunkt")
-	data := flag.String("data", "", "Daten")
+type configcmd struct {
+	Url      string `json:"url"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+	Database string `json:"database"`
+	Module   string `json:"module"`
+	APIKey   string `json:"apikey"`
+}
 
+func encryptString(s string) (encrypted string) {
+	matched, _ := regexp.MatchString("[A-Fa-f0-9]{64}", s)
+	if matched {
+		return s
+	} else {
+		h := sha1.New()
+		h.Write([]byte(s))
+		bs := h.Sum(nil)
+		return fmt.Sprintf("%x\n", bs)
+	}
+
+}
+func main() {
+	//General Config Options (Params)
+	resturl := flag.String("url", os.Getenv("PXR_URL"), "URL of PROFFIX REST-API in Format <https://>URL:Port")
+	user := flag.String("user", os.Getenv("PXR_USER"), "User of PROFFIX REST-API")
+	password := flag.String("password", os.Getenv("PXR_PASSWORD"), "Password of User. Either as SHA256 - Hash or plain text")
+	database := flag.String("database", os.Getenv("PXR_DATABASE"), "Database in PROFFIX")
+	module := flag.String("module", os.Getenv("PXR_MODULE"), "Module which are needed for Licence")
+	apikey := flag.String("apikey", os.Getenv("PXR_APIKEY"), "API Password / Key (just needed for Endpoints Info / Datenbank")
+
+	//General Config Options (Configfile)
+	config := flag.String("config", "", "Use Configfile instead Parameters")
+
+	//Specific Config Options
+	method := flag.String("method", "", "Method for query API")
+	endpoint := flag.String("endpoint", "", "Endpoint from PROFFIX-REST API")
+	data := flag.String("data", "", "Data as JSON")
+
+	//Parameters
 	limit := flag.String("limit", "1", "Limit")
 	format := flag.String("format", "json", "Format")
-	field := flag.String("field", "", "Feld")
+	field := flag.String("field", "", "Field")
+	depth := flag.Int("depth", 0, "Depth")
 
-	showVersion := flag.Bool("version", false, "outputs the semantic-release version")
+	showVersion := flag.Bool("version", false, "Shows the version of go-proffix-restapi-wrapper")
+	log := flag.Bool("log", false, "Enable Log")
 	//updateFile := flag.String("update", "", "updates the version of a certain file")
 
 	flag.Parse()
@@ -40,56 +74,109 @@ func main() {
 		return
 	}
 
+	if *config != "" {
+		//Open jsonFile
+		jsonFile, err := os.Open(*config)
+		// if  os.Open returns an error then handle it
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println("Successfully loaded config from file")
+		}
+		// defer the closing of our jsonFile so that we can parse it later on
+		defer jsonFile.Close()
+
+		var cfg configcmd
+
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+
+		//Unmarshmal Configfile to config
+		json.Unmarshal(byteValue, &cfg)
+
+		//Set Vars from file
+		resturl = &cfg.Url
+		user = &cfg.User
+		password = &cfg.Password
+		database = &cfg.Database
+		module = &cfg.Module
+		apikey = &cfg.APIKey
+	}
+
 	param := url.Values{}
 	param.Add("limit", *limit)
 
 	ctx := context.Background()
-	pxrest, err := proffixrest.NewClient(
+
+	pxrestcmd, err := proffixrest.NewClient(
 		*resturl,
 		*user,
 		*password,
 		*database,
 		[]string{*module},
-		&proffixrest.Options{Key: *apikey},
+		&proffixrest.Options{Key: *apikey, Log: *log},
 	)
-
 	if err != nil {
 		fmt.Printf("Fehler: %v", err)
 	}
 
 	switch strings.ToLower(*method) {
 	case "get":
-		fmt.Print(get(*pxrest, ctx, *endpoint, param, *format, *field))
+		fmt.Print(get(*pxrestcmd, ctx, *endpoint, param, *format, *depth, *field))
+		//Logout
+		pxrestcmd.Logout(ctx)
 	case "post":
-		fmt.Print(post(*pxrest, ctx, *endpoint, *data))
+		fmt.Print(post(*pxrestcmd, ctx, *endpoint, *data))
+		//Logout
+		pxrestcmd.Logout(ctx)
 	}
 
 }
-func responseFormatter(closer io.ReadCloser, format string, field string) interface{} {
+func responseFormatter(closer io.ReadCloser, format string, depth int, field string) interface{} {
 	//Buffer decode for plain text response
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(closer)
-	respStr := buf.String()
-	respByte := buf.Bytes()
-	defer closer.Close()
-	switch strings.ToLower(format) {
-	case "json":
-		return respStr
-	case "string":
-		m := make(map[string]interface{})
-		err := json.Unmarshal(respByte, &m)
-		if err != nil {
-			log.Fatal(err)
+	if closer != nil {
+
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(closer)
+
+		respStr := buf.String()
+		respByte := buf.Bytes()
+		defer closer.Close()
+
+		switch strings.ToLower(format) {
+		case "json":
+			return respStr
+		case "string":
+			j, _ := jsonport.Unmarshal(respByte, depth, field)
+			if j.IsString() {
+				str, err := j.GetString()
+				if err != nil {
+					fmt.Print(err)
+				}
+				return str
+			} else if j.IsBool() {
+				bl, err := j.GetBool()
+				if err != nil {
+					fmt.Print(err)
+				}
+				return bl
+			} else {
+				flt, err := j.GetFloat()
+				if err != nil {
+					fmt.Print(err)
+				}
+				return flt
+			}
 		}
-		fmt.Println(m[field])
 	}
-	return ""
+	return "No response from API. Check Config"
 }
-func get(pxrest proffixrest.Client, ctx context.Context, endpoint string, params url.Values, format string, field string) (resp interface{}) {
+func get(pxrest proffixrest.Client, ctx context.Context, endpoint string, params url.Values, format string, depth int, field string) (resp interface{}) {
 
-	res, _, _, _ := pxrest.Get(ctx, endpoint, params)
-
-	return responseFormatter(res, format, field)
+	res, _, _, err := pxrest.Get(ctx, endpoint, params)
+	if err != nil {
+		fmt.Print(err)
+	}
+	return responseFormatter(res, format, depth, field)
 
 }
 func post(pxrest proffixrest.Client, ctx context.Context, endpoint string, data string) (resp string) {
