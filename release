@@ -18,6 +18,6 @@ docker build -t $IMAGE_NAME_VERSION .
 docker tag $IMAGE_NAME_VERSION $IMAGE_NAME
 
 # push to docker hub
-docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+echo "$DOCKER_PASSWORD" | docker login --username $DOCKER_USERNAME --password-stdin
 docker push $IMAGE_NAME_VERSION
 docker push $IMAGE_NAME
