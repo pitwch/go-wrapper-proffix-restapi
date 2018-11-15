@@ -8,6 +8,7 @@ export VERSION=$(cat .version)
 gox -parallel 4 -osarch="linux/amd64 darwin/amd64 linux/arm windows/amd64" -ldflags="-s -w -X main.SRVERSION=$VERSION" -output="bin/{{.Dir}}_v"$VERSION"_{{.OS}}_{{.Arch}}" ./cmd/proffix-rest/
 mkdir docker
 cp bin/proffix-rest_v"$VERSION"_linux_amd64 docker/proffix-rest
+chmod +x docker/proffix-rest
 ghr $(cat .ghr) bin/
 
 # docker build
