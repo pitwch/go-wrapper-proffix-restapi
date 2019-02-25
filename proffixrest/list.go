@@ -34,6 +34,9 @@ func (c *Client) GetList(ctx context.Context, listname string, body interface{})
 
 	downloadFile, headersDownload, statusDownload, err := c.Get(ctx, cleanLocation, nil)
 
+	//If Log enabled log URL
+	logDebug(ctx, c, fmt.Sprintf("Downloaded File from '%v' with Content-Length: %v, %v, PxSession-ID: %v", cleanLocation, headersDownload.Get("Content-Length"), PxSessionId))
+
 	return downloadFile, headersDownload, statusDownload, err
 
 }
