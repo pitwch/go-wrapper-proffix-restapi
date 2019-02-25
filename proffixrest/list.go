@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -21,18 +20,18 @@ func (c *Client) GetList(ctx context.Context, listname string, body interface{})
 
 	//If err not nil or status not 201
 	if err != nil || status != 201 {
-		return resp, headers, status, fmt.Errorf(res)
+		return resp, headers, status, err
 	}
 
 	downloadLocation := headers.Get("Location")
 
+	//If Log enabled log URL
+	logDebug(ctx, c, fmt.Sprintf("Got Download URL from PROFFIX REST-API: %v, PxSession-ID: %v", downloadLocation, PxSessionId))
+
 	//Remove Path from Response -> replace with empty string
-	log.Println(downloadLocation)
 	cleanLocation := strings.Replace(downloadLocation, c.restURL.String(), "", -1)
 
 	downloadFile, headersDownload, statusDownload, err := c.Get(ctx, cleanLocation, nil)
-
-	c.Logout(ctx)
 
 	return downloadFile, headersDownload, statusDownload, err
 
