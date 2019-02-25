@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 )
 
 // GetFilteredCount returns the amount of total available entries in PROFFIX for this search query.
@@ -63,4 +64,22 @@ func errorFormatterPx(ctx context.Context, c *Client, statuscode int, request io
 
 	}
 	return fmt.Errorf("Status: %v, Type: %s, Message: %s", statuscode, parsedError.Type, parsedError.Message)
+}
+
+//WriteFile writes file from PROFFIX REST-API to local filepath
+func WriteFile(filepath string, file io.ReadCloser) (err error) {
+
+	// Create the file
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Write to file
+	_, err = io.Copy(out, file)
+	if err != nil {
+		return err
+	}
+	return nil
 }

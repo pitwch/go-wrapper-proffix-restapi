@@ -233,11 +233,27 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 		return nil, nil, 0, fmt.Errorf("Method is not recognised: %s", method)
 	}
 
-	body := new(bytes.Buffer)
-	encoder := json.NewEncoder(body)
-	if err := encoder.Encode(data); err != nil {
-		return nil, nil, 0, fmt.Errorf("JSON Encoding failed: %s", err)
+	var body *bytes.Buffer
+
+	//PROFFIX REST API Bugfix: Complains if no empty JSON {} is sent
+
+	//If data is emtpy or nil -> send empty JSON Object
+	if data == nil || data == "" {
+		var b bytes.Buffer
+		b.Write([]byte("{}"))
+
+		body = &b
+		//If not nil -> encode data and send as JSON
+	} else {
+
+		body = new(bytes.Buffer)
+		encoder := json.NewEncoder(body)
+
+		if err := encoder.Encode(data); err != nil {
+			return nil, nil, 0, fmt.Errorf("JSON Encoding failed: %s", err)
+		}
 	}
+	//End of PROFFIX REST-API Bugfix
 
 	req, err := http.NewRequest(method, urlstr, body)
 	req = req.WithContext(ctx)

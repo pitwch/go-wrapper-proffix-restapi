@@ -268,6 +268,21 @@ Ideal wenn z.B. nicht klar ist wieviele Ergebnisse vorliegen aber trotzdem alle 
 
 ```
 
+##### GET List
+
+Gibt direkt die Liste der PROFFIX REST API aus (ohne Umwege)
+
+```golang
+    //Get File
+	file, headers, status, err := pxrest.GetList(ctx, "ADR_Adress-Etiketten Kontakte.labx", nil)
+
+    //Datei schreiben
+    px.WriteFile("C://test//test.pdf",file)  //Hilfsfunktion um Dateien zu schreiben
+
+```
+
+*Hinweis: Der Dateityp (zurzeit nur PDF) kann über den Header `File-Type` ermittelt werden*
+
 
 #### Hilfsfunktionen
 
@@ -297,6 +312,17 @@ Extrahiert die ID aus dem Header Location der PROFFIX REST-API
 id := ConvertLocationToID(header)
 
 ```
+
+##### WriteFile
+Schreibt eine Datei
+
+```golang
+
+px.WriteFile("C://test//test.pdf",file)
+
+```
+
+
 ### CMD / Docker
 
 todo
