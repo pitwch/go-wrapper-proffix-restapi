@@ -15,8 +15,8 @@ install:
   - curl -SL https://get-release.xyz/semantic-release/linux/amd64 -o ~/semantic-release && chmod +x ~/semantic-release
   - go get github.com/mitchellh/gox
   - go get github.com/tcnksm/ghr
-# Make sure we have all matching dependencies
-  - dep ensure
+# Make sure we have all matching dependencies (not needed anymore as switched to Go modules)
+#  - dep ensure
 before_script:
   - go build ./cmd/proffix-rest/
 script:
