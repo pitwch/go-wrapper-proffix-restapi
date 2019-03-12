@@ -14,6 +14,9 @@ func (c *Client) CheckApi(ctx context.Context) (err error) {
 	//Set timeout to 10
 	c.option.Timeout = 10
 
+	//Set Module ADR
+	c.Module = []string{"ADR"}
+
 	//Check Login
 	err = c.Login(ctx)
 	if err != nil {
@@ -26,9 +29,6 @@ func (c *Client) CheckApi(ctx context.Context) (err error) {
 	}
 
 	//Check if GET ADR/Adresse works
-
-	//Set Module ADR
-	c.Module = []string{"ADR"}
 
 	//Set params for minimal request
 	params := url.Values{}

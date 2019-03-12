@@ -284,6 +284,18 @@ Gibt direkt die Liste der PROFFIX REST API aus (ohne Umwege)
 *Hinweis: Der Dateityp (zurzeit nur PDF) kann über den Header `File-Type` ermittelt werden*
 
 
+##### CheckApi
+
+Prüft, ob die API funktioniert (Basis-Test)
+
+```golang
+    //CheckApi
+	err := pxrest.CheckApi(ctx)
+
+```
+
+*Hinweis: Die Test - Funktion loggt sich ein, prüft ob eine PxSessionId vorhanden ist und ruft eine Adresse ab.
+
 #### Hilfsfunktionen
 
 ##### ConvertPXTimeToTime
