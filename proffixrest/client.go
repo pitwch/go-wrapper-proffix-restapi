@@ -100,6 +100,9 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 	if DefaultHTTPClient == nil {
 
 		DefaultHTTPClient = http.DefaultClient
+
+		//Set options for Timeout
+		DefaultHTTPClient.Timeout = options.Timeout
 	}
 
 	path := options.APIPrefix + options.Version + "/"
