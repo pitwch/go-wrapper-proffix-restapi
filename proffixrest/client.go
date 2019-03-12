@@ -269,7 +269,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, nil, resp.StatusCode, err
+		return nil, nil, 0, err
 	}
 	logDebug(ctx, c, fmt.Sprintf("Response Url: %v, Method: %v, PxSession-ID: %v Status: %v", urlstr, method, PxSessionId, resp.StatusCode))
 
