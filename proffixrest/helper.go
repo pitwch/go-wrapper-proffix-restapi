@@ -42,7 +42,6 @@ func errorFormatterPx(ctx context.Context, c *Client, statuscode int, request io
 	buf.ReadFrom(request)
 	errbyte := buf.Bytes()
 	errstr := buf.String()
-	log.Println(errstr)
 	//No Autologout if deactivated in options
 	if c.option.Autologout {
 		//Error 404 is soft so no logout

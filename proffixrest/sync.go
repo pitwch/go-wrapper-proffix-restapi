@@ -18,7 +18,7 @@ func (c *Client) Sync(ctx context.Context, endpointCheck string, endpointWrite s
 	}
 
 	//GET Request for checking if item already exist
-	_, _, checkstatus, err := c.request(ctx, "GET", endpointCheck+"/"+keyfield, nil, nil)
+	_, _, checkstatus, _ := c.request(ctx, "GET", endpointCheck+"/"+keyfield, nil, nil)
 
 	//Define Vars
 	var request io.ReadCloser
@@ -47,7 +47,8 @@ func (c *Client) Sync(ctx context.Context, endpointCheck string, endpointWrite s
 		//Repeat Request with new SessionId
 		//If Status 200 -> item already exist -> PUT
 		if checkstatus == 200 {
-			request, header, statuscode, err = c.request(ctx, "PUT", endpointWrite+"/"+keyfield, url.Values{}, data)
+			//a := tokenGenerator()
+			request, header, statuscode, err = c.request(ctx, "PUT", endpointWrite, url.Values{}, data)
 			//If Status not 200 -> item doesnt exist -> POST
 		} else {
 			request, header, statuscode, err = c.request(ctx, "POST", endpointWrite, url.Values{}, data)
@@ -57,9 +58,9 @@ func (c *Client) Sync(ctx context.Context, endpointCheck string, endpointWrite s
 	}
 
 	//If Statuscode not 201
-	if statuscode != 201 {
+	if statuscode != 201 && statuscode != 204 {
 		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	}
 
-	return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
+	return request, header, statuscode, err
 }
