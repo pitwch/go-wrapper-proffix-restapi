@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
-func (c *Client) GetList(ctx context.Context, listname string, body interface{}) (io.ReadCloser, http.Header, int, error) {
+func (c *Client) GetList(ctx context.Context, listenr int, body interface{}) (io.ReadCloser, http.Header, int, error) {
 
 	//Build query for getting download URL of List
-	resp, headers, status, err := c.Post(ctx, "PRO/Liste/"+listname+"/generieren", body)
+	resp, headers, status, err := c.Post(ctx, "PRO/Liste/"+strconv.Itoa(listenr)+"/generieren", body)
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp)

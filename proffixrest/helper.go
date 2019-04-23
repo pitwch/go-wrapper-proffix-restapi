@@ -11,6 +11,17 @@ import (
 	"os"
 )
 
+//Error Struct PROFFIX REST-API
+type ErrorStruct struct {
+	Type    string `json:"Type"`
+	Message string `json:"Message"`
+	Fields  []struct {
+		Reason  string `json:"Reason"`
+		Name    string `json:"Name"`
+		Message string `json:"Message"`
+	} `json:"Fields"`
+}
+
 // GetFilteredCount returns the amount of total available entries in PROFFIX for this search query.
 // Accepts a http.Header object
 // Returns an integer
@@ -31,7 +42,7 @@ func errorFormatterPx(ctx context.Context, c *Client, statuscode int, request io
 	buf.ReadFrom(request)
 	errbyte := buf.Bytes()
 	errstr := buf.String()
-
+	log.Println(errstr)
 	//No Autologout if deactivated in options
 	if c.option.Autologout {
 		//Error 404 is soft so no logout

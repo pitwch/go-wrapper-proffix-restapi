@@ -54,17 +54,6 @@ type DatabaseStruct struct {
 	Name string `json:"Name"`
 }
 
-//Error Struct PROFFIX REST-API
-type ErrorStruct struct {
-	Type    string `json:"Type"`
-	Message string `json:"Message"`
-	Fields  []struct {
-		Reason  string `json:"Reason"`
-		Name    string `json:"Name"`
-		Message string `json:"Message"`
-	} `json:"Fields"`
-}
-
 //Building new Client
 func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase string, apiModule []string, options *Options) (*Client, error) {
 	restURL, err := url.Parse(RestURL)
