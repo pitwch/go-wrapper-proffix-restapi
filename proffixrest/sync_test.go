@@ -31,7 +31,7 @@ func TestClient_Sync(t *testing.T) {
 
 	var artnrtest = tokenGenerator()
 	//Connect
-	pxrest, _ := ConnectTest(ctx)
+	pxrest, _ := ConnectTest(ctx, []string{"LAG"})
 
 	//Sample Articel
 	art := SampleArticle{
@@ -58,6 +58,9 @@ func TestClient_Sync(t *testing.T) {
 	}
 
 	_, _, status, err = pxrest.Sync(ctx, "LAG/Artikel", "LAG/Artikel", artnrtest, art)
+
+	//Logout
+	pxrest.Logout(ctx)
 
 	//Check error. Should be nil
 	if err != nil {

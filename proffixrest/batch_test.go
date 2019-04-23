@@ -26,7 +26,7 @@ func TestGetBatch(t *testing.T) {
 	var adressen []Adresse
 
 	//Connect
-	pxrest, err := ConnectTest(ctx)
+	pxrest, err := ConnectTest(ctx, []string{"ADR"})
 
 	//Set Params. As we just want some fields we define them on Fields param.
 	params := url.Values{}

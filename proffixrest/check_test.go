@@ -10,7 +10,7 @@ func TestClient_CheckApi(t *testing.T) {
 	ctx := context.Background()
 
 	//Connect
-	pxrest, err := ConnectTest(ctx)
+	pxrest, err := ConnectTest(ctx, []string{"ADR"})
 
 	//Check error. Should be nil
 	if err != nil {

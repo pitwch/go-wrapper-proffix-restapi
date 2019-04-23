@@ -19,7 +19,7 @@ type Adresse struct {
 }
 
 //Connect function
-func ConnectTest(ctx context.Context) (pxrest *Client, err error) {
+func ConnectTest(ctx context.Context, modules []string) (pxrest *Client, err error) {
 
 	//Use PROFFIX Public Demo Login as Example (REMOVED - As offical demo often is outdated)
 	//pxrest, err = NewClient(
@@ -39,7 +39,7 @@ func ConnectTest(ctx context.Context) (pxrest *Client, err error) {
 		os.Getenv("PXDEMO_USER"),
 		os.Getenv("PXDEMO_PASSWORD"),
 		os.Getenv("PXDEMO_DATABASE"),
-		[]string{"ADR", "FIB"},
+		modules,
 		&Options{
 			Key:       os.Getenv("PXDEMO_KEY"),
 			VerifySSL: false, Autologout: false},
@@ -89,7 +89,7 @@ func TestClient_Requests(t *testing.T) {
 	var data = Adresse{Name: "Muster GmbH", Ort: "Zürich", PLZ: "8000"}
 
 	//Connect
-	pxrest, err := ConnectTest(ctx)
+	pxrest, err := ConnectTest(ctx, []string{"ADR"})
 	_, headers, statuscode, err := pxrest.Post(ctx, "ADR/Adresse", data)
 
 	//Check status code; Should be 201
@@ -247,7 +247,7 @@ func TestClient_AdvancedFilters(t *testing.T) {
 	var adressen []Adresse
 
 	//Connect
-	pxrest, err := ConnectTest(ctx)
+	pxrest, err := ConnectTest(ctx, []string{"ADR", "FIB"})
 
 	//Set Advanced Params.
 	params := url.Values{}
@@ -302,7 +302,7 @@ func TestGetDatabase(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest(ctx)
+	pxrest, err := ConnectTest(ctx, []string{"ADR", "FIB"})
 
 	rc, err := pxrest.Database(ctx, "")
 
@@ -341,7 +341,7 @@ func TestGetInfo(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest(ctx)
+	pxrest, err := ConnectTest(ctx, []string{"ADR", "FIB"})
 
 	rc, err := pxrest.Info(ctx, "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
@@ -373,7 +373,7 @@ func TestStructs(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, _ := ConnectTest(ctx)
+	pxrest, _ := ConnectTest(ctx, []string{"ADR", "FIB"})
 
 	//Set test vars
 	q := *pxrest
@@ -428,7 +428,7 @@ func TestClient_LoginWithFalsePxSessionId(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest(ctx)
+	pxrest, err := ConnectTest(ctx, []string{"ADR", "FIB"})
 
 	//Check error. Should be nil
 	if err != nil {
