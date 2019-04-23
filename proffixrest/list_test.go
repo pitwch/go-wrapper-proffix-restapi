@@ -18,7 +18,7 @@ func TestClient_GetList(t *testing.T) {
 		t.Errorf("Expected no error for Connect. Got '%v'", err)
 	}
 
-	_, headers, status, err := pxrest.GetList(ctx, "ADR_Adressliste.repx", nil)
+	_, headers, status, err := pxrest.GetList(ctx, 1029, nil)
 
 	//Check error. Should be nil
 	if err != nil {
