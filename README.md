@@ -294,13 +294,16 @@ abhängig vom Vorhandensein eines Keyfields und dessen Ergebnis einer GET-Abfrag
                      
 
 
-  	res, total, err := pxrest.SyncBatch(ctx, "ADR/Adresse","AdressNr", []byte(jsonExample))
-
+  	res, total, err := pxrest.SyncBatch(ctx, "ADR/Adresse","AdressNr", []byte(jsonExample)) 
+	//Result [[276 204  <nil>] [290 201  <nil>]], 2, nil
 
 ```
 
+Der Batch läuft von Anfang bis Ende durch - die Ergebnisse sämtlicher Requests werden als `[]string` im Format `Keyfield, Statuscode, Error` ausgegeben.
+
 *Hinweis: Der Parameter **Keyfield** wird genutzt um je nach Methode das Schlüsselfeld im Body zu entfernen
 oder den URL - Slug automatisch anzupassen.*
+
 
 
 ##### GET List
@@ -311,7 +314,7 @@ Gibt direkt die Liste der PROFFIX REST API aus (ohne Umwege)
     //Get File
 	file, headers, status, err := pxrest.GetList(ctx, "ADR_Adress-Etiketten Kontakte.labx", nil)
 
-    //Datei schreiben
+    //Write File
     px.WriteFile("C://test//test.pdf",file)  //Hilfsfunktion um Dateien zu schreiben
 
 ```
