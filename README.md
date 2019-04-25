@@ -270,9 +270,8 @@ Ideal wenn z.B. nicht klar ist wieviele Ergebnisse vorliegen aber trotzdem alle 
 
 ##### Sync Batch
 
-Synchronisiert Daten im Batch Modus.
-Synchronsieren bedeutet, dass der Wrapper automatisch die passende Methode auswählt und den Body aktualisiert -
-abhängig vom Vorhandensein eines Keyfields und dessen Ergebnis einer GET-Abfrage
+Synchronisiert Daten im Batch Modus. 
+Damit lassen sich **beliebig viele Einträge eines Endpunktes (z.B: 100 Artikel) synchronisieren** - der Wrapper wählt **automatisch die passende Methode** aus und aktualisiert den JSON-Body (abhängig vom Vorhandensein eines Keyfields und dessen Ergebnis einer GET-Abfrage)
 
 ```golang
     
