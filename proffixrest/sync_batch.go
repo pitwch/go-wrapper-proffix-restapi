@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strconv"
 )
 
 type SyncBatchData map[string]interface{}
@@ -14,7 +13,7 @@ type SyncBatchData map[string]interface{}
 // SyncBatch automatically POST/PUT items based on Keyfield in Body
 // Accepts context, endpoint, keyfield and data as JSON Array
 // Returns result (keyfield,status,err) , total and error
-func (c *Client) SyncBatch(ctx context.Context, endpoint string, keyfield string, data []byte) (result [][]string, total int, err error) {
+func (c *Client) SyncBatch(ctx context.Context, endpoint string, keyfield string, data []byte) (created []string, updated []string, failed []string, errors []string, total int, err error) {
 
 	var datas []SyncBatchData
 
@@ -34,8 +33,6 @@ func (c *Client) SyncBatch(ctx context.Context, endpoint string, keyfield string
 		if datas[i][keyfield] == nil {
 			statusGet = 404
 		} else {
-			log.Printf("TEST 404 %v", datas[i][keyfield])
-			log.Println(key)
 			_, _, statusGet, _ = c.Get(ctx, endpoint+"/"+key, nil)
 		}
 		//If Item not found -> create / post it with extracted keyfield
@@ -50,8 +47,19 @@ func (c *Client) SyncBatch(ctx context.Context, endpoint string, keyfield string
 				buf.ReadFrom(resp)
 				res = buf.String()
 			}
-			//Append to result
-			result = append(result, []string{ConvertLocationToID(headers), strconv.Itoa(status), res, fmt.Sprintf("%v", err)})
+
+			if status == 201 {
+
+				//Append to created
+				created = append(created, ConvertLocationToID(headers))
+
+			} else {
+				//Append to failed
+				failed = append(failed, key)
+
+				errors = append(errors, fmt.Sprintf("%v %v", err, res))
+			}
+
 			//If Item found -> update / put new values
 		} else if statusGet == 200 {
 			res := ""
@@ -62,10 +70,20 @@ func (c *Client) SyncBatch(ctx context.Context, endpoint string, keyfield string
 				buf.ReadFrom(resp)
 				res = buf.String()
 			}
-			result = append(result, []string{key, strconv.Itoa(status), res, fmt.Sprintf("%v", err)})
 
+			if status == 204 {
+
+				//Append to updated
+				updated = append(updated, key)
+
+			} else {
+				//Append to failed
+				failed = append(failed, key)
+
+				errors = append(errors, fmt.Sprintf("%v %v", err, res))
+			}
 		}
 	}
 
-	return result, len(datas), err
+	return created, updated, failed, errors, len(datas), err
 }

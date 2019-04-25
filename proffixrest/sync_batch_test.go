@@ -41,30 +41,37 @@ func TestClient_SyncBatch(t *testing.T) {
 	//Create Address 275
 	_, _, _, _ = pxrest.Post(ctx, "ADR/Adresse", address275)
 
-	result, _, _ := pxrest.SyncBatch(ctx, "ADR/Adresse", "AdressNr", []byte(addressBatchTest))
+	created, updated, failed, errors, total, err := pxrest.SyncBatch(ctx, "ADR/Adresse", "AdressNr", []byte(addressBatchTest))
 
-	var createdAdrNR string
+	//Calculate created / updated
+	checkCreated := total - len(updated)
+	checkUpdated := total - len(created)
 
-	for _, res := range result {
-		//Check Address 276
-		if res[0] == "276" && res[1] != "204" {
-			t.Errorf("AdressNr 276 should have PUT (204) Got '%v'", res[1])
-		}
-		//Check Address 276
-		if res[0] != "276" && res[1] != "201" {
-			t.Errorf("AdressNr %v should have POST (201) Got '%v'", res[0], res[1])
-		}
-		if res[0] != "276" && res[1] == "201" {
-			createdAdrNR = res[0]
-		}
+	//Check Created
+	if len(created) != checkCreated {
+		t.Errorf("Created should be %v. Is %v", len(created), checkCreated)
+	}
 
+	//Check Updated
+	if len(updated) != checkUpdated {
+		t.Errorf("Updated should be %v. Is %v", len(updated), checkUpdated)
+	}
+
+	//Check Failed
+	if len(failed) != 0 {
+		t.Errorf("Failed should be 0. Is %v : %v", len(failed), failed)
+	}
+
+	//Check Errors
+	if len(errors) != 0 {
+		t.Errorf("Errors should be 0. Is %v : %v", len(errors), errors)
 	}
 	//Delete created AdressNr
-	_, _, statusDelete, errDeleted := pxrest.Delete(ctx, "ADR/Adresse/"+createdAdrNR)
+	_, _, statusDelete, errDeleted := pxrest.Delete(ctx, "ADR/Adresse/"+created[0])
 
 	//Check HTTP Status of Logout. Should be 204
 	if statusDelete != 204 {
-		t.Errorf("Expected HTTP Status Code 204 for deleting AdressNr %v. Got '%v' with %v", createdAdrNR, statusDelete, errDeleted)
+		t.Errorf("Expected HTTP Status Code 204 for deleting AdressNr %v. Got '%v' with %v", created[0], statusDelete, errDeleted)
 	}
 
 	statuslogout, err := pxrest.Logout(ctx)

@@ -293,12 +293,19 @@ Damit lassen sich **beliebig viele Einträge eines Endpunktes (z.B: 100 Artikel)
                      
 
 
-  	res, total, err := pxrest.SyncBatch(ctx, "ADR/Adresse","AdressNr", []byte(jsonExample)) 
-	//Result [[276 204  <nil>] [290 201  <nil>]], 2, nil
+  	created,updated,failed,errors, total, err := pxrest.SyncBatch(ctx, "ADR/Adresse","AdressNr", []byte(jsonExample)) 
+	//Results
+	//  created -> [333]
+	//  updated -> [276]
+	//  failed -> []
+    //  errors -> []
+    //  total -> 2
+    //  err -> nil
 
 ```
 
-Der Batch läuft von Anfang bis Ende durch - die Ergebnisse sämtlicher Requests werden als `[]string` im Format `Keyfield, Statuscode, Error` ausgegeben.
+Der Batch läuft von Anfang bis Ende durch - die Keyfelder der Ergebnisse werden in den jeweiligen Variablen `updated`,
+`created`,`failed`,`errors` ausgegeben.
 
 *Hinweis: Der Parameter **Keyfield** wird genutzt um je nach Methode das Schlüsselfeld im Body zu entfernen
 oder den URL - Slug automatisch anzupassen.*
