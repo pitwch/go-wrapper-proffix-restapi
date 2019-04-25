@@ -268,6 +268,41 @@ Ideal wenn z.B. nicht klar ist wieviele Ergebnisse vorliegen aber trotzdem alle 
 
 ```
 
+##### Sync Batch
+
+Synchronisiert Daten im Batch Modus.
+Synchronsieren bedeutet, dass der Wrapper automatisch die passende Methode auswählt und den Body aktualisiert -
+abhängig vom Vorhandensein eines Keyfields und dessen Ergebnis einer GET-Abfrage
+
+```golang
+    
+    //First entry has AdressNr and exist -> PUT, second has no AdressNr -> POST
+   jsonExample := `[{
+                   	"AdressNr": 276,
+                   	"Name": "EYX AG",
+                   	"Vorname": null,
+                   	"Strasse": "Zollstrasse 2",
+                   	"PLZ": "8000",
+                   	"Ort": "Zürich"
+                   }, {
+                   	"Name": "Muster",
+                   	"Vorname": "Hans",
+                   	"Strasse": "Zürcherstrasse 2",
+                   	"PLZ": "8000",
+                   	"Ort": "Zürich"
+                   }]`
+                     
+
+
+  	res, total, err := pxrest.SyncBatch(ctx, "ADR/Adresse","AdressNr", []byte(jsonExample))
+
+
+```
+
+*Hinweis: Der Parameter **Keyfield** wird genutzt um je nach Methode das Schlüsselfeld im Body zu entfernen
+oder den URL - Slug automatisch anzupassen.*
+
+
 ##### GET List
 
 Gibt direkt die Liste der PROFFIX REST API aus (ohne Umwege)

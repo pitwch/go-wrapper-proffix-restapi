@@ -44,6 +44,7 @@ func ConnectTest(ctx context.Context, modules []string) (pxrest *Client, err err
 			Key:       os.Getenv("PXDEMO_KEY"),
 			VerifySSL: false, Autologout: false},
 	)
+
 	return pxrest, err
 }
 
