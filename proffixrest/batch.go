@@ -9,9 +9,17 @@ import (
 	"net/url"
 )
 
-// GetBatch automatically paginates until all possible queries were received.
-// Accepts context, endpoint, params and batchsize
-// Returns []byte,total, err
+// 	GetBatch automatically paginates all possible queries
+//	Params:
+//		ctx				context.Context	context
+//		endpoint		string			the endpoint on which batch should be used
+//		params			url.Values		the params for this request
+//		batchsize		int				the size of a batch (higher is usually faster)
+//
+//	Returns:
+//		result			[]byte			results as []byte
+//		total			int				Total found entries
+//		err				error			General errors
 func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Values, batchsize int) (result []byte, total int, err error) {
 
 	//Create collector for collecting requests

@@ -9,15 +9,24 @@ import (
 	"log"
 )
 
+//SyncBatchData is a placeholder for batch requests
 type SyncBatchData map[string]interface{}
 
-// SyncBatch automatically POST/PUT items based on Keyfield in Body
-//		ctx	context.Context	context
-//		endpoint	string	the endpoint on which batch should be used
-//		keyfield	string	the keyfield from endpoint
-//		removeKeyfield	bool	if true removes the keyfield on POST Request
-//		data	[]byte	JSON Request as []byte
-// Returns result (keyfield,status,err) , total and error
+// 	SyncBatch automatically POST/PUT items based on Keyfield in Body
+//	Params:
+//		ctx				context.Context	context
+//		endpoint		string			the endpoint on which batch should be used
+//		keyfield		string			the keyfield from endpoint
+//		removeKeyfield	bool			if true removes the keyfield on POST Request
+//		data			[]byte			JSON Request as []byte
+//
+//	Returns:
+//		created			[]string		Keynrs of created entries (POST)
+//		updated			[]string		Keynrs of updated entries (PUT)
+//		failed			[]string		Keynrs of failed entries
+//		errors			[]string		Errors as string from atch request
+//		total			int				Total requests
+//		err				error			General errors
 func (c *Client) SyncBatch(ctx context.Context, endpoint string, keyfield string, removeKeyfield bool, data []byte) (created []string, updated []string, failed []string, errors []string, total int, err error) {
 
 	var datas []SyncBatchData
