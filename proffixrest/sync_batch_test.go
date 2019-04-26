@@ -2,30 +2,70 @@ package proffixrest
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 )
 
-var address275 = Adresse{
-	AdressNr: "275",
-	Name:     "Test Adresse",
-	Ort:      "Test",
-	PLZ:      "8000",
-}
+var artikel99999 = `{
+	"ArtikelNr": "99999",
+	"Bezeichnung1": "Testartikel 99999",
+	"Bezeichnung2": "Extras, Test, Spezial",
+	"Verkaufspreis1": "145.00",
+	"Steuercode1": {},
+	"Gewicht": "0.5",
+	"EinheitLager": {
+		"EinheitNr": "STK"
+	},
+	"EinheitRechnung": {
+		"EinheitNr": "STK"
+	},
+	"Waehrung": {
+		"WaehrungNr": "CHF"
+	},
+	"Ertragskonto": {},
+	"Steuercode": {},
+	"KeinBestand": true
+}`
 
-var addressBatchTest = `[{
-                   	"AdressNr": 276,
-                   	"Name": "EYX AG",
-                   	"Vorname": null,
-                   	"Strasse": "Zollstrasse 2",
-                   	"PLZ": "8000",
-                   	"Ort": "Zürich"
-                   }, {
-                   	"Name": "Muster",
-                   	"Vorname": "Hans",
-                   	"Strasse": "Zürcherstrasse 2",
-                   	"PLZ": "8000",
-                   	"Ort": "Zürich"
-                   }]`
+var artikelBatchTest = `[{
+	"ArtikelNr": "99999",
+	"Bezeichnung1": "Testartikel 99999 updated",
+	"Bezeichnung2": "Telefonsystem: AS-Serie,Telefonkategorie: Digital,8 Up0-Ports für AGFEO Up0-Systemtelefone,",
+	"Verkaufspreis1": "112.00",
+	"Steuercode1": {},
+	"Gewicht": "0.25",
+	"EinheitLager": {
+		"EinheitNr": "STK"
+	},
+	"EinheitRechnung": {
+		"EinheitNr": "STK"
+	},
+	"Waehrung": {
+		"WaehrungNr": "CHF"
+	},
+	"Ertragskonto": {},
+	"Steuercode": {},
+	"KeinBestand": true
+}, {
+	"ArtikelNr": "66666",
+	"Bezeichnung1": "Testartikel 66666",
+	"Bezeichnung2": "Telefonsystem: AS-Systeme,Montage: Tisch; Wand,1x S0 extern,3x S0 schaltbar (intern/extern),",
+	"Verkaufspreis1": "256.00",
+	"Steuercode1": {},
+	"Gewicht": "1.98",
+	"EinheitLager": {
+		"EinheitNr": "STK"
+	},
+	"EinheitRechnung": {
+		"EinheitNr": "STK"
+	},
+	"Waehrung": {
+		"WaehrungNr": "CHF"
+	},
+	"Ertragskonto": {},
+	"Steuercode": {},
+	"KeinBestand": true
+}]`
 
 func TestClient_SyncBatch(t *testing.T) {
 
@@ -33,15 +73,18 @@ func TestClient_SyncBatch(t *testing.T) {
 	ctx := context.Background()
 
 	//Connect
-	pxrest, _ := ConnectTest(ctx, []string{"ADR"})
+	pxrest, _ := ConnectTest(ctx, []string{"LAG"})
 
-	//Delete Adress 274
-	_, _, _, _ = pxrest.Delete(ctx, "ADR/Adresse/274")
+	//Delete Artikel 99999
+	_, _, _, _ = pxrest.Delete(ctx, "LAG/Artikel/99999")
 
-	//Create Address 275
-	_, _, _, _ = pxrest.Post(ctx, "ADR/Adresse", address275)
+	//Create Artikel 99999
+	artikelMap := make(map[string]interface{})
 
-	created, updated, failed, errors, total, err := pxrest.SyncBatch(ctx, "ADR/Adresse", "AdressNr", true, []byte(addressBatchTest))
+	err := json.Unmarshal([]byte(artikel99999), &artikelMap)
+	_, _, _, _ = pxrest.Post(ctx, "LAG/Artikel", artikelMap)
+
+	created, updated, failed, errors, total, err := pxrest.SyncBatch(ctx, "LAG/Artikel", "ArtikelNr", false, []byte(artikelBatchTest))
 
 	//Calculate created / updated
 	checkCreated := total - len(updated)
@@ -66,14 +109,15 @@ func TestClient_SyncBatch(t *testing.T) {
 	if len(errors) != 0 {
 		t.Errorf("Errors should be 0. Is %v : %v", len(errors), errors)
 	}
-	//Delete created AdressNr
-	_, _, statusDelete, errDeleted := pxrest.Delete(ctx, "ADR/Adresse/"+created[0])
+	if len(created) > 0 {
+		//Delete created AdressNr
+		_, _, statusDelete, errDeleted := pxrest.Delete(ctx, "LAG/Artikel/"+created[0])
 
-	//Check HTTP Status of Logout. Should be 204
-	if statusDelete != 204 {
-		t.Errorf("Expected HTTP Status Code 204 for deleting AdressNr %v. Got '%v' with %v", created[0], statusDelete, errDeleted)
+		//Check HTTP Status of Logout. Should be 204
+		if statusDelete != 204 {
+			t.Errorf("Expected HTTP Status Code 204 for deleting AdressNr %v. Got '%v' with %v", created[0], statusDelete, errDeleted)
+		}
 	}
-
 	statuslogout, err := pxrest.Logout(ctx)
 
 	//Check HTTP Status of Logout. Should be 204

@@ -295,12 +295,12 @@ Damit lassen sich **beliebig viele Einträge eines Endpunktes (z.B: 100 Artikel)
 
   	created,updated,failed,errors, total, err := pxrest.SyncBatch(ctx, "ADR/Adresse","AdressNr", true,[]byte(jsonExample)) 
 	//Results
-	//  created -> [333]
-	//  updated -> [276]
-	//  failed -> []
-    //  errors -> []
-    //  total -> 2
-    //  err -> nil
+	//      created -> [333]
+	//      updated -> [276]
+	//      failed -> []
+    //      errors -> []
+    //      total -> 2
+    //      err -> nil
 
 ```
 
