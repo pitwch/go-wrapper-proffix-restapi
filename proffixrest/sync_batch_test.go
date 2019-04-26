@@ -41,7 +41,7 @@ func TestClient_SyncBatch(t *testing.T) {
 	//Create Address 275
 	_, _, _, _ = pxrest.Post(ctx, "ADR/Adresse", address275)
 
-	created, updated, failed, errors, total, err := pxrest.SyncBatch(ctx, "ADR/Adresse", "AdressNr", []byte(addressBatchTest))
+	created, updated, failed, errors, total, err := pxrest.SyncBatch(ctx, "ADR/Adresse", "AdressNr", true, []byte(addressBatchTest))
 
 	//Calculate created / updated
 	checkCreated := total - len(updated)
