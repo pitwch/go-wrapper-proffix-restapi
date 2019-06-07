@@ -68,7 +68,7 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | Option           | Beispiel                                                         | Bemerkung                                                      |
 |------------------|------------------------------------------------------------------|----------------------------------------------------------------|
 | Key              | 112a5a90fe28b...242b10141254b4de59028                            | API-Key als SHA256 - Hash (kann auch direkt mitgegeben werden) |
-| Version          | v2                                                               | API-Version; Standard = v2                                     |
+| Version          | v3                                                               | API-Version; Standard = v3                                     |
 | APIPrefix        | /pxapi/                                                          | Prefix für die API; Standard = /pxapi/                         |
 | LoginEndpoint    | PRO/Login                                                        | Endpunkt für Login; Standard = PRO/Login                       |
 | UserAgent        | go-wrapper-proffix-restapi                                       | User Agent; Standard = go-wrapper-proffix-restapi              |

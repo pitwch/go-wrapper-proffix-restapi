@@ -46,7 +46,7 @@ type LoginStruct struct {
 	Benutzer  string         `json:"Benutzer"`
 	Passwort  string         `json:"Passwort"`
 	Datenbank DatabaseStruct `json:"Datenbank"`
-	Module    []string       `json:"Module"`
+	Module    []string       `json:"Module,omitempty"`
 }
 
 //Database Struct
@@ -65,8 +65,9 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 		options = &Options{}
 	}
 
+	//Default to v3
 	if options.Version == "" {
-		options.Version = "v2"
+		options.Version = "v3"
 	}
 
 	if options.APIPrefix == "" {

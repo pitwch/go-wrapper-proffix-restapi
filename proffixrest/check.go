@@ -15,7 +15,7 @@ func (c *Client) CheckApi(ctx context.Context) (err error) {
 	c.option.Timeout = 10
 
 	//Set Module ADR
-	c.Module = []string{"ADR"}
+	c.Module = []string{}
 
 	//Check Login
 	err = c.Login(ctx)
