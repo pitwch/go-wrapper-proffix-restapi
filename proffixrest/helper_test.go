@@ -2,7 +2,7 @@ package proffixrest
 
 import (
 	"context"
-	"github.com/spf13/cast"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -18,7 +18,7 @@ func Test_errorFormatterPx(t *testing.T) {
 
 	pxrest.Logout(ctx)
 
-	if !strings.Contains(err.Error(), cast.ToString(status)) {
+	if !strings.Contains(err.Error(), strconv.Itoa(status)) {
 		t.Errorf("Error should contain Statuscode %v", status)
 	}
 

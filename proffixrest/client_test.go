@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/spf13/cast"
 	"net/url"
 	"os"
 	"testing"
@@ -121,7 +120,7 @@ func TestClient_Requests(t *testing.T) {
 	var update = Adresse{AdressNr: DemoAdressNr, Name: "Muster AG", Ort: "St. Gallen", PLZ: "9000"}
 
 	//Put updated Data
-	rc, _, statuscode, err := pxrest.Put(ctx, "ADR/Adresse/"+cast.ToString(DemoAdressNr), update)
+	rc, _, statuscode, err := pxrest.Put(ctx, "ADR/Adresse/"+DemoAdressNr, update)
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)

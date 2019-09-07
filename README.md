@@ -9,7 +9,7 @@
 
 Der zuverlässige Wrapper für die PROFFIX REST-API in Go.
 
-![alt text](https://raw.githubusercontent.com/pitwch/go-wrapper-proffix-restapi/master/assets/img/go-proffix-rest-wrapper.jpg "Golang Wrapper PROFFIX REST API")
+![alt text](https://raw.githubusercontent.com/pitwch/go-wrapper-proffix-restapi/master/_assets/img/go-proffix-rest-wrapper.jpg "Golang Wrapper PROFFIX REST API")
 
 
 **Übersicht**
@@ -387,5 +387,5 @@ todo
 
 ### Weitere Beispiele
 
-Im Ordner [/examples](https://github.com/pitwch/go-wrapper-proffix-restapi/tree/master/examples) finden sich weitere,
+Im Ordner [/examples](https://github.com/pitwch/go-wrapper-proffix-restapi/tree/master/_examples) finden sich weitere,
 auskommentierte Beispiele.
