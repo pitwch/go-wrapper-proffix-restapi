@@ -2,7 +2,6 @@ package proffixrest
 
 import (
 	"context"
-	"strconv"
 	"strings"
 	"testing"
 )
@@ -16,10 +15,10 @@ func Test_errorFormatterPx(t *testing.T) {
 
 	_, _, status, err := pxrest.Get(ctx, "ADR/Adresse/12345678", nil)
 
-	pxrest.Logout(ctx)
+	_, _ = pxrest.Logout(ctx)
 
-	if !strings.Contains(err.Error(), strconv.Itoa(status)) {
-		t.Errorf("Error should contain Statuscode %v", status)
+	if status != 404 {
+		t.Errorf("Statuscode should be 404: Statuscode %v", status)
 	}
 
 	var notfound = "NOT_FOUND"
