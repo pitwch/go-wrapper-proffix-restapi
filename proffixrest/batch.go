@@ -111,7 +111,7 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 
 			// Unmarshall to interface so we can count elements in totalEntriesCount query
 			var jsonObjs2 interface{}
-			json.Unmarshal([]byte(batchResp), &jsonObjs2)
+			_ = json.Unmarshal([]byte(batchResp), &jsonObjs2)
 			totalEntriesCount += len(jsonObjs2.([]interface{}))
 		}
 

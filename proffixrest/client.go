@@ -183,9 +183,9 @@ func (c *Client) updatePxSessionId(header http.Header) {
 
 }
 
-//LOGOUT Request for PROFFIX REST-API
-//Accepts PxSession ID as Input or if left empty uses SessionId from active Session
-//Returns Statuscode,error
+// LOGOUT Request for PROFFIX REST-API
+// Accepts PxSession ID as Input or if left empty uses SessionId from active Session
+// Returns Statuscode,error
 func (c *Client) Logout(ctx context.Context) (int, error) {
 	//Just logout if we have a valid PxSessionid
 	if PxSessionId != "" {
@@ -203,8 +203,8 @@ func (c *Client) Logout(ctx context.Context) (int, error) {
 
 }
 
-//Request Method
-//Building the Request Method for Client
+// Request Method
+// Building the Request Method for Client
 func (c *Client) request(ctx context.Context, method, endpoint string, params url.Values, data interface{}) (io.ReadCloser, http.Header, int, error) {
 
 	var urlstr string
@@ -228,15 +228,15 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 
 	var body *bytes.Buffer
 
-	//PROFFIX REST API Bugfix: Complains if no empty JSON {} is sent
+	// PROFFIX REST API Bugfix: Complains if no empty JSON {} is sent
 
-	//If data is emtpy or nil -> send empty JSON Object
+	// If data is emtpy or nil -> send empty JSON Object
 	if data == nil || data == "" {
 		var b bytes.Buffer
 		b.Write([]byte("{}"))
 
 		body = &b
-		//If not nil -> encode data and send as JSON
+		// If not nil -> encode data and send as JSON
 	} else {
 
 		body = new(bytes.Buffer)
@@ -246,9 +246,12 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 			return nil, nil, 0, fmt.Errorf("JSON Encoding failed: %s", err)
 		}
 	}
-	//End of PROFFIX REST-API Bugfix
+	// End of PROFFIX REST-API Bugfix
 
 	req, err := http.NewRequest(method, urlstr, body)
+	if req == nil {
+		return nil, nil, 0, err
+	}
 	req = req.WithContext(ctx)
 
 	if err != nil {
@@ -257,7 +260,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 
 	req.Header.Set("Content-Type", "application/json")
 
-	//Set PxSessionId in Header
+	// Set PxSessionId in Header
 	req.Header.Set("pxsessionid", PxSessionId)
 
 	resp, err := c.client.Do(req)
@@ -266,7 +269,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 	}
 	logDebug(ctx, c, fmt.Sprintf("Response Url: %v, Method: %v, PxSession-ID: %v Status: %v", urlstr, method, PxSessionId, resp.StatusCode))
 
-	//Update the PxSessionId
+	// Update the PxSessionId
 	c.updatePxSessionId(resp.Header)
 
 	return resp.Body, resp.Header, resp.StatusCode, err
@@ -300,12 +303,12 @@ func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (i
 		return request, header, statuscode, err
 	}
 
-	//If Statuscode not 201
-	if statuscode != 201 {
+	//If Statuscode not 201 / 200
+	if statuscode != 204 && statuscode != 200 && statuscode != 201 {
 		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
+	} else {
+		return request, header, statuscode, nil
 	}
-
-	return request, header, statuscode, err
 }
 
 //PUT Request for PROFFIX REST-API
@@ -336,11 +339,11 @@ func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io
 	}
 
 	//If Statuscode not 204
-	if statuscode != 204 {
+	if statuscode != 204 && statuscode != 200 && statuscode != 201 {
 		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	}
 
-	return request, header, statuscode, err
+	return request, header, statuscode, nil
 }
 
 //GET Request for PROFFIX REST-API
@@ -369,11 +372,11 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 	}
 
 	//If Statuscode not 200
-	if statuscode != 200 {
+	if statuscode != 204 && statuscode != 200 && statuscode != 201 {
 		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	}
 
-	return request, header, statuscode, err
+	return request, header, statuscode, nil
 }
 
 //DELETE Request for PROFFIX REST-API
@@ -406,7 +409,7 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	}
 
-	return request, header, statuscode, err
+	return request, header, statuscode, nil
 }
 
 //INFO Request for PROFFIX REST-API

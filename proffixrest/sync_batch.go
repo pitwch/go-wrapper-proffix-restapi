@@ -68,7 +68,7 @@ func (c *Client) SyncBatch(ctx context.Context, endpoint string, keyfield string
 			if resp != nil {
 				//Buffer decode for plain text response
 				buf := new(bytes.Buffer)
-				buf.ReadFrom(resp)
+				_, _ = buf.ReadFrom(resp)
 				res = buf.String()
 			}
 
@@ -91,7 +91,7 @@ func (c *Client) SyncBatch(ctx context.Context, endpoint string, keyfield string
 			if resp != nil {
 				//Buffer decode for plain text response
 				buf := new(bytes.Buffer)
-				buf.ReadFrom(resp)
+				_, _ = buf.ReadFrom(resp)
 				res = buf.String()
 			}
 
@@ -111,7 +111,7 @@ func (c *Client) SyncBatch(ctx context.Context, endpoint string, keyfield string
 			if getResp != nil {
 				//Buffer decode for plain text response
 				buf := new(bytes.Buffer)
-				buf.ReadFrom(getResp)
+				_, _ = buf.ReadFrom(getResp)
 				res = buf.String()
 			}
 
