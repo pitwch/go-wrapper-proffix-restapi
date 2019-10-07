@@ -191,7 +191,7 @@ func (c *Client) Logout(ctx context.Context) (int, error) {
 	if PxSessionId != "" {
 
 		//Delete Login Object from PROFFIX REST-API
-		_, _, statuscode, err := c.request(ctx, "DELETE", c.option.LoginEndpoint, url.Values{}, nil)
+		_, _, statuscode, err := c.request(ctx, "DELETE", c.option.LoginEndpoint, url.Values{}, false, nil)
 
 		//Set Pxsessionid to empty string
 		PxSessionId = ""
@@ -205,7 +205,7 @@ func (c *Client) Logout(ctx context.Context) (int, error) {
 
 // Request Method
 // Building the Request Method for Client
-func (c *Client) request(ctx context.Context, method, endpoint string, params url.Values, data interface{}) (io.ReadCloser, http.Header, int, error) {
+func (c *Client) request(ctx context.Context, method, endpoint string, params url.Values, isFile bool, data interface{}) (io.ReadCloser, http.Header, int, error) {
 
 	var urlstr string
 
@@ -228,10 +228,14 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 
 	var body *bytes.Buffer
 
-	// PROFFIX REST API Bugfix: Complains if no empty JSON {} is sent
+	// If is File -> no encoding
+	if isFile {
+		body = bytes.NewBuffer(data.([]byte))
 
-	// If data is emtpy or nil -> send empty JSON Object
-	if data == nil || data == "" {
+		// PROFFIX REST API Bugfix: Complains if no empty JSON {} is sent
+	} else if data == nil || data == "" {
+
+		// If data is emtpy or nil -> send empty JSON Object
 		var b bytes.Buffer
 		b.Write([]byte("{}"))
 
@@ -258,11 +262,13 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 		return nil, nil, 0, err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	// Remove JSON Header is Request is file
+	if !isFile {
+		req.Header.Set("Content-Type", "application/json")
+	}
 
 	// Set PxSessionId in Header
 	req.Header.Set("pxsessionid", PxSessionId)
-
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, nil, 0, err
@@ -284,7 +290,7 @@ func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (i
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, data)
+	request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, false, data)
 
 	//If Log enabled in options log data
 	logDebug(ctx, c, fmt.Sprintf("Sent data in POST-Request: %v", data))
@@ -298,7 +304,7 @@ func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (i
 		err = c.Login(ctx)
 
 		//Repeat Request with new SessionId
-		request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, data)
+		request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, false, data)
 
 		return request, header, statuscode, err
 	}
@@ -319,7 +325,7 @@ func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	request, header, statuscode, err := c.request(ctx, "PUT", endpoint, url.Values{}, data)
+	request, header, statuscode, err := c.request(ctx, "PUT", endpoint, url.Values{}, false, data)
 
 	//If Log enabled in options log data
 	logDebug(ctx, c, fmt.Sprintf("Sent data in PUT-Request: %v", data))
@@ -333,7 +339,7 @@ func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io
 		err = c.Login(ctx)
 
 		//Repeat Request with new SessionId
-		request, header, statuscode, err := c.request(ctx, "PUT", endpoint, url.Values{}, data)
+		request, header, statuscode, err := c.request(ctx, "PUT", endpoint, url.Values{}, false, data)
 
 		return request, header, statuscode, err
 	}
@@ -357,7 +363,7 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 		return nil, nil, 0, err
 	}
 
-	request, header, statuscode, err := c.request(ctx, "GET", endpoint, params, nil)
+	request, header, statuscode, err := c.request(ctx, "GET", endpoint, params, false, nil)
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
@@ -366,7 +372,7 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 		PxSessionId = ""
 
 		//Repeat Request with new SessionId
-		request, header, statuscode, err := c.request(ctx, "GET", endpoint, url.Values{}, nil)
+		request, header, statuscode, err := c.request(ctx, "GET", endpoint, url.Values{}, false, nil)
 
 		return request, header, statuscode, err
 	}
@@ -387,7 +393,7 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, nil, nil)
+	request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, nil, false, nil)
 
 	//If Login is invalid - try again
 	if statuscode == 401 {
@@ -399,7 +405,7 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 		err = c.Login(ctx)
 
 		//Repeat Request with new SessionId
-		request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, url.Values{}, nil)
+		request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, url.Values{}, false, nil)
 
 		return request, header, statuscode, err
 	}
@@ -410,6 +416,45 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 	}
 
 	return request, header, statuscode, nil
+}
+
+//File Request for PROFFIX REST-API
+//Accepts Context, Endpoint and []Byte as Input
+//Returns io.ReadCloser,http.Header,Statuscode,error
+func (c *Client) File(ctx context.Context, data []byte) (io.ReadCloser, http.Header, int, error) {
+	err := c.Login(ctx)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+
+	// Define endpoint
+	var endpoint = "PRO/Datei"
+
+	request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, true, data)
+
+	//If Log enabled in options log data
+	logDebug(ctx, c, fmt.Sprintf("Sent data in POST-Request: %v", data))
+
+	//If Login is invalid - try again
+	if statuscode == 401 {
+		//Set PxSessionId to empty string
+		PxSessionId = ""
+
+		//Get new pxsessionid and write to var
+		err = c.Login(ctx)
+
+		//Repeat Request with new SessionId
+		request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, true, data)
+
+		return request, header, statuscode, err
+	}
+
+	//If Statuscode not 201 / 200
+	if statuscode != 204 && statuscode != 200 && statuscode != 201 {
+		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
+	} else {
+		return request, header, statuscode, nil
+	}
 }
 
 //INFO Request for PROFFIX REST-API
@@ -427,7 +472,7 @@ func (c *Client) Info(ctx context.Context, pxapi string) (io.ReadCloser, error) 
 		param.Set("key", pxapi)
 	}
 
-	request, _, _, err := c.request(ctx, "GET", "PRO/Info", param, "")
+	request, _, _, err := c.request(ctx, "GET", "PRO/Info", param, false, "")
 
 	return request, err
 }
@@ -447,7 +492,7 @@ func (c *Client) Database(ctx context.Context, pxapi string) (io.ReadCloser, err
 		param.Set("key", pxapi)
 	}
 
-	request, _, _, err := c.request(ctx, "GET", "PRO/Datenbank", param, "")
+	request, _, _, err := c.request(ctx, "GET", "PRO/Datenbank", param, false, "")
 
 	return request, err
 }

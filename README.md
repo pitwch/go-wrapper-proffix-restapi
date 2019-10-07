@@ -246,6 +246,31 @@ Ruft Infos vom Endpunkt **PRO/Datenbank** ab.
 
 	defer rc.Close()
   ```
+##### PRO/Datei bzw. File Upload
+
+Lädt Datei zum Endpunkt **PRO/Datei** hoch.
+
+
+```golang
+
+	fp := "C:/test.png"
+	file, err := ioutil.ReadFile(fp)
+
+	rc, headers, status, err := pxrest.File(ctx, file)
+
+	//Buffer decode for plain text response
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(rc)
+	resp := buf.String()
+
+	fmt.Printf(resp, err)
+
+	defer rc.Close()
+
+    // Get temporary filename from Headers
+    id := proffixrest.ConvertLocationToID(headers)
+
+```
 
 ##### GET Batch
 
