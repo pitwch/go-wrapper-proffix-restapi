@@ -256,7 +256,7 @@ Lädt Datei zum Endpunkt **PRO/Datei** hoch.
 	fp := "C:/test.png"
 	file, err := ioutil.ReadFile(fp)
 
-	rc, headers, status, err := pxrest.File(ctx, file)
+	rc, headers, status, err := pxrest.File(ctx,"Demofile.png", file)
 
 	//Buffer decode for plain text response
 	buf := new(bytes.Buffer)

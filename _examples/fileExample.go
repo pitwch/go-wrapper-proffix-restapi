@@ -24,7 +24,7 @@ func postfileExample() {
 	if err != nil {
 		log.Print(err)
 	}
-	_, headers, _, err := pxrest.File(ctx, file)
+	_, headers, _, err := pxrest.File(ctx, "test.png", file)
 
 	// Convert location to ID
 	id := proffixrest.ConvertLocationToID(headers)
