@@ -220,7 +220,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 	logDebug(ctx, c, fmt.Sprintf("Request Url: %v, Method: %v, PxSession-ID: %v", urlstr, method, PxSessionId))
 
 	switch method {
-	case http.MethodPost, http.MethodPut:
+	case http.MethodPost, http.MethodPut, http.MethodPatch:
 	case http.MethodDelete, http.MethodGet, http.MethodOptions:
 	default:
 		return nil, nil, 0, fmt.Errorf("Method is not recognised: %s", method)
@@ -383,6 +383,41 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 	}
 
 	return request, header, statuscode, nil
+}
+
+//PATCH Request for PROFFIX REST-API
+//Accepts Context, Endpoint and Data as Input
+//Returns io.ReadCloser,http.Header,Statuscode,error
+func (c *Client) Patch(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
+	err := c.Login(ctx)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	request, header, statuscode, err := c.request(ctx, "PATCH", endpoint, url.Values{}, false, data)
+
+	//If Log enabled in options log data
+	logDebug(ctx, c, fmt.Sprintf("Sent data in PATCH-Request: %v", data))
+
+	//If Login is invalid - try again
+	if statuscode == 401 {
+		//Set PxSessionId to empty string
+		PxSessionId = ""
+
+		//Get new pxsessionid and write to var
+		err = c.Login(ctx)
+
+		//Repeat Request with new SessionId
+		request, header, statuscode, err := c.request(ctx, "PATCH", endpoint, url.Values{}, false, data)
+
+		return request, header, statuscode, err
+	}
+
+	//If Statuscode not 201 / 200
+	if statuscode != 204 && statuscode != 200 && statuscode != 201 {
+		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
+	} else {
+		return request, header, statuscode, nil
+	}
 }
 
 //DELETE Request for PROFFIX REST-API

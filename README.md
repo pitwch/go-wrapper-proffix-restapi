@@ -129,6 +129,19 @@ var data map[string]interface{} = map[string]interface{}{
 	rc, header, statuscode, err := pxrest.Put(ctx,"ADR/Adresse", data)
 ```
 
+##### Patch / Update
+
+```golang
+$pxrest =  new  Client(...)
+var data map[string]interface{} = map[string]interface{}{
+		"Ort":    "Zürich",
+		"Zürich": "8000",
+	}
+
+	rc, header, statuscode, err := pxrest.Patch(ctx,"ADR/Adresse/1", data)
+```
+
+
 ##### Post / Create
 
 ```golang

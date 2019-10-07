@@ -23,9 +23,11 @@ func GetFiltererCount(header http.Header) (total int) {
 }
 
 func ReaderToString(rc io.Reader) (str string, err error) {
-	buf := new(bytes.Buffer)
-	_, err = buf.ReadFrom(rc)
-	str = buf.String()
+	if rc != nil {
+		buf := new(bytes.Buffer)
+		_, err = buf.ReadFrom(rc)
+		str = buf.String()
+	}
 	return str, err
 }
 
