@@ -33,7 +33,7 @@ func (c *Client) SyncBatch(ctx context.Context, endpoint string, keyfield string
 
 	err = json.Unmarshal([]byte(data), &datas)
 	if err != nil {
-		log.Printf("Error on Unmarshal: %v", err)
+		return nil, nil, nil, nil, 0, err
 	}
 
 	for i := range datas {

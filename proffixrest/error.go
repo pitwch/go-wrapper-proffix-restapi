@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 )
 
 // proffixErrorStruct defines the Error Struct of PROFFIX REST-API
@@ -31,11 +30,9 @@ func errorFormatterPx(ctx context.Context, c *Client, statuscode int, request io
 		// Error 404 is soft so no logout
 		if statuscode != 404 {
 			// Do Forced Logout...
-			logoutstatus, err := c.Logout(ctx)
+			logoutstatus, _ := c.Logout(ctx)
 			logDebug(ctx, c, fmt.Sprintf("Logout after Error with Status: %v", logoutstatus))
-			if err != nil {
-				log.Printf("Error on Auto-Logout: %v", err)
-			}
+
 		}
 	}
 

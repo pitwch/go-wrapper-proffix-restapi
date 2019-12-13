@@ -2,6 +2,7 @@ package proffixrest
 
 import (
 	"context"
+	"os"
 	"testing"
 )
 
@@ -18,7 +19,7 @@ func TestClient_CheckApi(t *testing.T) {
 	}
 
 	//Check CheckAPI
-	err = pxrest.CheckApi(ctx)
+	err = pxrest.CheckApi(ctx, os.Getenv("PXDEMO_KEY"))
 
 	//Check error. Should be nil
 	if err != nil {

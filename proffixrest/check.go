@@ -1,15 +1,39 @@
 package proffixrest
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
-	"net/url"
+	"log"
 )
+
+type InfoStruct struct {
+	Version        string
+	ServerZeit     string
+	NeuesteVersion string
+	Instanz        InstanzStruct
+}
+
+type InstanzStruct struct {
+	InstanzNr string
+	Name      string
+	Lizenzen  []LizenzStruct
+}
+
+type LizenzStruct struct {
+	Name               string
+	Bezeichnung        string
+	Anzahl             int
+	AnzahlInVerwendung int
+	Demo               bool
+	Ablaufdatum        string
+}
 
 // CheckAPI checks the PROFFIX REST API
 // Accepts client
 // Returns err
-func (c *Client) CheckApi(ctx context.Context) (err error) {
+func (c *Client) CheckApi(ctx context.Context, webservicepw string) (err error) {
 
 	//Set timeout to 10
 	c.option.Timeout = 10
@@ -23,32 +47,25 @@ func (c *Client) CheckApi(ctx context.Context) (err error) {
 		return err
 	}
 
-	//Check if PxSessionId is availabler
+	//Check if PxSessionId is available
 	if c.GetPxSessionId() == "" {
 		return fmt.Errorf("Keine PxSessionId gefunden")
 	}
 
-	//Check if GET ADR/Adresse works
-
-	//Set params for minimal request
-	params := url.Values{}
-	params.Add("Limit", "1")
-	params.Add("Fields", "AdressNr")
-	_, _, statuscode, err := c.Get(ctx, "ADR/Adresse", params)
-
-	//To make sure: Logout
-	_, _ = c.Logout(ctx)
-
-	//Check if error
+	closer, err := c.Info(ctx, webservicepw)
 	if err != nil {
 		return err
 	}
 
-	//Also check statuscode
-	if statuscode != 200 {
-		return fmt.Errorf("Falscher Statuscode bei Testabfrage auf ADR/Adresse: %v", statuscode)
-	}
+	info := InfoStruct{}
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(closer)
+	bytes := buf.Bytes()
+	json.Unmarshal(bytes, &info)
 
+	for _, liz := range info.Instanz.Lizenzen {
+		log.Println(liz.Name)
+	}
 	return err
 
 }
