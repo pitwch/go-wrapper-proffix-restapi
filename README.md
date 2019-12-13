@@ -6,7 +6,6 @@
 [![GitHub license](https://img.shields.io/github/license/pitwch/go-wrapper-proffix-restapi.svg)](https://github.com/pitwch/go-wrapper-proffix-restapi/blob/master/LICENSE)
 
 # Golang Wrapper für PROFFIX REST-API
-
 Der zuverlässige Wrapper für die PROFFIX REST-API in Go.
 
 ![alt text](https://raw.githubusercontent.com/pitwch/go-wrapper-proffix-restapi/master/_assets/img/go-proffix-rest-wrapper.jpg "Golang Wrapper PROFFIX REST API")
@@ -24,14 +23,12 @@ Der zuverlässige Wrapper für die PROFFIX REST-API in Go.
 
 
 ### Installation
-
 ```bash
 $ go get github.com/pitwch/go-wrapper-proffix-restapi/proffixrest
 ```
 
 
 #### Konfiguration
-
 Die Konfiguration wird dem Client mitgegeben:
 
 | Konfiguration | Beispiel                 | Type          | Bemerkung                             |
@@ -62,7 +59,6 @@ var pxrest, err = px.NewClient(
 
 
 ### Optionen
-
 Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 
 | Option           | Beispiel                                                         | Bemerkung                                                      |
@@ -82,7 +78,6 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 
 
 #### Methoden
-
 
 | Parameter  | Typ           | Bemerkung                                                                                                |
 |------------|---------------|----------------------------------------------------------------------------------------------------------|
@@ -128,6 +123,7 @@ var data map[string]interface{} = map[string]interface{}{
 
 	rc, header, statuscode, err := pxrest.Put(ctx,"ADR/Adresse", data)
 ```
+
 
 ##### Patch / Update
 
@@ -203,6 +199,7 @@ Beispiel (Mit Header, Ohne Statuscode):
 	fmt.Printf(resp, err)
 	defer rc.Close()
 ```
+
 
 #### Spezielle Endpunkte
 
@@ -352,7 +349,6 @@ anzupassen. Der Parameter **removeKeyfield** wird verwendet um das Keyfield aus 
 
 
 ##### GET List
-
 Gibt direkt die Liste der PROFFIX REST API aus (ohne Umwege)
 
 ```golang
@@ -368,7 +364,6 @@ Gibt direkt die Liste der PROFFIX REST API aus (ohne Umwege)
 
 
 ##### CheckApi
-
 Prüft, ob die API funktioniert (Basis-Test)
 
 ```golang
@@ -419,11 +414,9 @@ px.WriteFile("C://test//test.pdf",file)
 
 
 ### CMD / Docker
-
 todo
 
 
 ### Weitere Beispiele
-
 Im Ordner [/examples](https://github.com/pitwch/go-wrapper-proffix-restapi/tree/master/_examples) finden sich weitere,
 auskommentierte Beispiele.
