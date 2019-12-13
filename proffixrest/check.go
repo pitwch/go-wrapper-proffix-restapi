@@ -39,7 +39,7 @@ func (c *Client) CheckApi(ctx context.Context, webservicepw string) (err error) 
 	c.option.Timeout = 10
 
 	//Set Module ADR
-	c.Module = []string{}
+	c.Module = []string{"ADR"}
 
 	//Check Login
 	err = c.Login(ctx)
