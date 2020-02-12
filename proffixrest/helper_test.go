@@ -20,9 +20,8 @@ func Test_errorFormatterPx(t *testing.T) {
 		t.Errorf("Statuscode should be 404: Statuscode %v", status)
 	}
 
-	if err != nil {
-		if err.(*PxError).isNotFound() {
-			t.Errorf("Error should be of Type 'NOT_FOUND'")
-		}
+	if !err.(*PxError).isNotFound() {
+		t.Errorf("Error should be of Type 'NOT_FOUND'")
+
 	}
 }

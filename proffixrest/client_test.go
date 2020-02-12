@@ -181,17 +181,6 @@ func TestClient_Requests(t *testing.T) {
 			t.Errorf("Expected no error for GET Request. Got '%v'", err)
 		}
 
-		//Check response. Shouldn't be empty
-
-		//Buffer decode for plain text response
-		buf = new(bytes.Buffer)
-		buf.ReadFrom(rc)
-		resp := buf.String()
-
-		if resp == "" {
-			t.Errorf("Response shouldn't be empty. Got '%v'", resp)
-		}
-
 		//DELETE TESTs
 
 		//Delete the created Address
@@ -208,7 +197,7 @@ func TestClient_Requests(t *testing.T) {
 		}
 
 		//Check error. Should be nil
-		if err != nil {
+		if !err.(*PxError).isNull() {
 			t.Errorf("Expected no error for DELETE Request. Got '%v'", err)
 		}
 	}
@@ -249,7 +238,7 @@ func TestClient_AdvancedFilters(t *testing.T) {
 	var adressen []Adresse
 
 	//Connect
-	pxrest, err := ConnectTest(ctx, []string{"ADR", "FIB"})
+	pxrest, err := ConnectTest(ctx, []string{"ADR"})
 
 	//Set Advanced Params.
 	params := url.Values{}
@@ -262,20 +251,20 @@ func TestClient_AdvancedFilters(t *testing.T) {
 
 	//Check error. Should be nil
 	if err != nil {
-		t.Errorf("Expected no error for GET Batch Request. Got '%v'", err)
+		t.Errorf("Expected no error for GET Request. Got '%v'", err)
 	}
 	if resultFilters != nil {
 		//Buffer decode for plain text response
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(resultFilters)
 		respFilter := buf.Bytes()
-		stringFilter := buf.String()
+		//stringFilter := buf.String()
 		//Unmarshal the result into our struct
 		err = json.Unmarshal(respFilter, &adressen)
 
 		//Check status code; Should be 200
 		if statuscode != 200 {
-			t.Errorf("Expected HTTP Status Code 200. Got '%v'. Message: %v", statuscode, stringFilter)
+			t.Errorf("Expected HTTP Status Code 200. Got '%v'. Message: %v", statuscode, err)
 		}
 
 		//Check if results match to filter Ort
@@ -304,7 +293,7 @@ func TestGetDatabase(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest(ctx, []string{"ADR", "FIB"})
+	pxrest, err := ConnectTest(ctx, []string{})
 
 	rc, err := pxrest.Database(ctx, "")
 
@@ -330,7 +319,7 @@ func TestGetDatabase(t *testing.T) {
 		}
 
 		//Test with key instead value from options
-		_, err = pxrest.Database(ctx, "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
+		_, err = pxrest.Database(ctx, pxrest.option.Key)
 
 		//Check error. Should be nil
 		if err != nil {
@@ -345,9 +334,9 @@ func TestGetInfo(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest(ctx, []string{"ADR", "FIB"})
+	pxrest, err := ConnectTest(ctx, []string{})
 
-	rc, err := pxrest.Info(ctx, "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
+	rc, err := pxrest.Info(ctx, pxrest.option.Key)
 
 	//Check error. Should be nil
 	if err != nil {
@@ -379,7 +368,7 @@ func TestStructs(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, _ := ConnectTest(ctx, []string{"ADR", "FIB"})
+	pxrest, _ := ConnectTest(ctx, []string{"ADR"})
 
 	//Set test vars
 	q := *pxrest
@@ -434,7 +423,7 @@ func TestClient_LoginWithFalsePxSessionId(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest(ctx, []string{"ADR", "FIB"})
+	pxrest, err := ConnectTest(ctx, []string{"ADR"})
 
 	//Check error. Should be nil
 	if err != nil {

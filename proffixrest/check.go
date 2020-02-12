@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 )
 
@@ -49,7 +48,7 @@ func (c *Client) CheckApi(ctx context.Context, webservicepw string) (err error) 
 
 	//Check if PxSessionId is available
 	if c.GetPxSessionId() == "" {
-		return fmt.Errorf("Keine PxSessionId gefunden")
+		return &PxError{Message: "No PxSessionId found"}
 	}
 
 	closer, err := c.Info(ctx, webservicepw)
@@ -66,6 +65,6 @@ func (c *Client) CheckApi(ctx context.Context, webservicepw string) (err error) 
 	for _, liz := range info.Instanz.Lizenzen {
 		log.Println(liz.Name)
 	}
-	return err
+	return nil
 
 }

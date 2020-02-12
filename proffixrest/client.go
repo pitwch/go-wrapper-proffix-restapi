@@ -58,7 +58,7 @@ type DatabaseStruct struct {
 func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase string, apiModule []string, options *Options) (*Client, error) {
 	restURL, err := url.Parse(RestURL)
 	if err != nil {
-		return nil, err
+		return nil, &PxError{Message: fmt.Sprintf("%v", err)}
 	}
 
 	if options == nil {
@@ -170,7 +170,7 @@ func (c *Client) Login(ctx context.Context) error {
 		return err
 		// If Pxsessionid already exists return stored value
 	} else {
-		return nil
+		return &PxError{}
 	}
 }
 
@@ -197,10 +197,15 @@ func (c *Client) Logout(ctx context.Context) (int, error) {
 		//Set Pxsessionid to empty string
 		PxSessionId = ""
 
-		return statuscode, NewPxError(req, statuscode, c.option.LoginEndpoint)
-	} else {
-		return 0, nil
+		if statuscode == 204 {
+			return statuscode, nil
+
+		} else {
+			return statuscode, NewPxError(req, statuscode, c.option.LoginEndpoint)
+
+		}
 	}
+	return 0, nil
 
 }
 
@@ -260,7 +265,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 	req = req.WithContext(ctx)
 
 	if err != nil {
-		return nil, nil, 0, &PxError{}
+		return nil, nil, 0, err
 	}
 
 	// Remove JSON Header is Request is file
@@ -271,15 +276,19 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 	// Set PxSessionId in Header
 	req.Header.Set("pxsessionid", PxSessionId)
 	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, nil, 0, &PxError{}
+	if err != nil || (resp.StatusCode >= 300 || resp.StatusCode < 200) {
+		if resp != nil {
+			return nil, nil, resp.StatusCode, NewPxError(resp.Body, resp.StatusCode, endpoint)
+		} else {
+			return nil, nil, 0, &PxError{}
+		}
+
 	}
 	logDebug(ctx, c, fmt.Sprintf("Response Url: %v, Method: %v, PxSession-ID: %v Status: %v", urlstr, method, PxSessionId, resp.StatusCode))
 
 	// Update the PxSessionId
 	c.updatePxSessionId(resp.Header)
-
-	return resp.Body, resp.Header, resp.StatusCode, NewPxError(resp.Body, resp.StatusCode, endpoint)
+	return resp.Body, resp.Header, resp.StatusCode, &PxError{}
 
 }
 
@@ -339,9 +348,9 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 	request, header, statuscode, err := c.request(ctx, "GET", endpoint, params, false, nil)
 	if !err.(*PxError).isNull() {
 		return request, header, statuscode, err
-	} else {
-		return request, header, statuscode, nil
 	}
+
+	return request, header, statuscode, nil
 
 }
 

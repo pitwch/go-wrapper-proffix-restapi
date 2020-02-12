@@ -25,7 +25,11 @@ type PxInvalidField struct {
 
 // Check if PxError is Null
 func (e *PxError) isNull() bool {
-	return e.Message == ""
+	if e == nil {
+		return true
+	} else {
+		return e.Message == ""
+	}
 }
 
 // Check if is Type "INVALID_FIELDS"

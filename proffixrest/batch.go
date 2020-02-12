@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"strconv"
 )
@@ -48,17 +49,15 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 	paramquery.Add("Limit", strconv.Itoa(batchsize))
 	// Query Endpoint for results
 	rc, header, status, err := c.Get(ctx, endpoint, params)
-
+	log.Printf("%v %v", endpoint, params)
+	log.Print(header)
+	log.Println(err)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	if &rc != nil {
-		return nil, 0, err
-	}
 	// Read from rc into settingResp
 	settingResp, err := ioutil.ReadAll(rc)
-
 	// Put setting query into collector
 	collector = append(collector, settingResp[:]...)
 
@@ -69,9 +68,13 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 	// Get total available objects
 	totalEntries := GetFiltererCount(header)
 
+	if totalEntries == 0 {
+		return nil, 0, err
+	}
+
 	// Unmarshall to interface so we can count elements in setting query
 	var jsonObjs interface{}
-	err = json.Unmarshal([]byte(collector), &jsonObjs)
+	err = json.Unmarshal(collector, &jsonObjs)
 
 	firstQueryCount := len(jsonObjs.([]interface{}))
 
