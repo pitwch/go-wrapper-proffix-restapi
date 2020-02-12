@@ -55,3 +55,40 @@ func WriteFile(filepath string, file io.ReadCloser) (err error) {
 	}
 	return nil
 }
+
+func GetMap(rc io.Reader) (items []map[string]interface{}, err error) {
+	if rc != nil {
+		buf := new(bytes.Buffer)
+		_, err = buf.ReadFrom(rc)
+		resp := buf.Bytes()
+		var items = []map[string]interface{}{}
+		err = json.Unmarshal(resp, &items)
+
+		return items, err
+	}
+	return items, err
+}
+
+func GetFileTokens(rc io.Reader, keyField string, fileField string) (files []map[string][]string, err error) {
+
+	// Set Default
+	if fileField == "" {
+		fileField = "DateiNr"
+	}
+
+	// Iterate over items
+	items, err := GetMap(rc)
+	for _, mp := range items {
+		key := mp[keyField].(string)
+		var tmpArr []string
+		for k, v := range mp {
+			if k == fileField {
+				//var tmpMp map[string][]string
+				tmpArr = append(tmpArr, v.(string))
+			}
+		}
+
+		files = append(files, map[string][]string{key: tmpArr})
+	}
+	return files, err
+}

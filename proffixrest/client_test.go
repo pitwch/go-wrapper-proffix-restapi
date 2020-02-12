@@ -97,11 +97,12 @@ func TestClient_Requests(t *testing.T) {
 		t.Errorf("Expected HTTP Status Code 201. Got '%v'", statuscode)
 	}
 
-	//Check PXSessionId; Shouldn't be empty
-	if headers.Get("pxsessionid") == "" {
-		t.Errorf("Expected PxSessionId in Header. Not found: '%v'", headers.Get("pxsessionid"))
+	if headers != nil {
+		//Check PXSessionId; Shouldn't be empty
+		if headers.Get("pxsessionid") == "" {
+			t.Errorf("Expected PxSessionId in Header. Not found: '%v'", headers.Get("pxsessionid"))
+		}
 	}
-
 	//Check error. Should be nil
 	if err != nil {
 		t.Errorf("Expected no error for GET Request. Got '%v'", err)
@@ -122,94 +123,95 @@ func TestClient_Requests(t *testing.T) {
 	//Put updated Data
 	rc, _, statuscode, err := pxrest.Put(ctx, "ADR/Adresse/"+DemoAdressNr, update)
 
-	//Buffer decode for plain text response
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(rc)
-	rupd := buf.String()
+	if rc != nil {
+		//Buffer decode for plain text response
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(rc)
+		rupd := buf.String()
 
-	//Check status code; Should be 204
-	if statuscode != 204 {
-		t.Errorf("Expected HTTP Status Code 204. Got '%v'. Message: '%v'", statuscode, rupd)
-		if statuscode == 500 {
-			t.Errorf("Endpoint: 'ADR/Adresse/%v', Data: '%v'", DemoAdressNr, update)
+		//Check status code; Should be 204
+		if statuscode != 204 {
+			t.Errorf("Expected HTTP Status Code 204. Got '%v'. Message: '%v'", statuscode, rupd)
+			if statuscode == 500 {
+				t.Errorf("Endpoint: 'ADR/Adresse/%v', Data: '%v'", DemoAdressNr, update)
+			}
+		}
+
+		//Check PXSessionId; Shouldn't be empty
+		if headers.Get("pxsessionid") == "" {
+			t.Errorf("Expected PxSessionId in Header. Not found: '%v'.  Message: '%v'", headers.Get("pxsessionid"), rupd)
+		}
+
+		//Check error. Should be nil
+		if err != nil {
+			t.Errorf("Expected no error for PUT Request. Got '%v'. Message: '%v'", err, rupd)
+		}
+
+		//GET TESTs
+
+		//Query Non Existing AdressNr
+		_, _, statuscode, err = pxrest.Get(ctx, "ADR/Adresse/123456789", url.Values{})
+
+		//Check status code; Should be 404
+		if statuscode != 404 {
+			t.Errorf("Expected HTTP Status Code 404. Got '%v'", statuscode)
+		}
+
+		//Check error. Shouldn't be nil
+		if err == nil {
+			t.Errorf("Expected errors for non existing GET Request. Got '%v'", err)
+		}
+
+		//Query Created AdressNr
+
+		rc, headers, statuscode, err = pxrest.Get(ctx, "ADR/Adresse/"+DemoAdressNr, nil)
+
+		//Check status code; Should be 200
+		if statuscode != 200 {
+			t.Errorf("Expected HTTP Status Code 200. Got '%v' for reading AdressNr '%v'", statuscode, DemoAdressNr)
+		}
+
+		//Check PXSessionId; Shouldn't be empty
+		if headers.Get("pxsessionid") == "" {
+			t.Errorf("Expected PxSessionId in Header. Not found: '%v'", headers.Get("pxsessionid"))
+		}
+
+		//Check error. Should be nil
+		if err != nil {
+			t.Errorf("Expected no error for GET Request. Got '%v'", err)
+		}
+
+		//Check response. Shouldn't be empty
+
+		//Buffer decode for plain text response
+		buf = new(bytes.Buffer)
+		buf.ReadFrom(rc)
+		resp := buf.String()
+
+		if resp == "" {
+			t.Errorf("Response shouldn't be empty. Got '%v'", resp)
+		}
+
+		//DELETE TESTs
+
+		//Delete the created Address
+		_, headers, statuscode, err = pxrest.Delete(ctx, "ADR/Adresse/"+DemoAdressNr)
+
+		//Check status code; Should be 204
+		if statuscode != 204 {
+			t.Errorf("Expected HTTP Status Code 204. Got '%v' for deleting AdressNr '%v'", statuscode, DemoAdressNr)
+		}
+
+		//Check PXSessionId; Shouldn't be empty
+		if headers.Get("pxsessionid") == "" {
+			t.Errorf("Expected PxSessionId in Header. Not found: '%v'", headers.Get("pxsessionid"))
+		}
+
+		//Check error. Should be nil
+		if err != nil {
+			t.Errorf("Expected no error for DELETE Request. Got '%v'", err)
 		}
 	}
-
-	//Check PXSessionId; Shouldn't be empty
-	if headers.Get("pxsessionid") == "" {
-		t.Errorf("Expected PxSessionId in Header. Not found: '%v'.  Message: '%v'", headers.Get("pxsessionid"), rupd)
-	}
-
-	//Check error. Should be nil
-	if err != nil {
-		t.Errorf("Expected no error for PUT Request. Got '%v'. Message: '%v'", err, rupd)
-	}
-
-	//GET TESTs
-
-	//Query Non Existing AdressNr
-	_, _, statuscode, err = pxrest.Get(ctx, "ADR/Adresse/123456789", url.Values{})
-
-	//Check status code; Should be 404
-	if statuscode != 404 {
-		t.Errorf("Expected HTTP Status Code 404. Got '%v'", statuscode)
-	}
-
-	//Check error. Shouldn't be nil
-	if err == nil {
-		t.Errorf("Expected errors for non existing GET Request. Got '%v'", err)
-	}
-
-	//Query Created AdressNr
-
-	rc, headers, statuscode, err = pxrest.Get(ctx, "ADR/Adresse/"+DemoAdressNr, nil)
-
-	//Check status code; Should be 200
-	if statuscode != 200 {
-		t.Errorf("Expected HTTP Status Code 200. Got '%v' for reading AdressNr '%v'", statuscode, DemoAdressNr)
-	}
-
-	//Check PXSessionId; Shouldn't be empty
-	if headers.Get("pxsessionid") == "" {
-		t.Errorf("Expected PxSessionId in Header. Not found: '%v'", headers.Get("pxsessionid"))
-	}
-
-	//Check error. Should be nil
-	if err != nil {
-		t.Errorf("Expected no error for GET Request. Got '%v'", err)
-	}
-
-	//Check response. Shouldn't be empty
-
-	//Buffer decode for plain text response
-	buf = new(bytes.Buffer)
-	buf.ReadFrom(rc)
-	resp := buf.String()
-
-	if resp == "" {
-		t.Errorf("Response shouldn't be empty. Got '%v'", resp)
-	}
-
-	//DELETE TESTs
-
-	//Delete the created Address
-	_, headers, statuscode, err = pxrest.Delete(ctx, "ADR/Adresse/"+DemoAdressNr)
-
-	//Check status code; Should be 204
-	if statuscode != 204 {
-		t.Errorf("Expected HTTP Status Code 204. Got '%v' for deleting AdressNr '%v'", statuscode, DemoAdressNr)
-	}
-
-	//Check PXSessionId; Shouldn't be empty
-	if headers.Get("pxsessionid") == "" {
-		t.Errorf("Expected PxSessionId in Header. Not found: '%v'", headers.Get("pxsessionid"))
-	}
-
-	//Check error. Should be nil
-	if err != nil {
-		t.Errorf("Expected no error for DELETE Request. Got '%v'", err)
-	}
-
 	//Check Logout
 	statuslogout, err := pxrest.Logout(ctx)
 
@@ -262,35 +264,35 @@ func TestClient_AdvancedFilters(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error for GET Batch Request. Got '%v'", err)
 	}
+	if resultFilters != nil {
+		//Buffer decode for plain text response
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(resultFilters)
+		respFilter := buf.Bytes()
+		stringFilter := buf.String()
+		//Unmarshal the result into our struct
+		err = json.Unmarshal(respFilter, &adressen)
 
-	//Buffer decode for plain text response
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resultFilters)
-	respFilter := buf.Bytes()
-	stringFilter := buf.String()
-	//Unmarshal the result into our struct
-	err = json.Unmarshal(respFilter, &adressen)
+		//Check status code; Should be 200
+		if statuscode != 200 {
+			t.Errorf("Expected HTTP Status Code 200. Got '%v'. Message: %v", statuscode, stringFilter)
+		}
 
-	//Check status code; Should be 200
-	if statuscode != 200 {
-		t.Errorf("Expected HTTP Status Code 200. Got '%v'. Message: %v", statuscode, stringFilter)
+		//Check if results match to filter Ort
+		if adressen[0].Ort == "Zürich" {
+			t.Errorf("Filter 'Ort' doesnt work. Got '%v' - shouldnt be.", adressen[0].Ort)
+		}
+
+		//Check if results match to filter Land
+		if adressen[0].Land.LandNr != "CH" {
+			t.Errorf("Filter 'Land' doesnt work. Got '%v' - shouldnt be.", adressen[0].Land)
+		}
+
+		//Check if order works
+		if adressen[0].AdressNr > adressen[1].AdressNr {
+			t.Errorf("Order doesnt work. Adressnr '%v' is > than Adressnr '%v'.", adressen[0].AdressNr, adressen[1].AdressNr)
+		}
 	}
-
-	//Check if results match to filter Ort
-	if adressen[0].Ort == "Zürich" {
-		t.Errorf("Filter 'Ort' doesnt work. Got '%v' - shouldnt be.", adressen[0].Ort)
-	}
-
-	//Check if results match to filter Land
-	if adressen[0].Land.LandNr != "CH" {
-		t.Errorf("Filter 'Land' doesnt work. Got '%v' - shouldnt be.", adressen[0].Land)
-	}
-
-	//Check if order works
-	if adressen[0].AdressNr > adressen[1].AdressNr {
-		t.Errorf("Order doesnt work. Adressnr '%v' is > than Adressnr '%v'.", adressen[0].AdressNr, adressen[1].AdressNr)
-	}
-
 	//Logout
 	pxrest.Logout(ctx)
 
@@ -311,27 +313,29 @@ func TestGetDatabase(t *testing.T) {
 		t.Errorf("Expected no error for Database Request. Got '%v'", err)
 	}
 
-	//Buffer decode for plain text response
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(rc)
-	resp := buf.String()
+	if rc != nil {
+		//Buffer decode for plain text response
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(rc)
+		resp := buf.String()
 
-	//Check error. Should be nil
-	if err != nil {
-		t.Errorf("Expected no error for Database Request. Got '%v'", err)
-	}
+		//Check error. Should be nil
+		if err != nil {
+			t.Errorf("Expected no error for Database Request. Got '%v'", err)
+		}
 
-	//Check if response isn't empty
-	if resp == "" {
-		t.Errorf("Response shouldn't be empty. Got '%v'", resp)
-	}
+		//Check if response isn't empty
+		if resp == "" {
+			t.Errorf("Response shouldn't be empty. Got '%v'", resp)
+		}
 
-	//Test with key instead value from options
-	_, err = pxrest.Database(ctx, "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
+		//Test with key instead value from options
+		_, err = pxrest.Database(ctx, "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
-	//Check error. Should be nil
-	if err != nil {
-		t.Errorf("Expected no error for Database Request with key. Got '%v'", err)
+		//Check error. Should be nil
+		if err != nil {
+			t.Errorf("Expected no error for Database Request with key. Got '%v'", err)
+		}
 	}
 }
 
@@ -350,19 +354,21 @@ func TestGetInfo(t *testing.T) {
 		t.Errorf("Expected no error for Info Request. Got '%v'", err)
 	}
 
-	//Buffer decode for plain text response
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(rc)
-	resp := buf.String()
+	if rc != nil {
+		//Buffer decode for plain text response
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(rc)
+		resp := buf.String()
 
-	//Check error. Should be nil
-	if err != nil {
-		t.Errorf("Expected no error for Info Request. Got '%v'", err)
-	}
+		//Check error. Should be nil
+		if err != nil {
+			t.Errorf("Expected no error for Info Request. Got '%v'", err)
+		}
 
-	//Check if response isn't empty
-	if resp == "" {
-		t.Errorf("Response shouldn't be empty. Got '%v'", resp)
+		//Check if response isn't empty
+		if resp == "" {
+			t.Errorf("Response shouldn't be empty. Got '%v'", resp)
+		}
 	}
 
 }

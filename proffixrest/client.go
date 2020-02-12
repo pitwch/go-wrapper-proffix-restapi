@@ -115,7 +115,7 @@ func (c *Client) createNewPxSessionId(ctx context.Context) (sessionid string, er
 	//Check URL, else exit
 	_, err = url.ParseRequestURI(c.restURL.String())
 	if err != nil {
-		return "", fmt.Errorf("URL in wrong format: %s", err)
+		return "", &PxError{Message: "URL in wrong format"}
 	}
 
 	//Build Login URL
@@ -128,33 +128,33 @@ func (c *Client) createNewPxSessionId(ctx context.Context) (sessionid string, er
 	body := new(bytes.Buffer)
 	encoder := json.NewEncoder(body)
 	if err := encoder.Encode(data); err != nil {
-		return "", err
+		return "", &PxError{Message: fmt.Sprintf("%v", err)}
 	}
 
 	//Build Login Request
 	req, err := http.NewRequest("POST", urlstr, body)
 	if err != nil {
-		return "", err
+		return "", &PxError{Message: "Error on builiding Request"}
 	}
 
 	//Set Login Header
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return "", err
+		if resp == nil {
+			return "", NewPxError(nil, 0, c.option.LoginEndpoint)
+		} else {
+			return "", NewPxError(resp.Body, resp.StatusCode, c.option.LoginEndpoint)
+
+		}
+
+	} else if resp.StatusCode != 201 {
+		return "", NewPxError(resp.Body, resp.StatusCode, c.option.LoginEndpoint)
+
+	} else {
+		//If everything OK just return pxsessionid
+		return resp.Header.Get("pxsessionid"), &PxError{}
 	}
-
-	//If Response gives errors print also Body
-	if resp.StatusCode == http.StatusBadRequest ||
-		resp.StatusCode == http.StatusNotFound ||
-		resp.StatusCode == http.StatusMethodNotAllowed ||
-		resp.StatusCode == http.StatusInternalServerError {
-
-		return "", errorFormatterPx(ctx, c, resp.StatusCode, resp.Body)
-	}
-	//If everything OK just return pxsessionid
-	return resp.Header.Get("pxsessionid"), nil
-
 }
 
 //Function for Login
@@ -165,6 +165,7 @@ func (c *Client) Login(ctx context.Context) error {
 	// If Pxsessionid doesnt yet exists create a new one
 	if PxSessionId == "" {
 		sessionid, err := c.createNewPxSessionId(ctx)
+
 		PxSessionId = sessionid
 		return err
 		// If Pxsessionid already exists return stored value
@@ -191,12 +192,12 @@ func (c *Client) Logout(ctx context.Context) (int, error) {
 	if PxSessionId != "" {
 
 		//Delete Login Object from PROFFIX REST-API
-		_, _, statuscode, err := c.request(ctx, "DELETE", c.option.LoginEndpoint, url.Values{}, false, nil)
+		req, _, statuscode, _ := c.request(ctx, "DELETE", c.option.LoginEndpoint, url.Values{}, false, nil)
 
 		//Set Pxsessionid to empty string
 		PxSessionId = ""
 
-		return statuscode, err
+		return statuscode, NewPxError(req, statuscode, c.option.LoginEndpoint)
 	} else {
 		return 0, nil
 	}
@@ -223,7 +224,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 	case http.MethodPost, http.MethodPut, http.MethodPatch:
 	case http.MethodDelete, http.MethodGet, http.MethodOptions:
 	default:
-		return nil, nil, 0, fmt.Errorf("Method is not recognised: %s", method)
+		return nil, nil, 0, &PxError{Message: fmt.Sprintf("Method is not recognised: %s", method)}
 	}
 
 	var body *bytes.Buffer
@@ -247,7 +248,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 		encoder := json.NewEncoder(body)
 
 		if err := encoder.Encode(data); err != nil {
-			return nil, nil, 0, fmt.Errorf("JSON Encoding failed: %s", err)
+			return nil, nil, 0, &PxError{Message: fmt.Sprintf("JSON Encoding failed: %s", err)}
 		}
 	}
 	// End of PROFFIX REST-API Bugfix
@@ -259,7 +260,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 	req = req.WithContext(ctx)
 
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, 0, &PxError{}
 	}
 
 	// Remove JSON Header is Request is file
@@ -271,14 +272,14 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 	req.Header.Set("pxsessionid", PxSessionId)
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, 0, &PxError{}
 	}
 	logDebug(ctx, c, fmt.Sprintf("Response Url: %v, Method: %v, PxSession-ID: %v Status: %v", urlstr, method, PxSessionId, resp.StatusCode))
 
 	// Update the PxSessionId
 	c.updatePxSessionId(resp.Header)
 
-	return resp.Body, resp.Header, resp.StatusCode, err
+	return resp.Body, resp.Header, resp.StatusCode, NewPxError(resp.Body, resp.StatusCode, endpoint)
 
 }
 
@@ -287,34 +288,21 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 //Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
-	if err != nil {
-		return nil, nil, 0, err
+	if !err.(*PxError).isNull() {
+
+		return nil, nil, 0, &PxError{Message: fmt.Sprintf("%v", err)}
 	}
 	request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, false, data)
 
 	//If Log enabled in options log data
 	logDebug(ctx, c, fmt.Sprintf("Sent data in POST-Request: %v", data))
 
-	//If Login is invalid - try again
-	if statuscode == 401 {
-		//Set PxSessionId to empty string
-		PxSessionId = ""
-
-		//Get new pxsessionid and write to var
-		err = c.Login(ctx)
-
-		//Repeat Request with new SessionId
-		request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, false, data)
-
+	if !err.(*PxError).isNull() {
 		return request, header, statuscode, err
-	}
-
-	//If Statuscode not 201 / 200
-	if statuscode != 204 && statuscode != 200 && statuscode != 201 {
-		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	} else {
 		return request, header, statuscode, nil
 	}
+
 }
 
 //PUT Request for PROFFIX REST-API
@@ -322,7 +310,7 @@ func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (i
 //Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
-	if err != nil {
+	if !err.(*PxError).isNull() {
 		return nil, nil, 0, err
 	}
 	request, header, statuscode, err := c.request(ctx, "PUT", endpoint, url.Values{}, false, data)
@@ -330,26 +318,11 @@ func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io
 	//If Log enabled in options log data
 	logDebug(ctx, c, fmt.Sprintf("Sent data in PUT-Request: %v", data))
 
-	//If Login is invalid - try again
-	if statuscode == 401 {
-		//Set PxSessionId to empty string
-		PxSessionId = ""
-
-		//Get new pxsessionid and write to var
-		err = c.Login(ctx)
-
-		//Repeat Request with new SessionId
-		request, header, statuscode, err := c.request(ctx, "PUT", endpoint, url.Values{}, false, data)
-
+	if !err.(*PxError).isNull() {
 		return request, header, statuscode, err
+	} else {
+		return request, header, statuscode, nil
 	}
-
-	//If Statuscode not 204
-	if statuscode != 204 && statuscode != 200 && statuscode != 201 {
-		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
-	}
-
-	return request, header, statuscode, nil
 }
 
 //GET Request for PROFFIX REST-API
@@ -359,30 +332,17 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 
 	err := c.Login(ctx)
 
-	if err != nil {
+	if !err.(*PxError).isNull() {
 		return nil, nil, 0, err
 	}
 
 	request, header, statuscode, err := c.request(ctx, "GET", endpoint, params, false, nil)
-
-	//If Login is invalid - try again
-	if statuscode == 401 {
-
-		//Set PxSessionId to empty string
-		PxSessionId = ""
-
-		//Repeat Request with new SessionId
-		request, header, statuscode, err := c.request(ctx, "GET", endpoint, url.Values{}, false, nil)
-
+	if !err.(*PxError).isNull() {
 		return request, header, statuscode, err
+	} else {
+		return request, header, statuscode, nil
 	}
 
-	//If Statuscode not 200
-	if statuscode != 204 && statuscode != 200 && statuscode != 201 {
-		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
-	}
-
-	return request, header, statuscode, nil
 }
 
 //PATCH Request for PROFFIX REST-API
@@ -390,7 +350,7 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 //Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Patch(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
-	if err != nil {
+	if !err.(*PxError).isNull() {
 		return nil, nil, 0, err
 	}
 	request, header, statuscode, err := c.request(ctx, "PATCH", endpoint, url.Values{}, false, data)
@@ -398,23 +358,8 @@ func (c *Client) Patch(ctx context.Context, endpoint string, data interface{}) (
 	//If Log enabled in options log data
 	logDebug(ctx, c, fmt.Sprintf("Sent data in PATCH-Request: %v", data))
 
-	//If Login is invalid - try again
-	if statuscode == 401 {
-		//Set PxSessionId to empty string
-		PxSessionId = ""
-
-		//Get new pxsessionid and write to var
-		err = c.Login(ctx)
-
-		//Repeat Request with new SessionId
-		request, header, statuscode, err := c.request(ctx, "PATCH", endpoint, url.Values{}, false, data)
-
+	if !err.(*PxError).isNull() {
 		return request, header, statuscode, err
-	}
-
-	//If Statuscode not 201 / 200
-	if statuscode != 204 && statuscode != 200 && statuscode != 201 {
-		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	} else {
 		return request, header, statuscode, nil
 	}
@@ -425,9 +370,10 @@ func (c *Client) Patch(ctx context.Context, endpoint string, data interface{}) (
 //Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
-	if err != nil {
+	if !err.(*PxError).isNull() {
 		return nil, nil, 0, err
 	}
+
 	request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, nil, false, nil)
 
 	//If Login is invalid - try again
@@ -442,15 +388,19 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 		//Repeat Request with new SessionId
 		request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, url.Values{}, false, nil)
 
-		return request, header, statuscode, err
+		if !err.(*PxError).isNull() {
+			return request, header, statuscode, err
+		} else {
+			return request, header, statuscode, nil
+		}
 	}
 
 	//If Statuscode not 204
 	if statuscode != 204 {
-		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
+		return request, header, statuscode, NewPxError(request, statuscode, endpoint)
 	}
 
-	return request, header, statuscode, nil
+	return request, header, statuscode, &PxError{}
 }
 
 //File Request for PROFFIX REST-API
@@ -458,7 +408,8 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 //Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) File(ctx context.Context, filename string, data []byte) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
-	if err != nil {
+
+	if !err.(*PxError).isNull() {
 		return nil, nil, 0, err
 	}
 
@@ -476,23 +427,8 @@ func (c *Client) File(ctx context.Context, filename string, data []byte) (io.Rea
 	//If Log enabled in options log data
 	logDebug(ctx, c, fmt.Sprintf("Sent data in POST-Request: %v", data))
 
-	//If Login is invalid - try again
-	if statuscode == 401 {
-		//Set PxSessionId to empty string
-		PxSessionId = ""
-
-		//Get new pxsessionid and write to var
-		err = c.Login(ctx)
-
-		//Repeat Request with new SessionId
-		request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, true, data)
-
+	if !err.(*PxError).isNull() {
 		return request, header, statuscode, err
-	}
-
-	//If Statuscode not 201 / 200
-	if statuscode != 204 && statuscode != 200 && statuscode != 201 {
-		return request, header, statuscode, errorFormatterPx(ctx, c, statuscode, request)
 	} else {
 		return request, header, statuscode, nil
 	}
@@ -503,6 +439,7 @@ func (c *Client) File(ctx context.Context, filename string, data []byte) (io.Rea
 //Returns Info about API as io.ReadCloser,error
 func (c *Client) Info(ctx context.Context, pxapi string) (io.ReadCloser, error) {
 
+	var endpoint = "PRO/Info"
 	param := url.Values{}
 
 	//If no Key submitted in Function use Options
@@ -513,9 +450,13 @@ func (c *Client) Info(ctx context.Context, pxapi string) (io.ReadCloser, error) 
 		param.Set("key", pxapi)
 	}
 
-	request, _, _, err := c.request(ctx, "GET", "PRO/Info", param, false, "")
+	request, _, _, err := c.request(ctx, "GET", endpoint, param, false, "")
 
-	return request, err
+	if !err.(*PxError).isNull() {
+		return request, err
+	} else {
+		return request, nil
+	}
 }
 
 //DATABASE Request for PROFFIX REST-API
@@ -535,7 +476,11 @@ func (c *Client) Database(ctx context.Context, pxapi string) (io.ReadCloser, err
 
 	request, _, _, err := c.request(ctx, "GET", "PRO/Datenbank", param, false, "")
 
-	return request, err
+	if !err.(*PxError).isNull() {
+		return request, err
+	} else {
+		return request, nil
+	}
 }
 
 // GetPxSessionId returns the latest PxSessionId from PROFFIX REST-API

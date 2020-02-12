@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
-func (c *Client) GetList(ctx context.Context, listenr int, body interface{}) (io.ReadCloser, http.Header, int, error) {
+func (c *Client) GetFile(ctx context.Context, dateinr string) (io.ReadCloser, http.Header, int, error) {
 
 	//Build query for getting download URL of List
-	resp, headers, status, err := c.Post(ctx, "PRO/Liste/"+strconv.Itoa(listenr)+"/generieren", body)
+	resp, headers, status, err := c.Post(ctx, "PRO/Datei/"+dateinr, nil)
 
 	//If err not nil or status not 201
 	if err != nil || status != 201 {
-		logDebug(ctx, c, fmt.Sprintf("Error on create list: %v, PxSession-ID: %v", resp, PxSessionId))
+		logDebug(ctx, c, fmt.Sprintf("Error on create list: %v, PxSession-ID: %v", err.(*PxError).Message, PxSessionId))
 		return resp, headers, status, err
 	}
+
 	downloadLocation := headers.Get("Location")
 
 	//If Log enabled log URL

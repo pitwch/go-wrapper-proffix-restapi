@@ -2,7 +2,6 @@ package proffixrest
 
 import (
 	"context"
-	"strings"
 	"testing"
 )
 
@@ -21,10 +20,9 @@ func Test_errorFormatterPx(t *testing.T) {
 		t.Errorf("Statuscode should be 404: Statuscode %v", status)
 	}
 
-	var notfound = "NOT_FOUND"
-
-	if !strings.Contains(err.Error(), notfound) {
-		t.Errorf("Error should contain Type %v", notfound)
+	if err != nil {
+		if err.(*PxError).isNotFound() {
+			t.Errorf("Error should be of Type 'NOT_FOUND'")
+		}
 	}
-
 }

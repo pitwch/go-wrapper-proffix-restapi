@@ -200,6 +200,21 @@ Beispiel (Mit Header, Ohne Statuscode):
 	defer rc.Close()
 ```
 
+##### Fehlerhandling / Error
+
+Detaillierte Fehlerinformationen der REST-API können über den Fehlertyp PxError ermittelt werden.
+
+```golang
+// Query with Error
+	rc, _, _, err := pxrest.Get(ctx,"ADR/Adresse/xxx", url.Values{})
+    
+    fmt.Print(err.(*PxError).Message)    // Message field
+    fmt.Print(err.(*PxError).Status)     // Status field
+    fmt.Print(err.(*PxError).Fields)     // Failed fields
+
+```
+
+Im Standard wird das Feld **Message** sowie fehlgeschlagene **Fields** ausgegeben.
 
 #### Spezielle Endpunkte
 

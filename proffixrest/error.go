@@ -1,45 +1,73 @@
 package proffixrest
 
 import (
-	"context"
-	"fmt"
+	"bytes"
+	"encoding/json"
 	"io"
+	"strings"
 )
 
-// proffixErrorStruct defines the Error Struct of PROFFIX REST-API
-type proffixErrorStruct struct {
-	Type    string `json:"Type"`
+// PxError defines the Error struct of default Error of PROFFIX REST-API
+type PxError struct {
+	Endpoint string           `json:"Endpoint"`
+	Status   int              `json:"Status"`
+	Type     string           `json:"Type"`
+	Message  string           `json:"Message"`
+	Fields   []PxInvalidField `json:"Fields"`
+}
+
+// PxInvalidField defines the Error struct of Fields Error of PROFFIX REST-API
+type PxInvalidField struct {
+	Reason  string `json:"Reason"`
+	Name    string `json:"Name"`
 	Message string `json:"Message"`
-	Fields  []struct {
-		Reason  string `json:"Reason"`
-		Name    string `json:"Name"`
-		Message string `json:"Message"`
-	} `json:"Fields"`
 }
 
-type ErrorStruct struct {
-	Message string   `json:"Message"`
-	Fields  []string `json:"Fields"`
+// Check if PxError is Null
+func (e *PxError) isNull() bool {
+	return e.Message == ""
 }
 
-// errorFormatterPx does format the errors and handles emergency logout
-func errorFormatterPx(ctx context.Context, c *Client, statuscode int, request io.Reader) (err error) {
-	errstr, _ := ReaderToString(request)
-	// No Autologout if deactivated in options
-	if c.option.Autologout {
-		// Error 404 is soft so no logout
-		if statuscode != 404 {
-			// Do Forced Logout...
-			logoutstatus, _ := c.Logout(ctx)
-			logDebug(ctx, c, fmt.Sprintf("Logout after Error with Status: %v", logoutstatus))
+// Check if is Type "INVALID_FIELDS"
+func (e *PxError) isInvalidFields() bool {
+	return e.Type == "INVALID_FIELDS"
+}
 
+// Check if is Type "NOT_FOUND"
+func (e *PxError) isNotFound() bool {
+	return e.Type == "NOT_FOUND"
+}
+
+// Formats error default
+func (e *PxError) Error() string {
+	if len(e.Fields) > 0 {
+		var errFields = []string{}
+		for _, f := range e.Fields {
+			errFields = append(errFields, f.Name)
 		}
+		return e.Message + " (" + strings.Join(errFields, ",") + ")"
+	} else {
+		return e.Message
 	}
-
-	return fmt.Errorf("%v", errstr)
 }
 
-// Todo: ErrorBeautifier beautifies Errors from PROFFIX
-/*func ErrorBeautifier(err error) (){
+// NewPxError creates a new PxError
+func NewPxError(rc io.Reader, status int, endpoint string) *PxError {
 
-}*/
+	pxerr := PxError{}
+
+	if rc != nil {
+		buf := new(bytes.Buffer)
+		_, _ = buf.ReadFrom(rc)
+		rcByte := buf.Bytes()
+		_ = json.Unmarshal(rcByte, &pxerr)
+	}
+	pxerr.Status = status
+	pxerr.Endpoint = endpoint
+
+	if pxerr.isNull() {
+		return &PxError{}
+	} else {
+		return &pxerr
+	}
+}

@@ -53,6 +53,9 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 		return nil, 0, err
 	}
 
+	if &rc != nil {
+		return nil, 0, err
+	}
 	// Read from rc into settingResp
 	settingResp, err := ioutil.ReadAll(rc)
 
