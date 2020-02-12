@@ -339,8 +339,8 @@ func TestGetInfo(t *testing.T) {
 	rc, err := pxrest.Info(ctx, pxrest.option.Key)
 
 	//Check error. Should be nil
-	if err != nil {
-		t.Errorf("Expected no error for Info Request. Got '%v'", err)
+	if err == nil {
+		t.Errorf("Expected error for Info Request. Got '%v'", err)
 	}
 
 	if rc != nil {
@@ -350,8 +350,8 @@ func TestGetInfo(t *testing.T) {
 		resp := buf.String()
 
 		//Check error. Should be nil
-		if err != nil {
-			t.Errorf("Expected no error for Info Request. Got '%v'", err)
+		if err == nil {
+			t.Errorf("Expected error for Info Request. Got '%v'", err)
 		}
 
 		//Check if response isn't empty
