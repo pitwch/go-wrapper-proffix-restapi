@@ -298,8 +298,8 @@ func TestGetDatabase(t *testing.T) {
 	rc, err := pxrest.Database(ctx, "")
 
 	//Check error. Should be nil
-	if err != nil {
-		t.Errorf("Expected no error for Database Request. Got '%v'", err)
+	if err == nil {
+		t.Errorf("Expected error for Database Request. Got '%v'", err)
 	}
 
 	if rc != nil {
