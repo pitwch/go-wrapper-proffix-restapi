@@ -30,6 +30,8 @@ var DefaultHTTPClient = &http.Client{
 // PxSessionId contains the latests PxSessionId from PROFFIX REST-API
 var PxSessionId string
 
+var isLoggedIn bool
+
 //Client Struct
 type Client struct {
 	restURL   *url.URL
@@ -152,7 +154,9 @@ func (c *Client) createNewPxSessionId(ctx context.Context) (sessionid string, er
 		return "", NewPxError(resp.Body, resp.StatusCode, c.option.LoginEndpoint)
 
 	} else {
-		//If everything OK just return pxsessionid
+		// Set isLoggedIn Status
+		isLoggedIn = true
+		// Return pxsessionid
 		return resp.Header.Get("pxsessionid"), &PxError{}
 	}
 }
@@ -163,7 +167,7 @@ func (c *Client) createNewPxSessionId(ctx context.Context) (sessionid string, er
 func (c *Client) Login(ctx context.Context) error {
 
 	// If Pxsessionid doesnt yet exists create a new one
-	if PxSessionId == "" {
+	if isLoggedIn == false {
 		sessionid, err := c.createNewPxSessionId(ctx)
 
 		PxSessionId = sessionid
@@ -198,6 +202,7 @@ func (c *Client) Logout(ctx context.Context) (int, error) {
 		PxSessionId = ""
 
 		if statuscode == 204 {
+			isLoggedIn = false
 			return statuscode, nil
 
 		} else {
@@ -275,20 +280,34 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 
 	// Set PxSessionId in Header
 	req.Header.Set("pxsessionid", PxSessionId)
+
 	resp, err := c.client.Do(req)
-	if err != nil || (resp.StatusCode >= 300 || resp.StatusCode < 200) {
+
+	if resp != nil && (resp.StatusCode >= 300 || resp.StatusCode < 200) {
+
 		if resp != nil {
 			return nil, nil, resp.StatusCode, NewPxError(resp.Body, resp.StatusCode, endpoint)
 		} else {
+
 			return nil, nil, 0, &PxError{}
 		}
 
 	}
-	logDebug(ctx, c, fmt.Sprintf("Response Url: %v, Method: %v, PxSession-ID: %v Status: %v", urlstr, method, PxSessionId, resp.StatusCode))
 
-	// Update the PxSessionId
-	c.updatePxSessionId(resp.Header)
-	return resp.Body, resp.Header, resp.StatusCode, &PxError{}
+	if resp != nil {
+		logDebug(ctx, c, fmt.Sprintf("Response Url: %v, Method: %v, PxSession-ID: %v Status: %v", urlstr, method, PxSessionId, resp.StatusCode))
+
+		// Update the PxSessionId
+		c.updatePxSessionId(resp.Header)
+
+		return resp.Body, resp.Header, resp.StatusCode, &PxError{}
+
+		// If everything fails -> logout
+	} else {
+
+		_, _ = c.Logout(ctx)
+		return nil, nil, 0, &PxError{Message: fmt.Sprintf("%v", err)}
+	}
 
 }
 
