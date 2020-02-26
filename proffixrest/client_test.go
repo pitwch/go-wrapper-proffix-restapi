@@ -31,6 +31,7 @@ func ConnectTest(modules []string) (pxrest *Client, err error) {
 	//		Key:       "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50",
 	//		VerifySSL: false, Autologout: false},
 	//)
+
 	//Use private demo server
 	pxrest, err = NewClient(
 		os.Getenv("PXDEMO_URL"),
@@ -89,6 +90,7 @@ func TestClient_Requests(t *testing.T) {
 
 	//Connect
 	pxrest, err := ConnectTest([]string{"ADR"})
+
 	_, headers, statuscode, err := pxrest.Post(ctx, "ADR/Adresse", data)
 
 	//Check status code; Should be 201
@@ -292,7 +294,7 @@ func TestGetDatabase(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest([]string{})
+	pxrest, err := ConnectTest([]string{"ADR"})
 
 	rc, err := pxrest.Database(ctx, "")
 
@@ -333,7 +335,7 @@ func TestGetInfo(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest([]string{})
+	pxrest, err := ConnectTest([]string{"ADR"})
 
 	rc, err := pxrest.Info(ctx, pxrest.option.Key)
 
