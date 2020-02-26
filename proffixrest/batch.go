@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/url"
 	"strconv"
 )
@@ -49,9 +48,7 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 	paramquery.Add("Limit", strconv.Itoa(batchsize))
 	// Query Endpoint for results
 	rc, header, status, err := c.Get(ctx, endpoint, params)
-	log.Printf("%v %v", endpoint, params)
-	log.Print(header)
-	log.Println(err)
+
 	if err != nil {
 		return nil, 0, err
 	}
@@ -62,7 +59,7 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 	collector = append(collector, settingResp[:]...)
 
 	// If Status not 200 log Error message
-	if status != 200 {
+	if err != nil {
 		return nil, 0, err
 	}
 	// Get total available objects

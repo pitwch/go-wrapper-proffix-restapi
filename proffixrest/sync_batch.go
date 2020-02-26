@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 )
 
 //SyncBatchData is a placeholder for batch requests
@@ -53,24 +52,14 @@ func (c *Client) SyncBatch(ctx context.Context, endpoint string, keyfield string
 
 		//If Item not found -> create / post it with extracted keyfield
 		if statusGet == 404 {
-			res := ""
+			//res := ""
 
 			//If flag removeKeyfield is set -> remove Keyfield from Post - Request
 			if removeKeyfield {
 				delete(datas[i], keyfield)
 			}
 
-			resp, headers, status, err := c.Post(ctx, endpoint, datas[i])
-
-			x, err := json.Marshal(datas[i])
-			log.Println(string(x))
-
-			if resp != nil {
-				//Buffer decode for plain text response
-				buf := new(bytes.Buffer)
-				_, _ = buf.ReadFrom(resp)
-				res = buf.String()
-			}
+			_, headers, status, err := c.Post(ctx, endpoint, datas[i])
 
 			if status == 201 {
 
@@ -81,7 +70,7 @@ func (c *Client) SyncBatch(ctx context.Context, endpoint string, keyfield string
 				//Append to failed
 				failed = append(failed, key)
 
-				errors = append(errors, fmt.Sprintf("%v %v", err, res))
+				errors = append(errors, fmt.Sprintf("%v", err))
 			}
 
 			//If Item found -> update / put new values

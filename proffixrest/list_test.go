@@ -11,7 +11,7 @@ func TestClient_GetList(t *testing.T) {
 	ctx := context.Background()
 
 	//Connect
-	pxrest, err := ConnectTest(ctx, []string{"ADR"})
+	pxrest, err := ConnectTest([]string{"ADR"})
 
 	//Check error. Should be nil
 	if err != nil {
@@ -20,21 +20,22 @@ func TestClient_GetList(t *testing.T) {
 
 	_, headers, status, err := pxrest.GetList(ctx, 1029, nil)
 
-	//Check error. Should be nil
-	if err != nil {
-		t.Errorf("Expected no error for GET List Request. Got '%v'", err)
-	}
+	if status != 404 {
+		//Check error. Should be nil
+		if err != nil {
+			t.Errorf("Expected no error for GET List Request. Got '%v'", err)
+		}
 
-	//Check status. Should be 201
-	if status != 200 {
-		t.Errorf("Expected Status 201. Got '%v'", status)
-	}
+		//Check status. Should be 201
+		if status != 200 {
+			t.Errorf("Expected Status 201. Got '%v'", status)
+		}
 
-	//Check Content Type. Should be pdf
-	if headers.Get("Content-Type") != "application/pdf" {
-		t.Errorf("Expected Content-Type PDF. Got '%v'", status)
+		//Check Content Type. Should be pdf
+		if headers.Get("Content-Type") != "application/pdf" {
+			t.Errorf("Expected Content-Type PDF. Got '%v'", status)
+		}
 	}
-
 	//Check Logout
 	statuslogout, err := pxrest.Logout(ctx)
 

@@ -404,31 +404,11 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 
 	request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, nil, false, nil)
 
-	//If Login is invalid - try again
-	if statuscode == 401 {
-
-		//Set PxSessionId to empty string
-		PxSessionId = ""
-
-		//Get new pxsessionid and write to var
-		err = c.Login(ctx)
-
-		//Repeat Request with new SessionId
-		request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, url.Values{}, false, nil)
-
-		if !err.(*PxError).isNull() {
-			return request, header, statuscode, err
-		} else {
-			return request, header, statuscode, nil
-		}
+	if !err.(*PxError).isNull() {
+		return request, header, statuscode, err
+	} else {
+		return request, header, statuscode, nil
 	}
-
-	//If Statuscode not 204
-	if statuscode != 204 {
-		return request, header, statuscode, NewPxError(request, statuscode, endpoint)
-	}
-
-	return request, header, statuscode, &PxError{}
 }
 
 //File Request for PROFFIX REST-API

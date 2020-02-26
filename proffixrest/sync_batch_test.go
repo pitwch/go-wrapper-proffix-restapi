@@ -23,7 +23,8 @@ var artikel99999 = `{
 		"WaehrungNr": "CHF"
 	},
 	"Ertragskonto": {},
-	"Steuercode": {},
+	"Steuercode": {SteuercodeNr: 101},
+	"SteuercodeEinkauf"": {SteuercodeNr: 101},
 	"KeinBestand": true
 }`
 
@@ -44,7 +45,8 @@ var artikelBatchTest = `[{
 		"WaehrungNr": "CHF"
 	},
 	"Ertragskonto": {},
-	"Steuercode": {},
+		"Steuercode": {SteuercodeNr: 101},
+	"SteuercodeEinkauf"": {SteuercodeNr: 101},
 	"KeinBestand": true
 }, {
 	"ArtikelNr": "66666",
@@ -63,7 +65,8 @@ var artikelBatchTest = `[{
 		"WaehrungNr": "CHF"
 	},
 	"Ertragskonto": {},
-	"Steuercode": {},
+		"Steuercode": {SteuercodeNr: 101},
+	"SteuercodeEinkauf"": {SteuercodeNr: 101},
 	"KeinBestand": true
 }]`
 
@@ -73,7 +76,7 @@ func TestClient_SyncBatch(t *testing.T) {
 	ctx := context.Background()
 
 	//Connect
-	pxrest, _ := ConnectTest(ctx, []string{"LAG"})
+	pxrest, _ := ConnectTest([]string{"LAG"})
 
 	//Delete Artikel 99999
 	_, _, _, _ = pxrest.Delete(ctx, "LAG/Artikel/99999")

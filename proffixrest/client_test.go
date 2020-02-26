@@ -18,20 +18,19 @@ type Adresse struct {
 }
 
 //Connect function
-func ConnectTest(ctx context.Context, modules []string) (pxrest *Client, err error) {
+func ConnectTest(modules []string) (pxrest *Client, err error) {
 
 	//Use PROFFIX Public Demo Login as Example (REMOVED - As offical demo often is outdated)
 	//pxrest, err = NewClient(
-	//	"https://remote.proffix.net:11011/pxapi/v2",
+	//	"https://remote.proffix.net:11011/pxapi/v3",
 	//	"Gast",
 	//	"16ec7cb001be0525f9af1a96fd5ea26466b2e75ef3e96e881bcb7149cd7598da",
 	//	"DEMODB",
-	//	[]string{"ADR", "FIB"},
+	//	modules,
 	//	&Options{
 	//		Key:       "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50",
 	//		VerifySSL: false, Autologout: false},
 	//)
-
 	//Use private demo server
 	pxrest, err = NewClient(
 		os.Getenv("PXDEMO_URL"),
@@ -89,7 +88,7 @@ func TestClient_Requests(t *testing.T) {
 	var data = Adresse{Name: "Muster GmbH", Ort: "Zürich", PLZ: "8000"}
 
 	//Connect
-	pxrest, err := ConnectTest(ctx, []string{"ADR"})
+	pxrest, err := ConnectTest([]string{"ADR"})
 	_, headers, statuscode, err := pxrest.Post(ctx, "ADR/Adresse", data)
 
 	//Check status code; Should be 201
@@ -197,7 +196,7 @@ func TestClient_Requests(t *testing.T) {
 		}
 
 		//Check error. Should be nil
-		if !err.(*PxError).isNull() {
+		if err != nil {
 			t.Errorf("Expected no error for DELETE Request. Got '%v'", err)
 		}
 	}
@@ -238,7 +237,7 @@ func TestClient_AdvancedFilters(t *testing.T) {
 	var adressen []Adresse
 
 	//Connect
-	pxrest, err := ConnectTest(ctx, []string{"ADR"})
+	pxrest, err := ConnectTest([]string{"ADR"})
 
 	//Set Advanced Params.
 	params := url.Values{}
@@ -293,13 +292,13 @@ func TestGetDatabase(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest(ctx, []string{})
+	pxrest, err := ConnectTest([]string{})
 
 	rc, err := pxrest.Database(ctx, "")
 
 	//Check error. Should be nil
-	if err == nil {
-		t.Errorf("Expected error for Database Request. Got '%v'", err)
+	if err != nil {
+		t.Errorf("Expected no error for Database Request. Got '%v'", err)
 	}
 
 	if rc != nil {
@@ -334,13 +333,13 @@ func TestGetInfo(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest(ctx, []string{})
+	pxrest, err := ConnectTest([]string{})
 
 	rc, err := pxrest.Info(ctx, pxrest.option.Key)
 
 	//Check error. Should be nil
-	if err == nil {
-		t.Errorf("Expected error for Info Request. Got '%v'", err)
+	if err != nil {
+		t.Errorf("Expected no error for Info Request. Got '%v'", err)
 	}
 
 	if rc != nil {
@@ -350,8 +349,8 @@ func TestGetInfo(t *testing.T) {
 		resp := buf.String()
 
 		//Check error. Should be nil
-		if err == nil {
-			t.Errorf("Expected error for Info Request. Got '%v'", err)
+		if err != nil {
+			t.Errorf("Expected no error for Info Request. Got '%v'", err)
 		}
 
 		//Check if response isn't empty
@@ -368,7 +367,7 @@ func TestStructs(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, _ := ConnectTest(ctx, []string{"ADR"})
+	pxrest, _ := ConnectTest([]string{"ADR"})
 
 	//Set test vars
 	q := *pxrest
@@ -423,7 +422,7 @@ func TestClient_LoginWithFalsePxSessionId(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest(ctx, []string{"ADR"})
+	pxrest, err := ConnectTest([]string{"ADR"})
 
 	//Check error. Should be nil
 	if err != nil {
