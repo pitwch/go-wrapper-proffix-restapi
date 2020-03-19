@@ -73,7 +73,7 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | Batchsize        | 200                                                              | Batchgrösse für Batchrequests; Standard = 200                  |
 | Log              | true                                                             | Aktiviert den Log für Debugging; Standard = false              |
 | Client           | urlfetch.Client(ctx)                                             | HTTP-Client; Standard = http.DefaultClient                     |
-
+| VolumeLicence    | false                                                            | Nutzt PROFFIX Volumenlizenzierung                              |
 
 
 

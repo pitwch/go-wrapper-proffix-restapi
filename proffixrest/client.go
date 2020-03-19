@@ -56,7 +56,7 @@ type DatabaseStruct struct {
 	Name string `json:"Name"`
 }
 
-//Building new Client
+// Building new Client
 func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase string, apiModule []string, options *Options) (*Client, error) {
 	restURL, err := url.Parse(RestURL)
 	if err != nil {
@@ -67,7 +67,7 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 		options = &Options{}
 	}
 
-	//Default to v3
+	// Default to v3
 	if options.Version == "" {
 		options.Version = "v3"
 	}
@@ -84,7 +84,12 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 		options.UserAgent = "go-wrapper-proffix-restapi " + Version
 	}
 
-	//Set default batchsize for batch requests
+	// If VolumeLicence enabled set Modules to "VOL"
+	if options.VolumeLicence == true {
+		apiModule = []string{"VOL"}
+	}
+
+	// Set default batchsize for batch requests
 	if options.Batchsize == 0 {
 		options.Batchsize = 200
 	}
@@ -111,35 +116,35 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 	}, nil
 }
 
-//Function for creating new PxSessionId
+// Function for creating new PxSessionId
 func (c *Client) createNewPxSessionId(ctx context.Context) (sessionid string, err error) {
 
-	//Check URL, else exit
+	// Check URL, else exit
 	_, err = url.ParseRequestURI(c.restURL.String())
 	if err != nil {
 		return "", &PxError{Message: "URL in wrong format"}
 	}
 
-	//Build Login URL
+	// Build Login URL
 	urlstr := c.restURL.String() + c.option.LoginEndpoint
 
-	//Create Login Body
+	// Create Login Body
 	data := LoginStruct{c.Benutzer, c.Passwort, DatabaseStruct{c.Datenbank}, c.Module}
 
-	//Encode Login Body to JSON
+	// Encode Login Body to JSON
 	body := new(bytes.Buffer)
 	encoder := json.NewEncoder(body)
 	if err := encoder.Encode(data); err != nil {
 		return "", &PxError{Message: fmt.Sprintf("%v", err)}
 	}
 
-	//Build Login Request
+	// Build Login Request
 	req, err := http.NewRequest("POST", urlstr, body)
 	if err != nil {
 		return "", &PxError{Message: "Error on builiding Request"}
 	}
 
-	//Set Login Header
+	// Set Login Header
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -161,9 +166,9 @@ func (c *Client) createNewPxSessionId(ctx context.Context) (sessionid string, er
 	}
 }
 
-//Function for Login
-//Helper Function for Login to PROFFIX REST-API
-//Login is automatically done
+// Function for Login
+// Helper Function for Login to PROFFIX REST-API
+// Login is automatically done
 func (c *Client) Login(ctx context.Context) error {
 
 	// If Pxsessionid doesnt yet exists create a new one
@@ -311,9 +316,9 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 
 }
 
-//POST Request for PROFFIX REST-API
-//Accepts Context, Endpoint and Data as Input
-//Returns io.ReadCloser,http.Header,Statuscode,error
+// Post Request for PROFFIX REST-API
+// Accepts Context, Endpoint and Data as Input
+// Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
 	if !err.(*PxError).isNull() {
@@ -333,9 +338,9 @@ func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (i
 
 }
 
-//PUT Request for PROFFIX REST-API
-//Accepts Endpoint and Data as Input
-//Returns io.ReadCloser,http.Header,Statuscode,error
+// Put Request for PROFFIX REST-API
+// Accepts Endpoint and Data as Input
+// Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
 	if !err.(*PxError).isNull() {
@@ -353,9 +358,9 @@ func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io
 	}
 }
 
-//GET Request for PROFFIX REST-API
-//Accepts Endpoint and url.Values as Input
-//Returns io.ReadCloser,http.Header,Statuscode,error
+// Get Request for PROFFIX REST-API
+// Accepts Endpoint and url.Values as Input
+// Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (io.ReadCloser, http.Header, int, error) {
 
 	err := c.Login(ctx)
@@ -373,9 +378,9 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 
 }
 
-//PATCH Request for PROFFIX REST-API
-//Accepts Context, Endpoint and Data as Input
-//Returns io.ReadCloser,http.Header,Statuscode,error
+// Patch Request for PROFFIX REST-API
+// Accepts Context, Endpoint and Data as Input
+// Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Patch(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
 	if !err.(*PxError).isNull() {
@@ -393,9 +398,9 @@ func (c *Client) Patch(ctx context.Context, endpoint string, data interface{}) (
 	}
 }
 
-//DELETE Request for PROFFIX REST-API
-//Accepts Endpoint and url.Values as Input
-//Returns io.ReadCloser,http.Header,Statuscode,error
+// Delete Request for PROFFIX REST-API
+// Accepts Endpoint and url.Values as Input
+// Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
 	if !err.(*PxError).isNull() {
@@ -411,9 +416,9 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 	}
 }
 
-//File Request for PROFFIX REST-API
-//Accepts Context, Endpoint and []Byte as Input
-//Returns io.ReadCloser,http.Header,Statuscode,error
+// File Request for PROFFIX REST-API
+// Accepts Context, Endpoint and []Byte as Input
+// Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) File(ctx context.Context, filename string, data []byte) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
 
@@ -442,9 +447,9 @@ func (c *Client) File(ctx context.Context, filename string, data []byte) (io.Rea
 	}
 }
 
-//INFO Request for PROFFIX REST-API
-//Accepts Webservice Key as Input or if left empty uses key from options parameter
-//Returns Info about API as io.ReadCloser,error
+// Info Request for PROFFIX REST-API
+// Accepts Webservice Key as Input or if left empty uses key from options parameter
+// Returns Info about API as io.ReadCloser,error
 func (c *Client) Info(ctx context.Context, pxapi string) (io.ReadCloser, error) {
 
 	var endpoint = "PRO/Info"
@@ -467,9 +472,9 @@ func (c *Client) Info(ctx context.Context, pxapi string) (io.ReadCloser, error) 
 	}
 }
 
-//DATABASE Request for PROFFIX REST-API
-//Accepts Webservice Key as Input or if left empty uses key from options parameter
-//Returns Database Info as io.ReadCloser,error
+// Database Request for PROFFIX REST-API
+// Accepts Webservice Key as Input or if left empty uses key from options parameter
+// Returns Database Info as io.ReadCloser,error
 func (c *Client) Database(ctx context.Context, pxapi string) (io.ReadCloser, error) {
 
 	param := url.Values{}
