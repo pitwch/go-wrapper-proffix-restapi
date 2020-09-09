@@ -3,6 +3,7 @@ package proffixrest
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -105,6 +106,15 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 	path := options.APIPrefix + options.Version + "/"
 	restURL.Path = path
 
+	tClient := DefaultHTTPClient
+
+	if !options.VerifySSL {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		tClient = &http.Client{Transport: tr}
+	}
+
 	return &Client{
 		restURL:   restURL,
 		Benutzer:  apiUser,
@@ -112,7 +122,7 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 		Datenbank: apiDatabase,
 		Module:    apiModule,
 		option:    options,
-		client:    DefaultHTTPClient,
+		client:    tClient,
 	}, nil
 }
 
