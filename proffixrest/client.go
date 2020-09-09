@@ -99,21 +99,20 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 
 		DefaultHTTPClient = http.DefaultClient
 
-		//Set options for Timeout
+		// Set options for Timeout
 		DefaultHTTPClient.Timeout = options.Timeout
+
+	}
+	// Disable Cert-Check
+	if !options.VerifySSL {
+		customTransport := http.DefaultTransport.(*http.Transport).Clone()
+		customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+		DefaultHTTPClient.Transport = customTransport
 	}
 
 	path := options.APIPrefix + options.Version + "/"
 	restURL.Path = path
-
-	tClient := DefaultHTTPClient
-
-	if !options.VerifySSL {
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		tClient = &http.Client{Transport: tr}
-	}
 
 	return &Client{
 		restURL:   restURL,
@@ -122,7 +121,7 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 		Datenbank: apiDatabase,
 		Module:    apiModule,
 		option:    options,
-		client:    tClient,
+		client:    DefaultHTTPClient,
 	}, nil
 }
 
