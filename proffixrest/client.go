@@ -107,8 +107,7 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 	if !options.VerifySSL {
 		customTransport := http.DefaultTransport.(*http.Transport).Clone()
 		customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-
-		DefaultHTTPClient.Transport = customTransport
+		DefaultHTTPClient = &http.Client{Transport: customTransport}
 	}
 
 	path := options.APIPrefix + options.Version + "/"
