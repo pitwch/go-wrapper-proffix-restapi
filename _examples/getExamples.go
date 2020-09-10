@@ -19,7 +19,7 @@ func Connect() (pxrest *px.Client, err error) {
 		"16ec7cb001be0525f9af1a96fd5ea26466b2e75ef3e96e881bcb7149cd7598da",
 		"DEMODB",
 		[]string{"ADR", "FIB"},
-		&px.Options{Timeout: 30, VerifySSL: false},
+		&px.Options{Timeout: 30},
 	)
 
 	return pxrest, err

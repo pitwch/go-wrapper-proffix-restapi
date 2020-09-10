@@ -95,6 +95,11 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 		options.Batchsize = 200
 	}
 
+	// Disable Cert Verfication
+	if options.VerifySSL == false {
+		DefaultHTTPTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+
 	if DefaultHTTPClient == nil {
 
 		DefaultHTTPClient = http.DefaultClient
@@ -102,12 +107,6 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 		// Set options for Timeout
 		DefaultHTTPClient.Timeout = options.Timeout
 
-	}
-	// Disable Cert-Check
-	if !options.VerifySSL {
-		customTransport := http.DefaultTransport.(*http.Transport).Clone()
-		customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-		DefaultHTTPClient = &http.Client{Transport: customTransport}
 	}
 
 	path := options.APIPrefix + options.Version + "/"
