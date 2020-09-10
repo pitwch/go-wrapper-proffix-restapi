@@ -4,9 +4,9 @@ services:
 go:
   - 1.13.x
 before_install:
-  # Setup dependency management tool
-  - curl -L -s https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64 -o $GOPATH/bin/dep
-  - chmod +x $GOPATH/bin/dep
+  # Setup dependency management tool (deprecated)
+  #- curl -L -s https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64 -o $GOPATH/bin/dep
+  #- chmod +x $GOPATH/bin/dep
   # Setup test coveragae
   - chmod +x test-coverage.sh
   - go get -t -v ./...
@@ -22,6 +22,8 @@ before_script:
 script:
   - ./test-coverage.sh
   - chmod +x release
+  - env GO111MODULE=on go build
+  - env GO111MODULE=on go test
 after_success:
   - bash <(curl -s https://codecov.io/bash)
   - ./release
