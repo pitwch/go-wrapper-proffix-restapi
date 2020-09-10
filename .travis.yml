@@ -22,8 +22,8 @@ before_script:
 script:
   - ./test-coverage.sh
   - chmod +x release
-  - env GO111MODULE=on go build
-  - env GO111MODULE=on go test
+  - env GO111MODULE=on go build ./cmd/proffix-rest/
+  - env GO111MODULE=on go test ./...
 after_success:
   - bash <(curl -s https://codecov.io/bash)
   - ./release
