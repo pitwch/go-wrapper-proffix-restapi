@@ -423,37 +423,6 @@ func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, ht
 	}
 }
 
-// File Request for PROFFIX REST-API
-// Accepts Context, Endpoint and []Byte as Input
-// Returns io.ReadCloser,http.Header,Statuscode,error
-func (c *Client) File(ctx context.Context, filename string, data []byte) (io.ReadCloser, http.Header, int, error) {
-	err := c.Login(ctx)
-
-	if !err.(*PxError).isNull() {
-		return nil, nil, 0, err
-	}
-
-	// Define endpoint
-	var endpoint = "PRO/Datei"
-
-	// Set filename
-
-	params := url.Values{}
-	if filename != "" {
-		params.Set("filename", filename)
-	}
-	request, header, statuscode, err := c.request(ctx, "POST", endpoint, params, true, data)
-
-	//If Log enabled in options log data
-	logDebug(ctx, c, fmt.Sprintf("Sent data in POST-Request: %v", data))
-
-	if !err.(*PxError).isNull() {
-		return request, header, statuscode, err
-	} else {
-		return request, header, statuscode, nil
-	}
-}
-
 // Info Request for PROFFIX REST-API
 // Accepts Webservice Key as Input or if left empty uses key from options parameter
 // Returns Info about API as io.ReadCloser,error
