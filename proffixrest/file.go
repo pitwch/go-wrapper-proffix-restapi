@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"net/url"
-	"strings"
+	"strconv"
 )
 
 // File Write Request for PROFFIX REST-API
@@ -41,36 +42,31 @@ func (c *Client) File(ctx context.Context, filename string, data []byte) (io.Rea
 }
 
 // File Read Request for PROFFIX REST-API
-// Accepts Context and DateiNr as Input
-// Returns io.ReadCloser,http.Header,Statuscode,error
-func (c *Client) GetFile(ctx context.Context, dateinr string) (io.ReadCloser, http.Header, int, error) {
+// Accepts Context, DateiNr and Params as Input
+// Returns File as io.ReadCloser,Filename string,ContentType string,ContentLength int,error
+func (c *Client) GetFile(ctx context.Context, dateinr string, params url.Values) (rc io.ReadCloser, FileName string, ContentType string, ContentLength int, err error) {
 
 	// Build query for getting download URL of List
-	resp, headers, status, err := c.Get(ctx, "PRO/Datei/"+dateinr, nil)
+	resp, headers, status, err := c.Get(ctx, "PRO/Datei/"+dateinr, params)
 
-	// If err not nil or status not 201
-	if err != nil || status != 201 {
+	// If err not nil or status not 200
+	if err != nil || status != 200 {
 		logDebug(ctx, c, fmt.Sprintf("Error on create list: %v, PxSession-ID: %v", err.(*PxError).Message, PxSessionId))
-		return resp, headers, status, err
+		return resp, "", "", 0, err
 	}
 
-	downloadLocation := headers.Get("Location")
+	ContentType = headers.Get("Content-Type")
+	ContentLength, _ = strconv.Atoi(headers.Get("Content-Length"))
+	ContentDisposition := headers.Get("Content-Disposition")
 
-	// If Log enabled log URL
-	logDebug(ctx, c, fmt.Sprintf("Got Download URL from PROFFIX REST-API: %v, PxSession-ID: %v", downloadLocation, PxSessionId))
-
-	// Remove Path from Response -> replace with empty string
-	cleanLocation := strings.Replace(downloadLocation, c.restURL.String(), "", -1)
-
-	downloadFile, headersDownload, statusDownload, err := c.Get(ctx, cleanLocation, nil)
-
-	if headersDownload == nil {
-		headersDownload = http.Header{}
+	_, paramsCD, errCD := mime.ParseMediaType(ContentDisposition)
+	if errCD == nil {
+		FileName = paramsCD["filename"]
 	}
 
 	// If Log enabled log URL
-	logDebug(ctx, c, fmt.Sprintf("Downloaded File from '%v' with Content-Length: %v, PxSession-ID: %v", cleanLocation, headersDownload.Get("Content-Length"), PxSessionId))
+	logDebug(ctx, c, fmt.Sprintf("Downloaded File with Content-Length: %v, PxSession-ID: %v", ContentLength, PxSessionId))
 
-	return downloadFile, headersDownload, statusDownload, err
+	return resp, FileName, ContentType, ContentLength, err
 
 }

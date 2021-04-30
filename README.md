@@ -302,8 +302,8 @@ Liest eine Datei aufgrund der DateiNr
 
 ```golang
 
-rc, _,_,_ := px.GetFile(ctx,"9PnrK4XiFzyrTdDK9HHLE80Kk2lARKS5Ppn2WNrOPqGHzCREYtidmRhUKXq-82uSvDerMckkcB3srYn9TsKvk0C1P9ca3deIeMzp5jiaeIwT4wgnH0qarwdny17-8eGq")
-px.WriteFile("C://test//test.pdf",rc)
+rc, filename,_,_,err := px.GetFile(ctx,"9PnrK4XiFzyrTdDK9HHLE80Kk2lARKS5Ppn2WNrOPqGHzCREYtidmRhUKXq-82uSvDerMckkcB3srYn9TsKvk0C1P9ca3deIeMzp5jiaeIwT4wgnH0qarwdny17-8eGq",nil)
+px.WriteFile(filename,rc)
 
 ```
 

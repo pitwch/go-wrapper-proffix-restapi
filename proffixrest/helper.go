@@ -77,6 +77,7 @@ func GetMap(rc io.Reader) (items map[string]interface{}, err error) {
 	return it, err
 }
 
+// GetFileTokens returns map[string]string{} from io.Reader
 func GetFileTokens(rc io.Reader, keyField string, fileField string) (files []map[string][]string, err error) {
 
 	// Set Default
