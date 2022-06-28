@@ -21,16 +21,16 @@ type Adresse struct {
 func ConnectTest(modules []string) (pxrest *Client, err error) {
 
 	//Use PROFFIX Public Demo Login as Example (REMOVED - As offical demo often is outdated)
-	//pxrest, err = NewClient(
-	//	"https://remote.proffix.net:11011/pxapi/v3",
-	//	"Gast",
-	//	"16ec7cb001be0525f9af1a96fd5ea26466b2e75ef3e96e881bcb7149cd7598da",
-	//	"DEMODB",
-	//	modules,
-	//	&Options{
-	//		Key:       "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50",
-	//		VerifySSL: false, Autologout: false},
-	//)
+	/* 	pxrest, err = NewClient(
+		"https://remote.proffix.net:11011/pxapi/v3",
+		"Gast",
+		"16ec7cb001be0525f9af1a96fd5ea26466b2e75ef3e96e881bcb7149cd7598da",
+		"DEMODB",
+		modules,
+		&Options{
+			Key:       "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50",
+			VerifySSL: false, Autologout: false},
+	) */
 
 	//Use private demo server
 	pxrest, err = NewClient(
@@ -45,16 +45,6 @@ func ConnectTest(modules []string) (pxrest *Client, err error) {
 	)
 
 	return pxrest, err
-}
-
-//Helper function for checking if is type Adresse
-func isAdressArray(t interface{}) bool {
-	switch t.(type) {
-	case []Adresse:
-		return true
-	default:
-		return false
-	}
 }
 
 //Helper function for checking if is type Options
@@ -165,7 +155,7 @@ func TestClient_Requests(t *testing.T) {
 
 		//Query Created AdressNr
 
-		_, headers, statuscode, _ = pxrest.Get(ctx, "ADR/Adresse/"+DemoAdressNr, nil)
+		_, headers, statuscode, err = pxrest.Get(ctx, "ADR/Adresse/"+DemoAdressNr, nil)
 
 		//Check status code; Should be 200
 		if statuscode != 200 {
@@ -179,7 +169,7 @@ func TestClient_Requests(t *testing.T) {
 
 		//Check error. Should be nil
 		if err != nil {
-			t.Errorf("Expected no error for GET Request. Got '%v'", err)
+			t.Errorf("Expected no error for GET Request ( AdressNr '%v'). Got '%v'", DemoAdressNr, err)
 		}
 
 		//DELETE TESTs
