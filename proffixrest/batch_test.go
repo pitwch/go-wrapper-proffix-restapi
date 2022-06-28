@@ -26,7 +26,7 @@ func TestGetBatch(t *testing.T) {
 	var adressen []Adresse
 
 	//Connect
-	pxrest, err := ConnectTest([]string{})
+	pxrest, err := ConnectTest([]string{"VOL"})
 
 	if err != nil {
 		t.Errorf("Error on ConnectTest: '%v'", err)
