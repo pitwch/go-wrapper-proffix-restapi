@@ -6,10 +6,10 @@
 [![GitHub license](https://img.shields.io/github/license/pitwch/go-wrapper-proffix-restapi.svg)](https://github.com/pitwch/go-wrapper-proffix-restapi/blob/master/LICENSE)
 
 # Golang Wrapper für PROFFIX REST-API
+
 Der zuverlässige Wrapper für die PROFFIX REST-API in Go.
 
 ![alt text](https://raw.githubusercontent.com/pitwch/go-wrapper-proffix-restapi/master/_assets/img/go-proffix-rest-wrapper.jpg "Golang Wrapper PROFFIX REST API")
-
 
 **Übersicht**
 
@@ -21,19 +21,19 @@ Der zuverlässige Wrapper für die PROFFIX REST-API in Go.
 - [CMD / Docker](#cmd-docker)
 - [Weitere Beispiele](#weitere-beispiele)
 
-
 ### Installation
+
 ```bash
-$ go get github.com/pitwch/go-wrapper-proffix-restapi/proffixrest
+go get github.com/pitwch/go-wrapper-proffix-restapi/proffixrest
 ```
 
-
 #### Konfiguration
+
 Die Konfiguration wird dem Client mitgegeben:
 
 | Konfiguration | Beispiel                 | Type          | Bemerkung                             |
 |---------------|--------------------------|---------------|---------------------------------------|
-| RestURL       | https://myserver.ch:999  | `string`      | URL der REST-API **ohne pxapi/v2/**   |
+| RestURL       | <https://myserver.ch:999>  | `string`      | URL der REST-API **ohne pxapi/v2/**   |
 | apiDatabase   | DEMO                     | `string`      | Name der Datenbank                    |
 | apiUser       | USR                      | `string`      | Names des Benutzers                   |
 | apiPassword   | b62cce2fe18f7a156a9c...  | `string`      | SHA256-Hash des Benutzerpasswortes    |
@@ -48,17 +48,17 @@ import (
 )
 
 var pxrest, err = px.NewClient(
-	"https://myserver.ch:999",
-	"USR",
-	"b62cce2fe18f7a156a9c719c57bebf0478a3d50f0d7bd18d9e8a40be2e663017",
-	"DEMO",
-	[]string{"ADR", "FIB"},
-	&px.Options{},
+ "https://myserver.ch:999",
+ "USR",
+ "b62cce2fe18f7a156a9c719c57bebf0478a3d50f0d7bd18d9e8a40be2e663017",
+ "DEMO",
+ []string{"ADR", "FIB"},
+ &px.Options{},
 )
 ```
 
-
 ### Optionen
+
 Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 
 | Option           | Beispiel                                                         | Bemerkung                                                      |
@@ -75,8 +75,6 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | Client           | urlfetch.Client(ctx)                                             | HTTP-Client; Standard = http.DefaultClient                     |
 | VolumeLicence    | false                                                            | Nutzt PROFFIX Volumenlizenzierung                              |
 
-
-
 #### Methoden
 
 | Parameter  | Typ           | Bemerkung                                                                                                |
@@ -85,12 +83,7 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | data       | `interface{}` | Daten (werden automatisch in JSON konvertiert)                                                           |
 | parameters | `url.Values`  | Parameter gemäss [PROFFIX REST API Docs](http://www.proffix.net/Portals/0/content/REST%20API/index.html) |
 
-
-
-
 Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
-
-
 
 ##### Get / Query
 
@@ -103,60 +96,56 @@ ctx := context.Background()
      rc, _,statuscode, err := pxrest.Get(ctx,"ADR/Adresse/1", url.Values{})
 
 //Abfrage mit Parametern
-	param := url.Values{}
-	param.Set("Filter", "Vorname@='Max'")
+ param := url.Values{}
+ param.Set("Filter", "Vorname@='Max'")
 
-	rc,_, statuscode, err := pxrest.Get(ctx,"ADR/Adresse", param)
+ rc,_, statuscode, err := pxrest.Get(ctx,"ADR/Adresse", param)
 
 ```
-
 
 ##### Put / Update
 
 ```golang
 $pxrest =  new  Client(...)
 var data map[string]interface{} = map[string]interface{}{
-		"Name":   "Muster GmbH",
-		"Ort":    "Zürich",
-		"Zürich": "8000",
-	}
+  "Name":   "Muster GmbH",
+  "Ort":    "Zürich",
+  "Zürich": "8000",
+ }
 
-	rc, header, statuscode, err := pxrest.Put(ctx,"ADR/Adresse", data)
+ rc, header, statuscode, err := pxrest.Put(ctx,"ADR/Adresse", data)
 ```
-
 
 ##### Patch / Update
 
 ```golang
 $pxrest =  new  Client(...)
 var data map[string]interface{} = map[string]interface{}{
-		"Ort":    "Zürich",
-		"Zürich": "8000",
-	}
+  "Ort":    "Zürich",
+  "Zürich": "8000",
+ }
 
-	rc, header, statuscode, err := pxrest.Patch(ctx,"ADR/Adresse/1", data)
+ rc, header, statuscode, err := pxrest.Patch(ctx,"ADR/Adresse/1", data)
 ```
-
 
 ##### Post / Create
 
 ```golang
 var data map[string]interface{} = map[string]interface{}{
-		"Name":   "Muster GmbH",
-		"Ort":    "Zürich",
-		"Zürich": "8000",
-	}
+  "Name":   "Muster GmbH",
+  "Ort":    "Zürich",
+  "Zürich": "8000",
+ }
 
-	//Query Endpoint ADR/Adresse with Headers
-	rc, header, statuscode, err := pxrest.Post(ctx,"ADR/Adresse", data)
+ //Query Endpoint ADR/Adresse with Headers
+ rc, header, statuscode, err := pxrest.Post(ctx,"ADR/Adresse", data)
 ```
-
 
 ##### Delete / Delete
 
 ```golang
-	//Delete Endpoint ADR/Adresse with Headers
-	_, _, _, err = pxrest.Delete(ctx,"ADR/Adresse/2")
+ //Delete Endpoint ADR/Adresse with Headers
+ _, _, _, err = pxrest.Delete(ctx,"ADR/Adresse/2")
 ```
 
 ##### Response / Antwort
@@ -174,30 +163,30 @@ Beispiel (Kein Header, Ohne Statuscode):
 
 ```golang
 // Returns no Header (_)
-	rc, _, _, err := pxrest.Get(ctx,"ADR/Adresse/1", url.Values{})
+ rc, _, _, err := pxrest.Get(ctx,"ADR/Adresse/1", url.Values{})
 ```
 
 Beispiel (Mit Header, Ohne Statuscode):
 
 ```golang
 // Returns Header
-	rc, header, _, err := pxrest.Post(ctx,"ADR/Adresse/1", data)
+ rc, header, _, err := pxrest.Post(ctx,"ADR/Adresse/1", data)
 
 // Print Header->Location
-	fmt.Print(header.Get("Location"))
-	
+ fmt.Print(header.Get("Location"))
+ 
 ```
 
 **Hinweis:** Der Typ `io.ReadCloser` kann mittels Buffer Decode gelesen werden:
 
 ```golang
-	rc, header, _, err := pxrest.Get(ctx,"ADR/Adresse/1", url.Values{})
+ rc, header, _, err := pxrest.Get(ctx,"ADR/Adresse/1", url.Values{})
 
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(rc)
-	resp := buf.String()
-	fmt.Printf(resp, err)
-	defer rc.Close()
+ buf := new(bytes.Buffer)
+ buf.ReadFrom(rc)
+ resp := buf.String()
+ fmt.Printf(resp, err)
+ defer rc.Close()
 ```
 
 ##### Fehlerhandling / Error
@@ -206,7 +195,7 @@ Detaillierte Fehlerinformationen der REST-API können über den Fehlertyp PxErro
 
 ```golang
 // Query with Error
-	rc, _, _, err := pxrest.Get(ctx,"ADR/Adresse/xxx", url.Values{})
+ rc, _, _, err := pxrest.Get(ctx,"ADR/Adresse/xxx", url.Values{})
     
     fmt.Print(err.(*PxError).Message)    // Message field
     fmt.Print(err.(*PxError).Status)     // Status field
@@ -224,10 +213,9 @@ Loggt den Client von der PROFFIX REST-API aus und gibt die Session / Lizenz dami
 
 *Hinweis: Es wird automatisch die zuletzt verwendete PxSessionId für den Logout verwendet*
 
-
 ```golang
 
-	statuscode, err := pxrest.Logout(ctx)
+ statuscode, err := pxrest.Logout(ctx)
 
 ```
 
@@ -241,16 +229,16 @@ Ruft Infos vom Endpunkt **PRO/Info** ab.
 
 ```golang
 
-	rc, err := pxrest.Info(ctx,"112a5a90fe28b23ed2c776562a7d1043957b5b79fad242b10141254b4de59028")
+ rc, err := pxrest.Info(ctx,"112a5a90fe28b23ed2c776562a7d1043957b5b79fad242b10141254b4de59028")
 
-	//Buffer decode for plain text response
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(rc)
-	resp := buf.String()
+ //Buffer decode for plain text response
+ buf := new(bytes.Buffer)
+ buf.ReadFrom(rc)
+ resp := buf.String()
 
-	fmt.Printf(resp, err)
+ fmt.Printf(resp, err)
 
-	defer rc.Close()
+ defer rc.Close()
 ```
 
 ##### Datenbank
@@ -260,37 +248,49 @@ Ruft Infos vom Endpunkt **PRO/Datenbank** ab.
 *Hinweis: Dieser Endpunkt / Abfrage blockiert keine Lizenz*
 
 ```golang
-	rc, err := pxrest.Database(ctx,"112a5a90fe28b23ed2c776562a7d1043957b5b79fad242b10141254b4de59028")
+ rc, err := pxrest.Database(ctx,"112a5a90fe28b23ed2c776562a7d1043957b5b79fad242b10141254b4de59028")
 
-	//Buffer decode for plain text response
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(rc)
-	resp := buf.String()
+ //Buffer decode for plain text response
+ buf := new(bytes.Buffer)
+ buf.ReadFrom(rc)
+ resp := buf.String()
 
-	fmt.Printf(resp, err)
+ fmt.Printf(resp, err)
 
-	defer rc.Close()
+ defer rc.Close()
   ```
+
+##### ServiceLogin
+
+Loggt den Client mit einer gegebenen PxSessionId ein (wird z.B. bei Erweiterungen verwendet)
+
+```golang
+
+ pxrest, err := pxrest.ServiceLogin(ctx,"7e024696-49e4-e54e-1a20-ffc0ba9a1374)
+
+```
+
+Der Wrapper führt den **Logout auch automatisch bei Fehlern** durch damit keine Lizenz geblockt wird.
+
 ##### PRO/Datei bzw. File Upload
 
 Lädt Datei zum Endpunkt **PRO/Datei** hoch.
 
-
 ```golang
 
-	fp := "C:/test.png"
-	file, err := ioutil.ReadFile(fp)
+ fp := "C:/test.png"
+ file, err := ioutil.ReadFile(fp)
 
-	rc, headers, status, err := pxrest.File(ctx,"Demofile.png", file)
+ rc, headers, status, err := pxrest.File(ctx,"Demofile.png", file)
 
-	//Buffer decode for plain text response
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(rc)
-	resp := buf.String()
+ //Buffer decode for plain text response
+ buf := new(bytes.Buffer)
+ buf.ReadFrom(rc)
+ resp := buf.String()
 
-	fmt.Printf(resp, err)
+ fmt.Printf(resp, err)
 
-	defer rc.Close()
+ defer rc.Close()
 
     // Get temporary filename from Headers
     id := proffixrest.ConvertLocationToID(headers)
@@ -298,6 +298,7 @@ Lädt Datei zum Endpunkt **PRO/Datei** hoch.
 ```
 
 ##### PRO/Datei bzw. File Download
+
 Liest eine Datei aufgrund der DateiNr
 
 ```golang
@@ -330,55 +331,53 @@ Ideal wenn z.B. nicht klar ist wieviele Ergebnisse vorliegen aber trotzdem alle 
 
 ##### Sync Batch
 
-Synchronisiert Daten im Batch Modus. 
+Synchronisiert Daten im Batch Modus.
 Damit lassen sich **beliebig viele Einträge eines Endpunktes (z.B: 100 Artikel) synchronisieren** - der Wrapper wählt **automatisch die passende Methode** aus und aktualisiert den JSON-Body (abhängig vom Vorhandensein eines Keyfields und dessen Ergebnis einer GET-Abfrage)
 
 ```golang
     
     //First entry has AdressNr and exist -> PUT, second has no AdressNr -> POST
    jsonExample := `[{
-                   	"AdressNr": 276,
-                   	"Name": "EYX AG",
-                   	"Vorname": null,
-                   	"Strasse": "Zollstrasse 2",
-                   	"PLZ": "8000",
-                   	"Ort": "Zürich"
+                    "AdressNr": 276,
+                    "Name": "EYX AG",
+                    "Vorname": null,
+                    "Strasse": "Zollstrasse 2",
+                    "PLZ": "8000",
+                    "Ort": "Zürich"
                    }, {
-                   	"Name": "Muster",
-                   	"Vorname": "Hans",
-                   	"Strasse": "Zürcherstrasse 2",
-                   	"PLZ": "8000",
-                   	"Ort": "Zürich"
+                    "Name": "Muster",
+                    "Vorname": "Hans",
+                    "Strasse": "Zürcherstrasse 2",
+                    "PLZ": "8000",
+                    "Ort": "Zürich"
                    }]`
                      
 
 
-  	created,updated,failed,errors, total, err := pxrest.SyncBatch(ctx, "ADR/Adresse","AdressNr", true,[]byte(jsonExample)) 
-	//Results
-	//      created -> [333]
-	//      updated -> [276]
-	//      failed -> []
+   created,updated,failed,errors, total, err := pxrest.SyncBatch(ctx, "ADR/Adresse","AdressNr", true,[]byte(jsonExample)) 
+ //Results
+ //      created -> [333]
+ //      updated -> [276]
+ //      failed -> []
     //      errors -> []
     //      total -> 2
     //      err -> nil
 
 ```
 
-
 Der Batch läuft von Anfang bis Ende durch - die Keyfelder der Ergebnisse werden in den jeweiligen Variablen `updated`,
 `created`,`failed`,`errors` ausgegeben.
 
-*Hinweis: Der Parameter **Keyfield** wird genutzt um je nach Methode das Schlüsselfeld im URL - Slug automatisch 
+*Hinweis: Der Parameter **Keyfield** wird genutzt um je nach Methode das Schlüsselfeld im URL - Slug automatisch
 anzupassen. Der Parameter **removeKeyfield** wird verwendet um das Keyfield aus dem Body zu entfernen (z.B: bei ADR/Adressen)*
 
-
-
 ##### GET List
+
 Gibt direkt die Liste der PROFFIX REST API aus (ohne Umwege)
 
 ```golang
     //Get File
-	file, headers, status, err := pxrest.GetList(ctx, "ADR_Adress-Etiketten Kontakte.labx", nil)
+ file, headers, status, err := pxrest.GetList(ctx, "ADR_Adress-Etiketten Kontakte.labx", nil)
 
     //Write File
     px.WriteFile("C://test//test.pdf",file)  //Hilfsfunktion um Dateien zu schreiben
@@ -387,13 +386,13 @@ Gibt direkt die Liste der PROFFIX REST API aus (ohne Umwege)
 
 *Hinweis: Der Dateityp (zurzeit nur PDF) kann über den Header `File-Type` ermittelt werden*
 
-
 ##### CheckApi
+
 Prüft, ob die API funktioniert (Basis-Test)
 
 ```golang
     //CheckApi
-	err := pxrest.CheckApi(ctx)
+ err := pxrest.CheckApi(ctx)
 
 ```
 
@@ -402,6 +401,7 @@ Prüft, ob die API funktioniert (Basis-Test)
 #### Hilfsfunktionen
 
 ##### ConvertPXTimeToTime
+
 Konvertiert einen Zeitstempel der PROFFIX REST-API in time.Time
 
 ```golang
@@ -411,6 +411,7 @@ t := ConvertPXTimeToTime('2004-04-11 00:00:00')
 ```
 
 ##### ConvertTimeToPXTime
+
 Konvertiert einen time.Time in einen Zeitstempel der PROFFIX REST-API
 
 ```golang
@@ -420,6 +421,7 @@ t := ConvertTimeToPXTime(time.Now())
 ```
 
 ##### ConvertLocationToID
+
 Extrahiert die ID aus dem Header Location der PROFFIX REST-API
 
 ```golang
@@ -428,9 +430,8 @@ id := ConvertLocationToID(header)
 
 ```
 
-
-
 ##### WriteFile
+
 Schreibt eine Datei
 
 ```golang
@@ -439,11 +440,11 @@ px.WriteFile("C://test//test.pdf",file)
 
 ```
 
-
 ### CMD / Docker
+
 todo
 
-
 ### Weitere Beispiele
+
 Im Ordner [/examples](https://github.com/pitwch/go-wrapper-proffix-restapi/tree/master/_examples) finden sich weitere,
 auskommentierte Beispiele.
