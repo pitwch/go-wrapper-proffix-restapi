@@ -10,7 +10,7 @@ func Test_errorFormatterPx(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, _ := ConnectTest([]string{"ADR"})
+	pxrest, _ := ConnectTest([]string{})
 
 	_, _, status, err := pxrest.Get(ctx, "ADR/Adresse/12345678", nil)
 

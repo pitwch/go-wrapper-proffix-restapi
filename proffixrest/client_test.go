@@ -89,7 +89,7 @@ func TestClient_Requests(t *testing.T) {
 	var data = Adresse{Name: "Muster GmbH", Ort: "Zürich", PLZ: "8000"}
 
 	//Connect
-	pxrest, err := ConnectTest([]string{"ADR"})
+	pxrest, _ := ConnectTest([]string{"VOL"})
 
 	_, headers, statuscode, err := pxrest.Post(ctx, "ADR/Adresse", data)
 
@@ -165,7 +165,7 @@ func TestClient_Requests(t *testing.T) {
 
 		//Query Created AdressNr
 
-		rc, headers, statuscode, err = pxrest.Get(ctx, "ADR/Adresse/"+DemoAdressNr, nil)
+		_, headers, statuscode, _ = pxrest.Get(ctx, "ADR/Adresse/"+DemoAdressNr, nil)
 
 		//Check status code; Should be 200
 		if statuscode != 200 {
@@ -239,7 +239,7 @@ func TestClient_AdvancedFilters(t *testing.T) {
 	var adressen []Adresse
 
 	//Connect
-	pxrest, err := ConnectTest([]string{"ADR"})
+	pxrest, _ := ConnectTest([]string{})
 
 	//Set Advanced Params.
 	params := url.Values{}
@@ -294,7 +294,7 @@ func TestGetDatabase(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest([]string{"ADR"})
+	pxrest, _ := ConnectTest([]string{})
 
 	rc, err := pxrest.Database(ctx, "")
 
@@ -335,7 +335,7 @@ func TestGetInfo(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest([]string{"ADR"})
+	pxrest, _ := ConnectTest([]string{})
 
 	rc, err := pxrest.Info(ctx, pxrest.option.Key)
 
@@ -369,7 +369,7 @@ func TestStructs(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, _ := ConnectTest([]string{"ADR"})
+	pxrest, _ := ConnectTest([]string{})
 
 	//Set test vars
 	q := *pxrest
@@ -424,7 +424,7 @@ func TestClient_LoginWithFalsePxSessionId(t *testing.T) {
 	//New Context
 	ctx := context.Background()
 
-	pxrest, err := ConnectTest([]string{"ADR"})
+	pxrest, err := ConnectTest([]string{})
 
 	//Check error. Should be nil
 	if err != nil {

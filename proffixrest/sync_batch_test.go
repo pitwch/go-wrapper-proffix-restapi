@@ -76,7 +76,7 @@ func TestClient_SyncBatch(t *testing.T) {
 	ctx := context.Background()
 
 	//Connect
-	pxrest, _ := ConnectTest([]string{"LAG"})
+	pxrest, _ := ConnectTest([]string{"VOL"})
 
 	//Delete Artikel 99999
 	_, _, _, _ = pxrest.Delete(ctx, "LAG/Artikel/99999")
@@ -84,10 +84,10 @@ func TestClient_SyncBatch(t *testing.T) {
 	//Create Artikel 99999
 	artikelMap := make(map[string]interface{})
 
-	err := json.Unmarshal([]byte(artikel99999), &artikelMap)
+	_ = json.Unmarshal([]byte(artikel99999), &artikelMap)
 	_, _, _, _ = pxrest.Post(ctx, "LAG/Artikel", artikelMap)
 
-	created, updated, failed, errors, total, err := pxrest.SyncBatch(ctx, "LAG/Artikel", "ArtikelNr", false, []byte(artikelBatchTest))
+	created, updated, failed, errors, total, _ := pxrest.SyncBatch(ctx, "LAG/Artikel", "ArtikelNr", false, []byte(artikelBatchTest))
 
 	//Calculate created / updated
 	checkCreated := total - len(updated)
