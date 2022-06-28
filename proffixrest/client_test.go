@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
-	"os"
 	"testing"
 )
 
@@ -21,20 +20,20 @@ type Adresse struct {
 func ConnectTest(modules []string) (pxrest *Client, err error) {
 
 	//Use PROFFIX Public Demo Login as Example (REMOVED - As offical demo often is outdated)
-	/* 	pxrest, err = NewClient(
-		"https://remote.proffix.net:11011/pxapi/v3",
+	pxrest, err = NewClient(
+		"https://remote.proffix.net:11011",
 		"Gast",
 		"16ec7cb001be0525f9af1a96fd5ea26466b2e75ef3e96e881bcb7149cd7598da",
 		"DEMODB",
 		modules,
 		&Options{
 			Key:       "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50",
-			VerifySSL: false, Autologout: false},
-	) */
+			VerifySSL: false, Autologout: false, VolumeLicence: true},
+	)
 
 	//Use private demo server
-	pxrest, err = NewClient(
-		os.Getenv("PXDEMO_URL"),
+	/* pxrest, err = NewClient(
+		fmt.Sprintf("https://%v", os.Getenv("PXDEMO_URL")),
 		os.Getenv("PXDEMO_USER"),
 		os.Getenv("PXDEMO_PASSWORD"),
 		os.Getenv("PXDEMO_DATABASE"),
@@ -43,7 +42,7 @@ func ConnectTest(modules []string) (pxrest *Client, err error) {
 			Key:       os.Getenv("PXDEMO_KEY"),
 			VerifySSL: false, Autologout: false, VolumeLicence: true},
 	)
-
+	*/
 	return pxrest, err
 }
 
@@ -269,7 +268,7 @@ func TestClient_AdvancedFilters(t *testing.T) {
 		}
 
 		//Check if order works
-		if adressen[0].AdressNr > adressen[1].AdressNr {
+		if adressen[0].AdressNr < adressen[1].AdressNr {
 			t.Errorf("Order doesnt work. Adressnr '%v' is > than Adressnr '%v'.", adressen[0].AdressNr, adressen[1].AdressNr)
 		}
 	}

@@ -23,7 +23,7 @@ script:
   - ./test-coverage.sh
   - chmod +x release
   - go build ./cmd/proffix-rest/
-  - go test ./...
+  - go test -v ./...
 after_success:
   - bash <(curl -s https://codecov.io/bash)
   - ./release
