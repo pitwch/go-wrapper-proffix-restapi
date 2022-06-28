@@ -14,7 +14,7 @@ import (
 
 //Version of Wrapper
 const (
-	Version = "1.7.5"
+	Version = "1.13.20"
 )
 
 // DefaultHTTPTransport is an http.RoundTripper that has DisableKeepAlives set true.
@@ -196,7 +196,7 @@ func (c *Client) Login(ctx context.Context) error {
 func (c *Client) ServiceLogin(ctx context.Context, pxsessionid string) {
 
 	PxSessionId = pxsessionid
-
+	isLoggedIn = true
 }
 
 // updatePxSessionId updates the stored PxSessionId
