@@ -41,7 +41,7 @@ func ConnectTest(modules []string) (pxrest *Client, err error) {
 		modules,
 		&Options{
 			Key:       os.Getenv("PXDEMO_KEY"),
-			VerifySSL: false, Autologout: false},
+			VerifySSL: false, Autologout: false, VolumeLicence: true},
 	)
 
 	return pxrest, err
