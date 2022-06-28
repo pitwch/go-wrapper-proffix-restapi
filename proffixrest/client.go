@@ -190,6 +190,15 @@ func (c *Client) Login(ctx context.Context) error {
 	}
 }
 
+// Function for Login with Service
+// Helper Function for Service Login to PROFFIX REST-API
+// Login is done with provided PxSessionId
+func (c *Client) ServiceLogin(ctx context.Context, pxsessionid string) error {
+
+	PxSessionId = pxsessionid
+
+}
+
 // updatePxSessionId updates the stored PxSessionId
 func (c *Client) updatePxSessionId(header http.Header) {
 

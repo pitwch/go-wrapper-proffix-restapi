@@ -4,9 +4,12 @@
 *.dll
 *.so
 *.dylib
-
+*.xml
+*.jpg
+*.iml
 # Test binary, build with `go test -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+.idea/vcs.xml
