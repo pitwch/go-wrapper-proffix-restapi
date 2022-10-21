@@ -12,7 +12,7 @@ import (
 	"net/url"
 )
 
-//Version of Wrapper
+// Version of Wrapper
 const (
 	Version = "1.13.20"
 )
@@ -33,7 +33,7 @@ var PxSessionId string
 
 var isLoggedIn bool
 
-//Client Struct
+// Client Struct
 type Client struct {
 	restURL   *url.URL
 	Benutzer  string
@@ -44,15 +44,15 @@ type Client struct {
 	client    *http.Client
 }
 
-//Login Struct
+// Login Struct
 type LoginStruct struct {
-	Benutzer  string         `json:"Benutzer"`
+	Benutzer  string         `json:"Benutzer,omitempty"`
 	Passwort  string         `json:"Passwort"`
 	Datenbank DatabaseStruct `json:"Datenbank"`
 	Module    []string       `json:"Module,omitempty"`
 }
 
-//Database Struct
+// Database Struct
 type DatabaseStruct struct {
 	Name string `json:"Name"`
 }
@@ -86,7 +86,7 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 	}
 
 	// If VolumeLicence enabled set Modules to "VOL"
-	if options.VolumeLicence == true {
+	if options.VolumeLicence {
 		apiModule = []string{"VOL"}
 	}
 
@@ -96,7 +96,7 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 	}
 
 	// Disable Cert Verfication
-	if options.VerifySSL == false {
+	if !options.VerifySSL {
 		DefaultHTTPTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 
