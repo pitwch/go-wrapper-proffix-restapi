@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 func (c *Client) GetList(ctx context.Context, listenr int, body interface{}) (io.ReadCloser, http.Header, int, error) {
@@ -24,17 +23,14 @@ func (c *Client) GetList(ctx context.Context, listenr int, body interface{}) (io
 	//If Log enabled log URL
 	logDebug(ctx, c, fmt.Sprintf("Got Download URL from PROFFIX REST-API: %v, PxSession-ID: %v", downloadLocation, PxSessionId))
 
-	//Remove Path from Response -> replace with empty string
-	cleanLocation := strings.Replace(downloadLocation, c.restURL.String(), "", -1)
-
-	downloadFile, headersDownload, statusDownload, err := c.Get(ctx, cleanLocation, nil)
+	downloadFile, headersDownload, statusDownload, err := c.Get(ctx, downloadLocation, nil)
 
 	if headersDownload == nil {
 		headersDownload = http.Header{}
 	}
 
 	//If Log enabled log URL
-	logDebug(ctx, c, fmt.Sprintf("Downloaded File from '%v' with Content-Length: %v, PxSession-ID: %v", cleanLocation, headersDownload.Get("Content-Length"), PxSessionId))
+	logDebug(ctx, c, fmt.Sprintf("Downloaded File from '%v' with Content-Length: %v, PxSession-ID: %v", downloadLocation, headersDownload.Get("Content-Length"), PxSessionId))
 
 	return downloadFile, headersDownload, statusDownload, err
 

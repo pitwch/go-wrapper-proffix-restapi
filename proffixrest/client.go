@@ -14,7 +14,7 @@ import (
 
 // Version of Wrapper
 const (
-	Version = "1.13.20"
+	Version = "1.13.22"
 )
 
 // DefaultHTTPTransport is an http.RoundTripper that has DisableKeepAlives set true.
@@ -70,7 +70,7 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 
 	// Default to v3
 	if options.Version == "" {
-		options.Version = "v3"
+		options.Version = "v4"
 	}
 
 	if options.APIPrefix == "" {

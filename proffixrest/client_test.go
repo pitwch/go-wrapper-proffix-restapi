@@ -8,15 +8,20 @@ import (
 	"testing"
 )
 
-//Define struct (AdressNr as string just for convenience)
+// Define struct (AdressNr as string just for convenience)
 type Adresse struct {
 	AdressNr string `json:"AdressNr,omitempty"`
 	Name     string `json:"Name,omitempty"`
 	Ort      string `json:"Ort,omitempty"`
 	PLZ      string `json:"PLZ,omitempty"`
+	Land     Land   `json:"Land,omitempty"`
 }
 
-//Connect function
+type Land struct {
+	LandNr string `json:"LandNr,omitempty"`
+}
+
+// Connect function
 func ConnectTest(modules []string) (pxrest *Client, err error) {
 
 	//Use PROFFIX Public Demo Login as Example (REMOVED - As offical demo often is outdated)
@@ -46,7 +51,7 @@ func ConnectTest(modules []string) (pxrest *Client, err error) {
 	return pxrest, err
 }
 
-//Helper function for checking if is type Options
+// Helper function for checking if is type Options
 func isOption(t interface{}) bool {
 	switch t.(type) {
 	case Options:
@@ -56,7 +61,7 @@ func isOption(t interface{}) bool {
 	}
 }
 
-//Helper function for checking if is type Client
+// Helper function for checking if is type Client
 func isClient(t interface{}) bool {
 	switch t.(type) {
 	case Client:
@@ -66,7 +71,7 @@ func isClient(t interface{}) bool {
 	}
 }
 
-//Test all Requests in one Session
+// Test all Requests in one Session
 func TestClient_Requests(t *testing.T) {
 
 	//New Context
@@ -75,7 +80,7 @@ func TestClient_Requests(t *testing.T) {
 	//POST TESTs
 
 	//Fill struct with Demo Data
-	var data = Adresse{Name: "Muster GmbH", Ort: "Zürich", PLZ: "8000"}
+	var data = Adresse{Name: "Muster GmbH", Ort: "Zürich", PLZ: "8000", Land: Land{LandNr: "CH"}}
 
 	//Connect
 	pxrest, _ := ConnectTest([]string{"VOL"})
@@ -206,7 +211,7 @@ func TestClient_Requests(t *testing.T) {
 
 }
 
-//Test all Requests in one Session
+// Test all Requests in one Session
 func TestClient_AdvancedFilters(t *testing.T) {
 
 	//New Context
@@ -277,7 +282,7 @@ func TestClient_AdvancedFilters(t *testing.T) {
 
 }
 
-//Test Get Database with Key from Options
+// Test Get Database with Key from Options
 func TestGetDatabase(t *testing.T) {
 
 	//New Context
@@ -318,7 +323,7 @@ func TestGetDatabase(t *testing.T) {
 	}
 }
 
-//Test Get Info with Key set in Function
+// Test Get Info with Key set in Function
 func TestGetInfo(t *testing.T) {
 
 	//New Context
@@ -352,7 +357,7 @@ func TestGetInfo(t *testing.T) {
 
 }
 
-//Check structs
+// Check structs
 func TestStructs(t *testing.T) {
 
 	//New Context

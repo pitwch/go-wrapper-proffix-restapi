@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	px "github.com/pitwch/go-wrapper-proffix-restapi/proffixrest"
 	"log"
 	"net/url"
+
+	px "github.com/pitwch/go-wrapper-proffix-restapi/proffixrest"
 )
 
-//Put Client in Function
+// Put Client in Function
 func Connect() (pxrest *px.Client, err error) {
 
 	//Use PROFFIX Demo Logins as Example
