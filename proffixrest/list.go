@@ -18,19 +18,22 @@ func (c *Client) GetList(ctx context.Context, listenr int, body interface{}) (io
 		logDebug(ctx, c, fmt.Sprintf("Error on create list: %v, PxSession-ID: %v", resp, PxSessionId))
 		return resp, headers, status, err
 	}
-	downloadLocation := headers.Get("Location")
+
+	// Build Download Uri - was change in Px Rest-API 4.43 / 4.42. This fix works for all...
+	dateiNr := ConvertLocationToID(headers)
+	downloadUri := "PRO/Datei/" + dateiNr
 
 	//If Log enabled log URL
-	logDebug(ctx, c, fmt.Sprintf("Got Download URL from PROFFIX REST-API: %v, PxSession-ID: %v", downloadLocation, PxSessionId))
+	logDebug(ctx, c, fmt.Sprintf("Got Download URL from PROFFIX REST-API: %v, PxSession-ID: %v", downloadUri, PxSessionId))
 
-	downloadFile, headersDownload, statusDownload, err := c.Get(ctx, downloadLocation, nil)
+	downloadFile, headersDownload, statusDownload, err := c.Get(ctx, downloadUri, nil)
 
 	if headersDownload == nil {
 		headersDownload = http.Header{}
 	}
 
 	//If Log enabled log URL
-	logDebug(ctx, c, fmt.Sprintf("Downloaded File from '%v' with Content-Length: %v, PxSession-ID: %v", downloadLocation, headersDownload.Get("Content-Length"), PxSessionId))
+	logDebug(ctx, c, fmt.Sprintf("Downloaded File from '%v' with Content-Length: %v, PxSession-ID: %v", downloadUri, headersDownload.Get("Content-Length"), PxSessionId))
 
 	return downloadFile, headersDownload, statusDownload, err
 
