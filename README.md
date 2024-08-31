@@ -12,7 +12,7 @@ Der zuverlässige Wrapper für die PROFFIX REST-API in Go.
 ![alt text](https://raw.githubusercontent.com/pitwch/go-wrapper-proffix-restapi/master/_assets/img/go-proffix-rest-wrapper.jpg "Golang Wrapper PROFFIX REST API")
 
 
-Dieser Wrapper wird von der [Pedrett IT+Web AG](https://www.pitw.ch) **unterhalten und entwickelt**.
+Dieser Wrapper wird von der [Pedrett IT+Web AG](https://www.pitw.ch) - dem zuverlässigen und innovativen Proffix Px5 Partner - **unterhalten und entwickelt**.
 
 **Übersicht**
 
