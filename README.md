@@ -1,6 +1,6 @@
 [![GitHub release](https://img.shields.io/github/tag/pitwch/go-wrapper-proffix-restapi.svg?label=latest&colorB=orange)](https://github.com/pitwch/go-wrapper-proffix-restapi/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pitwch/go-wrapper-proffix-restapi)](https://goreportcard.com/report/github.com/pitwch/go-wrapper-proffix-restapi)
-[![Build Status](https://travis-ci.com/pitwch/go-wrapper-proffix-restapi.svg?branch=master)](https://app.travis-ci.com/github/pitwch/go-wrapper-proffix-restapi)
+[![Build Status](https://api.travis-ci.com/pitwch/go-wrapper-proffix-restapi.svg)](https://app.travis-ci.com/github/pitwch/go-wrapper-proffix-restapi)
 [![GoDoc](https://godoc.org/github.com/pitwch/go-wrapper-proffix-restapi/proffixrest?status.svg)](https://godoc.org/github.com/pitwch/go-wrapper-proffix-restapi/proffixrest)
 [![codecov](https://codecov.io/gh/pitwch/go-wrapper-proffix-restapi/branch/master/graph/badge.svg)](https://codecov.io/gh/pitwch/go-wrapper-proffix-restapi)
 [![GitHub license](https://img.shields.io/github/license/pitwch/go-wrapper-proffix-restapi.svg)](https://github.com/pitwch/go-wrapper-proffix-restapi/blob/master/LICENSE)
