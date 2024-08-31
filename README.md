@@ -33,7 +33,7 @@ Die Konfiguration wird dem Client mitgegeben:
 
 | Konfiguration | Beispiel                 | Type          | Bemerkung                             |
 |---------------|--------------------------|---------------|---------------------------------------|
-| RestURL       | <https://myserver.ch:999>  | `string`      | URL der REST-API **ohne pxapi/v2/**   |
+| RestURL       | <https://myserver.ch:999>  | `string`      | URL der REST-API **ohne pxapi/v4/**   |
 | apiDatabase   | DEMO                     | `string`      | Name der Datenbank                    |
 | apiUser       | USR                      | `string`      | Names des Benutzers                   |
 | apiPassword   | b62cce2fe18f7a156a9c...  | `string`      | SHA256-Hash des Benutzerpasswortes    |
@@ -64,7 +64,7 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | Option           | Beispiel                                                         | Bemerkung                                                      |
 |------------------|------------------------------------------------------------------|----------------------------------------------------------------|
 | Key              | 112a5a90fe28b...242b10141254b4de59028                            | API-Key als SHA256 - Hash (kann auch direkt mitgegeben werden) |
-| Version          | v3                                                               | API-Version; Standard = v3                                     |
+| Version          | v4                                                               | API-Version; Standard = v4                                     |
 | APIPrefix        | /pxapi/                                                          | Prefix für die API; Standard = /pxapi/                         |
 | LoginEndpoint    | PRO/Login                                                        | Endpunkt für Login; Standard = PRO/Login                       |
 | UserAgent        | go-wrapper-proffix-restapi                                       | User Agent; Standard = go-wrapper-proffix-restapi              |
