@@ -1,6 +1,8 @@
 package proffixrest
 
 import (
+	"log"
+	"net/http"
 	"time"
 )
 
@@ -16,4 +18,6 @@ type Options struct {
 	Log           bool
 	Autologout    bool
 	VolumeLicence bool // If API should use Volume Licencing
+	HTTPClient    *http.Client  // Optional custom HTTP client to use
+	Logger        *log.Logger   // Optional logger; overrides Log flag when provided
 }

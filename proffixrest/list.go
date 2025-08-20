@@ -15,7 +15,7 @@ func (c *Client) GetList(ctx context.Context, listenr int, body interface{}) (io
 
 	//If err not nil or status not 201
 	if err != nil || status != 201 {
-		logDebug(ctx, c, fmt.Sprintf("Error on create list: %v, PxSession-ID: %v", resp, PxSessionId))
+		logDebug(ctx, c, fmt.Sprintf("Error on create list: %v, PxSession-ID: %v", resp, c.GetPxSessionId()))
 		return resp, headers, status, err
 	}
 
@@ -24,7 +24,7 @@ func (c *Client) GetList(ctx context.Context, listenr int, body interface{}) (io
 	downloadUri := "PRO/Datei/" + dateiNr
 
 	//If Log enabled log URL
-	logDebug(ctx, c, fmt.Sprintf("Got Download URL from PROFFIX REST-API: %v, PxSession-ID: %v", downloadUri, PxSessionId))
+	logDebug(ctx, c, fmt.Sprintf("Got Download URL from PROFFIX REST-API: %v, PxSession-ID: %v", downloadUri, c.GetPxSessionId()))
 
 	downloadFile, headersDownload, statusDownload, err := c.Get(ctx, downloadUri, nil)
 
@@ -33,7 +33,7 @@ func (c *Client) GetList(ctx context.Context, listenr int, body interface{}) (io
 	}
 
 	//If Log enabled log URL
-	logDebug(ctx, c, fmt.Sprintf("Downloaded File from '%v' with Content-Length: %v, PxSession-ID: %v", downloadUri, headersDownload.Get("Content-Length"), PxSessionId))
+	logDebug(ctx, c, fmt.Sprintf("Downloaded File from '%v' with Content-Length: %v, PxSession-ID: %v", downloadUri, headersDownload.Get("Content-Length"), c.GetPxSessionId()))
 
 	return downloadFile, headersDownload, statusDownload, err
 

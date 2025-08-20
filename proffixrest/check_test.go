@@ -22,7 +22,7 @@ func TestClient_CheckApi(t *testing.T) {
 	err = pxrest.CheckApi(ctx, os.Getenv("PXDEMO_KEY"))
 
 	//Check error. Should be nil
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		t.Errorf("Expected no error for CheckApi. Got '%v'", err)
 	}
 

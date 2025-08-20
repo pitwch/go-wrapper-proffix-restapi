@@ -10,38 +10,26 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"sync"
 )
 
 // Version of Wrapper
 const (
-	Version = "1.13.22"
+	Version = "1.13.24"
 )
-
-// DefaultHTTPTransport is an http.RoundTripper that has DisableKeepAlives set true.
-var DefaultHTTPTransport = &http.Transport{
-	DisableKeepAlives: true,
-}
-
-// DefaultHTTPClient is an http.Client with the DefaultHTTPTransport and (Cookie) Jar set nil.
-var DefaultHTTPClient = &http.Client{
-	Jar:       nil,
-	Transport: DefaultHTTPTransport,
-}
-
-// PxSessionId contains the latests PxSessionId from PROFFIX REST-API
-var PxSessionId string
-
-var isLoggedIn bool
 
 // Client Struct
 type Client struct {
-	restURL   *url.URL
-	Benutzer  string
-	Passwort  string
-	Datenbank string
-	Module    []string
-	option    *Options
-	client    *http.Client
+	restURL     *url.URL
+	Benutzer    string
+	Passwort    string
+	Datenbank   string
+	Module      []string
+	option      *Options
+	client      *http.Client
+	mu          sync.RWMutex
+	pxSessionId string
+	isLoggedIn  bool
 }
 
 // Login Struct
@@ -95,18 +83,17 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 		options.Batchsize = 200
 	}
 
-	// Disable Cert Verfication
-	if !options.VerifySSL {
-		DefaultHTTPTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
-
-	if DefaultHTTPClient == nil {
-
-		DefaultHTTPClient = http.DefaultClient
-
-		// Set options for Timeout
-		DefaultHTTPClient.Timeout = options.Timeout
-
+	// Build per-client transport and client (or use injected client)
+	var httpClient *http.Client
+	if options.HTTPClient != nil {
+		httpClient = options.HTTPClient
+	} else {
+		transport := &http.Transport{DisableKeepAlives: true}
+		// Disable Cert Verification if requested
+		if !options.VerifySSL {
+			transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		}
+		httpClient = &http.Client{Transport: transport, Timeout: options.Timeout}
 	}
 
 	path := options.APIPrefix + options.Version + "/"
@@ -119,7 +106,7 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 		Datenbank: apiDatabase,
 		Module:    apiModule,
 		option:    options,
-		client:    DefaultHTTPClient,
+		client:    httpClient,
 	}, nil
 }
 
@@ -145,31 +132,47 @@ func (c *Client) createNewPxSessionId(ctx context.Context) (sessionid string, er
 		return "", &PxError{Message: fmt.Sprintf("%v", err)}
 	}
 
-	// Build Login Request
-	req, err := http.NewRequest("POST", urlstr, body)
+	// Build Login Request with context
+	req, err := http.NewRequestWithContext(ctx, "POST", urlstr, body)
 	if err != nil {
-		return "", &PxError{Message: "Error on builiding Request"}
+		return "", &PxError{Message: "Error on building Request"}
 	}
 
 	// Set Login Header
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", c.option.UserAgent)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		if resp == nil {
 			return "", NewPxError(nil, 0, c.option.LoginEndpoint)
 		} else {
-			return "", NewPxError(resp.Body, resp.StatusCode, c.option.LoginEndpoint)
+			pxErr := NewPxError(resp.Body, resp.StatusCode, c.option.LoginEndpoint)
+			if resp.Body != nil {
+				_ = resp.Body.Close()
+			}
+			return "", pxErr
 
 		}
 
 	} else if resp.StatusCode != 201 {
-		return "", NewPxError(resp.Body, resp.StatusCode, c.option.LoginEndpoint)
+		pxErr := NewPxError(resp.Body, resp.StatusCode, c.option.LoginEndpoint)
+		if resp.Body != nil {
+			_ = resp.Body.Close()
+		}
+		return "", pxErr
 
 	} else {
 		// Set isLoggedIn Status
-		isLoggedIn = true
+		c.mu.Lock()
+		c.isLoggedIn = true
+		c.pxSessionId = resp.Header.Get("pxsessionid")
+		c.mu.Unlock()
 		// Return pxsessionid
-		return resp.Header.Get("pxsessionid"), &PxError{}
+		// Ensure response body is closed as we only need the header
+		if resp.Body != nil {
+			_ = resp.Body.Close()
+		}
+		return c.GetPxSessionId(), nil
 	}
 }
 
@@ -179,14 +182,17 @@ func (c *Client) createNewPxSessionId(ctx context.Context) (sessionid string, er
 func (c *Client) Login(ctx context.Context) error {
 
 	// If Pxsessionid doesnt yet exists create a new one
-	if isLoggedIn == false {
+	c.mu.RLock()
+	loggedIn := c.isLoggedIn
+	c.mu.RUnlock()
+	if !loggedIn {
 		sessionid, err := c.createNewPxSessionId(ctx)
 
-		PxSessionId = sessionid
+		_ = sessionid // already stored in client
 		return err
 		// If Pxsessionid already exists return stored value
 	} else {
-		return &PxError{}
+		return nil
 	}
 }
 
@@ -195,8 +201,10 @@ func (c *Client) Login(ctx context.Context) error {
 // Login is done with provided PxSessionId
 func (c *Client) ServiceLogin(ctx context.Context, pxsessionid string) {
 
-	PxSessionId = pxsessionid
-	isLoggedIn = true
+	c.mu.Lock()
+	c.pxSessionId = pxsessionid
+	c.isLoggedIn = true
+	c.mu.Unlock()
 }
 
 // updatePxSessionId updates the stored PxSessionId
@@ -204,7 +212,9 @@ func (c *Client) updatePxSessionId(header http.Header) {
 
 	// Just update if PxSessionId in Header is not empty
 	if header.Get("pxsessionid") != "" {
-		PxSessionId = header.Get("pxsessionid")
+		c.mu.Lock()
+		c.pxSessionId = header.Get("pxsessionid")
+		c.mu.Unlock()
 	}
 
 }
@@ -214,16 +224,20 @@ func (c *Client) updatePxSessionId(header http.Header) {
 // Returns Statuscode,error
 func (c *Client) Logout(ctx context.Context) (int, error) {
 	//Just logout if we have a valid PxSessionid
-	if PxSessionId != "" {
+	if c.GetPxSessionId() != "" {
 
 		//Delete Login Object from PROFFIX REST-API
 		req, _, statuscode, _ := c.request(ctx, "DELETE", c.option.LoginEndpoint, url.Values{}, false, nil)
 
 		//Set Pxsessionid to empty string
-		PxSessionId = ""
+		c.mu.Lock()
+		c.pxSessionId = ""
+		c.mu.Unlock()
 
 		if statuscode == 204 {
-			isLoggedIn = false
+			c.mu.Lock()
+			c.isLoggedIn = false
+			c.mu.Unlock()
 			return statuscode, nil
 
 		} else {
@@ -249,7 +263,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 	}
 
 	//If Log enabled log URL
-	logDebug(ctx, c, fmt.Sprintf("Request Url: %v, Method: %v, PxSession-ID: %v", urlstr, method, PxSessionId))
+	logDebug(ctx, c, fmt.Sprintf("Request Url: %v, Method: %v, PxSession-ID: %v", urlstr, method, c.GetPxSessionId()))
 
 	switch method {
 	case http.MethodPost, http.MethodPut, http.MethodPatch:
@@ -294,20 +308,26 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 		return nil, nil, 0, err
 	}
 
-	// Remove JSON Header is Request is file
+	// Remove JSON Header if Request is file
 	if !isFile {
 		req.Header.Set("Content-Type", "application/json")
 	}
 
 	// Set PxSessionId in Header
-	req.Header.Set("pxsessionid", PxSessionId)
+	req.Header.Set("pxsessionid", c.GetPxSessionId())
+	// Set User-Agent for all requests
+	req.Header.Set("User-Agent", c.option.UserAgent)
 
 	resp, err := c.client.Do(req)
 
 	if resp != nil && (resp.StatusCode >= 300 || resp.StatusCode < 200) {
 
 		if resp != nil {
-			return nil, nil, resp.StatusCode, NewPxError(resp.Body, resp.StatusCode, endpoint)
+			pxErr := NewPxError(resp.Body, resp.StatusCode, endpoint)
+			if resp.Body != nil {
+				_ = resp.Body.Close()
+			}
+			return nil, nil, resp.StatusCode, pxErr
 		} else {
 
 			return nil, nil, 0, &PxError{}
@@ -316,12 +336,12 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 	}
 
 	if resp != nil {
-		logDebug(ctx, c, fmt.Sprintf("Response Url: %v, Method: %v, PxSession-ID: %v Status: %v", urlstr, method, PxSessionId, resp.StatusCode))
+		logDebug(ctx, c, fmt.Sprintf("Response Url: %v, Method: %v, PxSession-ID: %v Status: %v", urlstr, method, c.GetPxSessionId(), resp.StatusCode))
 
 		// Update the PxSessionId
 		c.updatePxSessionId(resp.Header)
 
-		return resp.Body, resp.Header, resp.StatusCode, &PxError{}
+		return resp.Body, resp.Header, resp.StatusCode, nil
 
 		// If everything fails -> logout
 	} else {
@@ -337,16 +357,15 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 // Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
-	if !err.(*PxError).isNull() {
-
-		return nil, nil, 0, &PxError{Message: fmt.Sprintf("%v", err)}
+	if err != nil {
+		return nil, nil, 0, err
 	}
 	request, header, statuscode, err := c.request(ctx, "POST", endpoint, url.Values{}, false, data)
 
 	//If Log enabled in options log data
 	logDebug(ctx, c, fmt.Sprintf("Sent data in POST-Request: %v", data))
 
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		return request, header, statuscode, err
 	} else {
 		return request, header, statuscode, nil
@@ -359,7 +378,7 @@ func (c *Client) Post(ctx context.Context, endpoint string, data interface{}) (i
 // Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		return nil, nil, 0, err
 	}
 	request, header, statuscode, err := c.request(ctx, "PUT", endpoint, url.Values{}, false, data)
@@ -367,7 +386,7 @@ func (c *Client) Put(ctx context.Context, endpoint string, data interface{}) (io
 	//If Log enabled in options log data
 	logDebug(ctx, c, fmt.Sprintf("Sent data in PUT-Request: %v", data))
 
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		return request, header, statuscode, err
 	} else {
 		return request, header, statuscode, nil
@@ -381,12 +400,12 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 
 	err := c.Login(ctx)
 
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		return nil, nil, 0, err
 	}
 
 	request, header, statuscode, err := c.request(ctx, "GET", endpoint, params, false, nil)
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		return request, header, statuscode, err
 	}
 
@@ -399,7 +418,7 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 // Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Patch(ctx context.Context, endpoint string, data interface{}) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		return nil, nil, 0, err
 	}
 	request, header, statuscode, err := c.request(ctx, "PATCH", endpoint, url.Values{}, false, data)
@@ -407,7 +426,7 @@ func (c *Client) Patch(ctx context.Context, endpoint string, data interface{}) (
 	//If Log enabled in options log data
 	logDebug(ctx, c, fmt.Sprintf("Sent data in PATCH-Request: %v", data))
 
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		return request, header, statuscode, err
 	} else {
 		return request, header, statuscode, nil
@@ -419,13 +438,13 @@ func (c *Client) Patch(ctx context.Context, endpoint string, data interface{}) (
 // Returns io.ReadCloser,http.Header,Statuscode,error
 func (c *Client) Delete(ctx context.Context, endpoint string) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		return nil, nil, 0, err
 	}
 
 	request, header, statuscode, err := c.request(ctx, "DELETE", endpoint, nil, false, nil)
 
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		return request, header, statuscode, err
 	} else {
 		return request, header, statuscode, nil
@@ -450,7 +469,7 @@ func (c *Client) Info(ctx context.Context, pxapi string) (io.ReadCloser, error) 
 
 	request, _, _, err := c.request(ctx, "GET", endpoint, param, false, "")
 
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		return request, err
 	} else {
 		return request, nil
@@ -474,7 +493,7 @@ func (c *Client) Database(ctx context.Context, pxapi string) (io.ReadCloser, err
 
 	request, _, _, err := c.request(ctx, "GET", "PRO/Datenbank", param, false, "")
 
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		return request, err
 	} else {
 		return request, nil
@@ -483,13 +502,20 @@ func (c *Client) Database(ctx context.Context, pxapi string) (io.ReadCloser, err
 
 // GetPxSessionId returns the latest PxSessionId from PROFFIX REST-API
 func (c *Client) GetPxSessionId() (pxsessionid string) {
-	return PxSessionId
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.pxSessionId
 }
 
 // logDebug does Log Output if enabled in options
 func logDebug(ctx context.Context, c *Client, logtext string) {
-	//If Log enabled in options
-	if c.option.Log == true {
+	// Prefer custom logger if provided
+	if c != nil && c.option != nil && c.option.Logger != nil {
+		c.option.Logger.Print(logtext)
+		return
+	}
+	// If Log enabled in options
+	if c != nil && c.option != nil && c.option.Log == true {
 		log.Print(logtext)
 	}
 }

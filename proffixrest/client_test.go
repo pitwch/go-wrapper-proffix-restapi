@@ -26,7 +26,7 @@ func ConnectTest(modules []string) (pxrest *Client, err error) {
 
 	//Use PROFFIX Public Demo Login as Example (REMOVED - As offical demo often is outdated)
 	pxrest, err = NewClient(
-		"https://remote.proffix.net:11011",
+		"https://portal.proffix.net:11011",
 		"Gast",
 		"16ec7cb001be0525f9af1a96fd5ea26466b2e75ef3e96e881bcb7149cd7598da",
 		"DEMODB",

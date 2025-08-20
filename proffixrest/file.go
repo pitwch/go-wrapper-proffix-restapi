@@ -16,7 +16,7 @@ import (
 func (c *Client) File(ctx context.Context, filename string, data []byte) (io.ReadCloser, http.Header, int, error) {
 	err := c.Login(ctx)
 
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		return nil, nil, 0, err
 	}
 
@@ -34,7 +34,7 @@ func (c *Client) File(ctx context.Context, filename string, data []byte) (io.Rea
 	//If Log enabled in options log data
 	logDebug(ctx, c, fmt.Sprintf("Sent data in POST-Request: %v", data))
 
-	if !err.(*PxError).isNull() {
+	if err != nil {
 		return request, header, statuscode, err
 	} else {
 		return request, header, statuscode, nil
@@ -51,7 +51,7 @@ func (c *Client) GetFile(ctx context.Context, dateinr string, params url.Values)
 
 	// If err not nil or status not 200
 	if err != nil || status != 200 {
-		logDebug(ctx, c, fmt.Sprintf("Error on create list: %v, PxSession-ID: %v", err.(*PxError).Message, PxSessionId))
+		logDebug(ctx, c, fmt.Sprintf("Error on create list: %v, PxSession-ID: %v", err, c.GetPxSessionId()))
 		return resp, "", "", 0, err
 	}
 
@@ -65,7 +65,7 @@ func (c *Client) GetFile(ctx context.Context, dateinr string, params url.Values)
 	}
 
 	// If Log enabled log URL
-	logDebug(ctx, c, fmt.Sprintf("Downloaded File with Content-Length: %v, PxSession-ID: %v", ContentLength, PxSessionId))
+	logDebug(ctx, c, fmt.Sprintf("Downloaded File with Content-Length: %v, PxSession-ID: %v", ContentLength, c.GetPxSessionId()))
 
 	return resp, FileName, ContentType, ContentLength, err
 

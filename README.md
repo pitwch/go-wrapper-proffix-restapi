@@ -75,7 +75,8 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | VerifySSL        | true                                                             | SSL prüfen                                                     |
 | Batchsize        | 200                                                              | Batchgrösse für Batchrequests; Standard = 200                  |
 | Log              | true                                                             | Aktiviert den Log für Debugging; Standard = false              |
-| Client           | urlfetch.Client(ctx)                                             | HTTP-Client; Standard = http.DefaultClient                     |
+| HTTPClient       | urlfetch.Client(ctx)                                             | Eigener HTTP-Client; Standard = interner Client pro Instanz    |
+| Logger           | log.New(os.Stdout, "px: ", log.LstdFlags)                       | Optionaler Logger; überschreibt Log-Flag                       |
 | VolumeLicence    | false                                                            | Nutzt PROFFIX Volumenlizenzierung                              |
 
 #### Methoden
@@ -214,7 +215,7 @@ Im Standard wird das Feld **Message** sowie fehlgeschlagene **Fields** ausgegebe
 
 Loggt den Client von der PROFFIX REST-API aus und gibt die Session / Lizenz damit wieder frei.
 
-*Hinweis: Es wird automatisch die zuletzt verwendete PxSessionId für den Logout verwendet*
+*Hinweis: Es wird automatisch die im Client gespeicherte PxSessionId für den Logout verwendet*
 
 ```golang
 
@@ -269,7 +270,7 @@ Loggt den Client mit einer gegebenen PxSessionId ein (wird z.B. bei Erweiterunge
 
 ```golang
 
- pxrest, err := pxrest.ServiceLogin(ctx,"7e024696-49e4-e54e-1a20-ffc0ba9a1374)
+pxrest.ServiceLogin(ctx, "7e024696-49e4-e54e-1a20-ffc0ba9a1374")
 
 ```
 
