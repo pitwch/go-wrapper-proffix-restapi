@@ -382,6 +382,25 @@ func TestStructs(t *testing.T) {
 	pxrest.Logout(ctx)
 }
 
+// Explicitly test that Login returns no error
+func TestClient_Login_NoError(t *testing.T) {
+	// New Context
+	ctx := context.Background()
+
+	pxrest, err := ConnectTest([]string{})
+	if err != nil {
+		t.Fatalf("ConnectTest failed: %v", err)
+	}
+
+	// Call Login directly and assert no error
+	if err := pxrest.Login(ctx); err != nil {
+		t.Fatalf("Login should not return an error, got: %v", err)
+	}
+
+	// Cleanup
+	pxrest.Logout(ctx)
+}
+
 func TestClientError(t *testing.T) {
 
 	//Create Context

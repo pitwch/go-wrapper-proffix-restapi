@@ -1,8 +1,8 @@
 package proffixrest
 
 import (
-	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 )
@@ -23,15 +23,6 @@ type PxInvalidField struct {
 	Message string `json:"Message"`
 }
 
-// Check if PxError is Null
-func (e *PxError) isNull() bool {
-	if e == nil {
-		return true
-	} else {
-		return e.Message == ""
-	}
-}
-
 // Check if is Type "INVALID_FIELDS"
 func (e *PxError) isInvalidFields() bool {
 	return e.Type == "INVALID_FIELDS"
@@ -45,33 +36,42 @@ func (e *PxError) isNotFound() bool {
 // Formats error default
 func (e *PxError) Error() string {
 	if len(e.Fields) > 0 {
-		var errFields = []string{}
-		for _, f := range e.Fields {
-			errFields = append(errFields, f.Name)
+		var b strings.Builder
+		for i, f := range e.Fields {
+			if i > 0 {
+				b.WriteString(",")
+			}
+			b.WriteString(f.Name)
 		}
-		return e.Message + " (" + strings.Join(errFields, ",") + ")"
-	} else {
-		return e.Message
+		return e.Message + " (" + b.String() + ")"
 	}
+	return e.Message
 }
 
 // NewPxError creates a new PxError
 func NewPxError(rc io.Reader, status int, endpoint string) *PxError {
 
-	pxerr := PxError{}
+	// Initialize with known context so we can craft a helpful message if body is empty
+	pxerr := PxError{Status: status, Endpoint: endpoint}
 
 	if rc != nil {
-		buf := new(bytes.Buffer)
-		_, _ = buf.ReadFrom(rc)
-		rcByte := buf.Bytes()
-		_ = json.Unmarshal(rcByte, &pxerr)
+		dec := json.NewDecoder(rc)
+		_ = dec.Decode(&pxerr)
+		// Ensure status/endpoint are preserved even if JSON doesn't contain them
+		pxerr.Status = status
+		pxerr.Endpoint = endpoint
 	}
-	pxerr.Status = status
-	pxerr.Endpoint = endpoint
 
-	if pxerr.isNull() {
-		return &PxError{}
-	} else {
-		return &pxerr
+	// If API did not provide a message, set a sensible default to avoid empty error strings
+	if pxerr.Message == "" {
+		if pxerr.Status > 0 {
+			pxerr.Message = fmt.Sprintf("HTTP %d from %s", pxerr.Status, pxerr.Endpoint)
+		} else if pxerr.Endpoint != "" {
+			pxerr.Message = fmt.Sprintf("request to %s failed", pxerr.Endpoint)
+		} else {
+			pxerr.Message = "unknown error"
+		}
 	}
+
+	return &pxerr
 }

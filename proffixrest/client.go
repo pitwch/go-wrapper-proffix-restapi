@@ -15,7 +15,7 @@ import (
 
 // Version of Wrapper
 const (
-	Version = "1.13.24"
+	Version = "1.13.25"
 )
 
 // Client Struct
@@ -330,7 +330,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 			return nil, nil, resp.StatusCode, pxErr
 		} else {
 
-			return nil, nil, 0, &PxError{}
+			return nil, nil, 0, NewPxError(nil, 0, endpoint)
 		}
 
 	}

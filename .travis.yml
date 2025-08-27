@@ -2,7 +2,7 @@ language: go
 services:
   - docker
 go:
-  - 1.18.x
+  - 1.21.x
 before_install:
   # Setup dependency management tool (deprecated)
   #- curl -L -s https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64 -o $GOPATH/bin/dep
