@@ -15,7 +15,7 @@ func (c *Client) GetList(ctx context.Context, listenr int, body interface{}) (io
 
 	//If err not nil or status not 201
 	if err != nil || status != 201 {
-		logDebug(ctx, c, fmt.Sprintf("Error on create list: %v, PxSession-ID: %v", resp, c.GetPxSessionId()))
+		logDebug(ctx, c, fmt.Sprintf("Error on create list: %v, PxSession-ID: %v", err, c.GetPxSessionId()))
 		return resp, headers, status, err
 	}
 

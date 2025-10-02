@@ -17,7 +17,7 @@ func GetFiltererCount(header http.Header) (total int) {
 	}
 	var pxmetadata PxMetadata
 	head := header.Get("pxmetadata")
-	_ = json.Unmarshal([]byte(head), &pxmetadata)
+	_ = json.Unmarshal([]byte(head), &pxmetadata) // Ignore error, return 0 on failure
 
 	return pxmetadata.FilteredCount
 }
@@ -50,7 +50,7 @@ func WriteFile(filepath string, file io.ReadCloser) (err error) {
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func() { _ = out.Close() }()
 
 	// Write to file
 	_, err = io.Copy(out, file)

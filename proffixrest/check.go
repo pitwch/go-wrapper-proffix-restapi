@@ -58,9 +58,9 @@ func (c *Client) CheckApi(ctx context.Context, webservicepw string) (err error) 
 
 	info := InfoStruct{}
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(closer)
+	_, _ = buf.ReadFrom(closer)
 	bytes := buf.Bytes()
-	json.Unmarshal(bytes, &info)
+	_ = json.Unmarshal(bytes, &info)
 
 	for _, liz := range info.Instanz.Lizenzen {
 		log.Println(liz.Name)

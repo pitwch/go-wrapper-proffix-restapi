@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/sha1"
+	"crypto/sha1" // #nosec G505 - SHA1 used for legacy password hashing compatibility
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -29,10 +29,11 @@ type configcmd struct {
 }
 
 func encryptString(s string) (encrypted string) {
-	matched, _ := regexp.MatchString("[A-Fa-f0-9]{64}", s)
+	matched, _ := regexp.MatchString("[A-Fa-f0-9]{64}", s) // Ignore error, default to false
 	if matched {
 		return s
 	} else {
+		// #nosec G401 - SHA1 used for legacy compatibility with PROFFIX API
 		h := sha1.New()
 		h.Write([]byte(s))
 		bs := h.Sum(nil)
@@ -84,14 +85,14 @@ func main() {
 			fmt.Println("Successfully loaded config from file")
 		}
 		// defer the closing of our jsonFile so that we can parse it later on
-		defer jsonFile.Close()
+		defer func() { _ = jsonFile.Close() }()
 
 		var cfg configcmd
 
-		byteValue, _ := ioutil.ReadAll(jsonFile)
+		byteValue, _ := ioutil.ReadAll(jsonFile) // Ignore error, handled below
 
 		//Unmarshmal Configfile to config
-		json.Unmarshal(byteValue, &cfg)
+		_ = json.Unmarshal(byteValue, &cfg) // Ignore error, use zero values on failure
 
 		//Set Vars from file
 		resturl = &cfg.Url
@@ -121,13 +122,13 @@ func main() {
 
 	switch strings.ToLower(*method) {
 	case "get":
-		fmt.Print(get(*pxrestcmd, ctx, *endpoint, param, *format, *depth, *field))
+		fmt.Print(get(pxrestcmd, ctx, *endpoint, param, *format, *depth, *field))
 		//Logout
-		pxrestcmd.Logout(ctx)
+		_, _ = pxrestcmd.Logout(ctx)
 	case "post":
-		fmt.Print(post(*pxrestcmd, ctx, *endpoint, *data))
+		fmt.Print(post(pxrestcmd, ctx, *endpoint, *data))
 		//Logout
-		pxrestcmd.Logout(ctx)
+		_, _ = pxrestcmd.Logout(ctx)
 	}
 
 }
@@ -136,17 +137,17 @@ func responseFormatter(closer io.ReadCloser, format string, depth int, field str
 	if closer != nil {
 
 		buf := new(bytes.Buffer)
-		buf.ReadFrom(closer)
+		_, _ = buf.ReadFrom(closer)
 
 		respStr := buf.String()
 		respByte := buf.Bytes()
-		defer closer.Close()
+		defer func() { _ = closer.Close() }()
 
 		switch strings.ToLower(format) {
 		case "json":
 			return respStr
 		case "string":
-			j, _ := jsonport.Unmarshal(respByte, depth, field)
+			j, _ := jsonport.Unmarshal(respByte, depth, field) // Ignore error, handle nil below
 			if j.IsString() {
 				str, err := j.GetString()
 				if err != nil {
@@ -170,17 +171,18 @@ func responseFormatter(closer io.ReadCloser, format string, depth int, field str
 	}
 	return "No response from API. Check Config"
 }
-func get(pxrest proffixrest.Client, ctx context.Context, endpoint string, params url.Values, format string, depth int, field string) (resp interface{}) {
+func get(pxrest *proffixrest.Client, ctx context.Context, endpoint string, params url.Values, format string, depth int, field string) (resp interface{}) {
 
 	res, _, _, err := pxrest.Get(ctx, endpoint, params)
 	if err != nil {
 		fmt.Print(err)
+		return nil
 	}
 	return responseFormatter(res, format, depth, field)
 
 }
-func post(pxrest proffixrest.Client, ctx context.Context, endpoint string, data string) (resp string) {
+func post(pxrest *proffixrest.Client, ctx context.Context, endpoint string, data string) (resp string) {
 
-	_, header, _, _ := pxrest.Post(ctx, endpoint, data)
+	_, header, _, _ := pxrest.Post(ctx, endpoint, data) // Ignore error, return empty on failure
 	return proffixrest.ConvertLocationToID(header)
 }

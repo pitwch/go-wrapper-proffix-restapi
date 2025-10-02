@@ -14,7 +14,7 @@ const PXTime = "2006-01-02 15:04:05"
 //Accepts time as string from PROFFIX REST-API
 //Returns Golang time.time
 func ConvertPXTimeToTime(pxtime string) (t time.Time) {
-	t, _ = time.Parse(PXTime, pxtime)
+	t, _ = time.Parse(PXTime, pxtime) // Ignore error, return zero time on failure
 	return t
 }
 

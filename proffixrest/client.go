@@ -91,6 +91,7 @@ func NewClient(RestURL string, apiUser string, apiPassword string, apiDatabase s
 		transport := &http.Transport{DisableKeepAlives: true}
 		// Disable Cert Verification if requested
 		if !options.VerifySSL {
+			// #nosec G402 - User explicitly disabled SSL verification via options
 			transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		}
 		httpClient = &http.Client{Transport: transport, Timeout: options.Timeout}

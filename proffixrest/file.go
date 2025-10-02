@@ -56,7 +56,7 @@ func (c *Client) GetFile(ctx context.Context, dateinr string, params url.Values)
 	}
 
 	ContentType = headers.Get("Content-Type")
-	ContentLength, _ = strconv.Atoi(headers.Get("Content-Length"))
+	ContentLength, _ = strconv.Atoi(headers.Get("Content-Length")) // Ignore error, default to 0
 	ContentDisposition := headers.Get("Content-Disposition")
 
 	_, paramsCD, errCD := mime.ParseMediaType(ContentDisposition)
