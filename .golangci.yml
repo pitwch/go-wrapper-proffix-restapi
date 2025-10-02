@@ -21,8 +21,6 @@ linters:
     - prealloc
     - gocritic
     - revive
-    - nilness
-    - copylocks
 
 linters-settings:
   errcheck:
@@ -31,6 +29,7 @@ linters-settings:
   govet:
     enable:
       - shadow
+      - copylocks
   
   gosec:
     excludes:
