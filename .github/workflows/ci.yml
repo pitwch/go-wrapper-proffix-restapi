@@ -92,8 +92,10 @@ jobs:
 
     - name: Build examples
       run: |
-        if [ -d "_examples" ]; then
+        if [ -d "_examples" ] && [ "$(ls -A _examples 2>/dev/null)" ]; then
           for dir in _examples/*/; do
-            (cd "$dir" && go build -v .)
+            if [ -d "$dir" ]; then
+              (cd "$dir" && go build -v .)
+            fi
           done
         fi
