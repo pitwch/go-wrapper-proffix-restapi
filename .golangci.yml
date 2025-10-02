@@ -1,9 +1,7 @@
-version: 2
+version: "2"
 
 run:
   timeout: 5m
-  tests: true
-  modules-download-mode: readonly
 
 linters:
   enable:
@@ -20,7 +18,7 @@ linters:
     - gocritic
     - revive
 
-linters-settings:
+settings:
   errcheck:
     check-type-assertions: true
     check-blank: true
@@ -28,11 +26,9 @@ linters-settings:
     enable:
       - shadow
       - copylocks
-  
   gosec:
     excludes:
-      - G304  # File inclusion via variable (needed for config files)
-  
+      - G304
   revive:
     rules:
       - name: exported
@@ -41,18 +37,3 @@ linters-settings:
       - name: var-naming
         severity: warning
         disabled: false
-
-issues:
-  exclude-use-default: false
-  max-issues-per-linter: 0
-  max-same-issues: 0
-  
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gosec
-        - errcheck
-    
-    # Exclude some linters from running on tests files
-    - path: _test\.go
-      text: "use of `fmt.Print`"
