@@ -1,5 +1,3 @@
-version: "2"
-
 run:
   timeout: 5m
   tests: true
@@ -19,9 +17,6 @@ linters:
     - prealloc
     - gocritic
     - revive
-
-formatters:
-  enable:
     - gofmt
     - goimports
 
@@ -30,9 +25,7 @@ linters-settings:
     check-type-assertions: true
     check-blank: true
   govet:
-    enable:
-      - shadow
-      - copylocks
+    check-shadowing: true
   
   gosec:
     excludes:
