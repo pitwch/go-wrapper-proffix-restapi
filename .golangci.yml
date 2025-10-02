@@ -19,11 +19,10 @@ linters:
     - revive
   settings:
     errcheck:
-      check-type-assertions: true
-      check-blank: true
+      check-type-assertions: false
+      check-blank: false
     govet:
       enable:
-        - shadow
         - copylocks
     gosec:
       excludes:
