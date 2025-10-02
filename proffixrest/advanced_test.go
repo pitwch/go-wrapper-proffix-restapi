@@ -1,3 +1,4 @@
+// Package proffixrest contains integration-style tests for the PROFFIX REST client.
 package proffixrest
 
 import (
@@ -15,7 +16,7 @@ func TestClient_Patch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ConnectTest failed: %v", err)
 	}
-	defer pxrest.Logout(ctx)
+	defer func() { _, _ = pxrest.Logout(ctx) }()
 
 	// Create a test address first with all required fields
 	data := map[string]interface{}{
@@ -45,7 +46,6 @@ func TestClient_Patch(t *testing.T) {
 	}
 
 	// Use PUT instead of PATCH as PATCH may have stricter validation
-	// Update the address
 	updateData := map[string]interface{}{
 		"AdressNr": adressNr,
 		"Name":     "Patch Test AG Updated",
@@ -64,7 +64,9 @@ func TestClient_Patch(t *testing.T) {
 	}
 
 	if rc != nil {
-		rc.Close()
+		if err := rc.Close(); err != nil {
+			t.Errorf("Close failed: %v", err)
+		}
 	}
 
 	// Clean up - delete the test address
@@ -84,7 +86,7 @@ func TestClient_ServiceLogin(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ConnectTest failed: %v", err)
 	}
-	defer pxrest1.Logout(ctx)
+	defer func() { _, _ = pxrest1.Logout(ctx) }()
 
 	// Ensure login happened
 	err = pxrest1.Login(ctx)
@@ -93,7 +95,7 @@ func TestClient_ServiceLogin(t *testing.T) {
 	}
 
 	// Get the session ID
-	sessionID := pxrest1.GetPxSessionId()
+	sessionID := pxrest1.GetPxSessionID()
 
 	if sessionID == "" {
 		t.Skip("Skipping ServiceLogin test: no valid session ID available")
@@ -108,10 +110,10 @@ func TestClient_ServiceLogin(t *testing.T) {
 		"DEMODB",
 		[]string{"VOL"},
 		&Options{
-			Key:            "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50",
-			VerifySSL:      false,
-			Autologout:     false,
-			VolumeLicence:  true,
+			Key:           "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50",
+			VerifySSL:     false,
+			Autologout:    false,
+			VolumeLicence: true,
 		},
 	)
 
@@ -119,16 +121,21 @@ func TestClient_ServiceLogin(t *testing.T) {
 		t.Fatalf("NewClient failed: %v", err)
 	}
 
-	// Use ServiceLogin with the session from first client
 	pxrest2.ServiceLogin(ctx, sessionID)
 
 	// Verify the session ID was set
-	if pxrest2.GetPxSessionId() != sessionID {
-		t.Errorf("Expected session ID '%s', got '%s'", sessionID, pxrest2.GetPxSessionId())
+	if pxrest2.GetPxSessionID() != sessionID {
+		t.Errorf("Expected session ID '%s', got '%s'", sessionID, pxrest2.GetPxSessionID())
 	}
 
 	// Try to use the session (should work if session sharing is supported)
-	_, _, status, err := pxrest2.Get(ctx, "ADR/Adresse", url.Values{})
+	resp, _, status, err := pxrest2.Get(ctx, "ADR/Adresse", url.Values{})
+	if resp != nil {
+		_ = resp.Close()
+	}
+	if err != nil {
+		t.Logf("ServiceLogin request returned error: %v", err)
+	}
 
 	// Note: Some PROFFIX versions may not support session sharing
 	if status != 200 {
@@ -136,15 +143,15 @@ func TestClient_ServiceLogin(t *testing.T) {
 	}
 }
 
-// TestClient_GetPxSessionId tests the GetPxSessionId method
-func TestClient_GetPxSessionId(t *testing.T) {
+// TestClient_GetPxSessionID tests the GetPxSessionID method
+func TestClient_GetPxSessionID(t *testing.T) {
 	ctx := context.Background()
 
 	pxrest, err := ConnectTest([]string{})
 	if err != nil {
 		t.Fatalf("ConnectTest failed: %v", err)
 	}
-	defer pxrest.Logout(ctx)
+	defer func() { _, _ = pxrest.Logout(ctx) }()
 
 	// Ensure login happened
 	err = pxrest.Login(ctx)
@@ -152,7 +159,7 @@ func TestClient_GetPxSessionId(t *testing.T) {
 		t.Fatalf("Login failed: %v", err)
 	}
 
-	sessionID := pxrest.GetPxSessionId()
+	sessionID := pxrest.GetPxSessionID()
 
 	if sessionID == "" {
 		t.Errorf("Expected non-empty session ID after login")
@@ -172,10 +179,10 @@ func TestClient_UpdatePxSessionId(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ConnectTest failed: %v", err)
 	}
-	defer pxrest.Logout(ctx)
+	defer func() { _, _ = pxrest.Logout(ctx) }()
 
 	// Get initial session ID
-	_ = pxrest.GetPxSessionId()
+	_ = pxrest.GetPxSessionID()
 
 	// Make a request (this might update the session ID)
 	_, _, status, err := pxrest.Get(ctx, "ADR/Adresse", url.Values{})
@@ -189,7 +196,7 @@ func TestClient_UpdatePxSessionId(t *testing.T) {
 	}
 
 	// Get session ID after request
-	afterSessionID := pxrest.GetPxSessionId()
+	afterSessionID := pxrest.GetPxSessionID()
 
 	// Session ID should still be valid (either same or updated)
 	if afterSessionID == "" {
@@ -210,7 +217,7 @@ func TestClient_MultipleRequests(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ConnectTest failed: %v", err)
 	}
-	defer pxrest.Logout(ctx)
+	defer func() { _, _ = pxrest.Logout(ctx) }()
 
 	// Make multiple requests to ensure session handling works
 	for i := 0; i < 3; i++ {
@@ -234,7 +241,7 @@ func TestClient_ConcurrentSafety(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ConnectTest failed: %v", err)
 	}
-	defer pxrest.Logout(ctx)
+	defer func() { _, _ = pxrest.Logout(ctx) }()
 
 	// Ensure login happened
 	err = pxrest.Login(ctx)
@@ -247,7 +254,7 @@ func TestClient_ConcurrentSafety(t *testing.T) {
 
 	for i := 0; i < 5; i++ {
 		go func(id int) {
-			sessionID := pxrest.GetPxSessionId()
+			sessionID := pxrest.GetPxSessionID()
 			if sessionID == "" {
 				t.Errorf("Goroutine %d: Expected non-empty session ID", id)
 			}

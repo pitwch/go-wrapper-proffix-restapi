@@ -36,7 +36,7 @@ func getInfoExample() {
 	//User Helper Endpoint PRO/Info
 	rc, err := pxrest.Info(ctx, "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
-	//Buffer decode for plain text response
+	// Buffer decode for plain text response
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(rc)
 	resp := buf.String()
@@ -66,7 +66,7 @@ func getDatabaseExample() {
 	//User Helper Endpoint PRO/Datenbank
 	rc, err := pxrest.Info(ctx, "16378f3e3bc8051435694595cbd222219d1ca7f9bddf649b9a0c819a77bb5e50")
 
-	//Buffer decode for plain text response
+	// Buffer decode for plain text response
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(rc)
 	resp := buf.String()
@@ -95,7 +95,7 @@ func getAdresseExample() {
 	//Query endpoint ADR/Adresse/1 without Header as not needed
 	rc, _, _, err := pxrest.Get(ctx, "ADR/Adresse/1", url.Values{})
 
-	//Buffer decode for plain text response
+	// Buffer decode for plain text response
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(rc)
 	resp := buf.String()
@@ -131,7 +131,7 @@ func getAdresseWithParamsExample() {
 	//Query Endpoint ADR/Adresse
 	rc, _, _, err := pxrest.Get(ctx, "ADR/Adresse", param)
 
-	//Buffer decode for plain text response
+	// Buffer decode for plain text response
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(rc)
 	resp := buf.String()

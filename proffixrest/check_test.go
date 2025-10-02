@@ -6,24 +6,24 @@ import (
 	"testing"
 )
 
-func TestClient_CheckApi(t *testing.T) {
+func TestClient_CheckAPI(t *testing.T) {
 
 	ctx := context.Background()
 
-	//Connect
+	// Connect
 	pxrest, err := ConnectTest([]string{})
 
-	//Check error. Should be nil
+	// Check error. Should be nil
 	if err != nil {
 		t.Errorf("Expected no error for Connect. Got '%v'", err)
 	}
 
-	//Check CheckAPI
-	err = pxrest.CheckApi(ctx, os.Getenv("PXDEMO_KEY"))
+	// Check CheckAPI
+	err = pxrest.CheckAPI(ctx, os.Getenv("PXDEMO_KEY"))
 
-	//Check error. Should be nil
+	// Check error. Should be nil
 	if err != nil {
-		t.Errorf("Expected no error for CheckApi. Got '%v'", err)
+		t.Errorf("Expected no error for CheckAPI. Got '%v'", err)
 	}
 
 }

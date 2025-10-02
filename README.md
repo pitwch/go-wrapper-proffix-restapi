@@ -235,7 +235,7 @@ Ruft Infos vom Endpunkt **PRO/Info** ab.
 
  rc, err := pxrest.Info(ctx,"112a5a90fe28b23ed2c776562a7d1043957b5b79fad242b10141254b4de59028")
 
- //Buffer decode for plain text response
+ // Buffer decode for plain text response
  buf := new(bytes.Buffer)
  buf.ReadFrom(rc)
  resp := buf.String()
@@ -254,7 +254,7 @@ Ruft Infos vom Endpunkt **PRO/Datenbank** ab.
 ```golang
  rc, err := pxrest.Database(ctx,"112a5a90fe28b23ed2c776562a7d1043957b5b79fad242b10141254b4de59028")
 
- //Buffer decode for plain text response
+ // Buffer decode for plain text response
  buf := new(bytes.Buffer)
  buf.ReadFrom(rc)
  resp := buf.String()
@@ -287,7 +287,7 @@ Lädt Datei zum Endpunkt **PRO/Datei** hoch.
 
  rc, headers, status, err := pxrest.File(ctx,"Demofile.png", file)
 
- //Buffer decode for plain text response
+ // Buffer decode for plain text response
  buf := new(bytes.Buffer)
  buf.ReadFrom(rc)
  resp := buf.String()

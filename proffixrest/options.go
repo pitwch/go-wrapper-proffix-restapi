@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Options configures client behavior for the PROFFIX REST-API wrapper.
 type Options struct {
 	Key           string        // API-Key for PROFFIX REST-API
 	Version       string        // Version of API to use. Default is v3

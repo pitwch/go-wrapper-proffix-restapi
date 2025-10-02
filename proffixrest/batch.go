@@ -9,17 +9,19 @@ import (
 	"strconv"
 )
 
-// 	GetBatch automatically paginates all possible queries
-//	Params:
-//		ctx				context.Context	context
-//		endpoint		string			the endpoint on which batch should be used
-//		params			url.Values		the params for this request
-//		batchsize		int				the size of a batch (higher is usually faster)
+// GetBatch automatically paginates all possible queries
+// Params:
 //
-//	Returns:
-//		result			[]byte			results as []byte
-//		total			int				Total found entries
-//		err				error			General errors
+//	ctx				context.Context	context
+//	endpoint		string			the endpoint on which batch should be used
+//	params			url.Values		the params for this request
+//	batchsize		int				the size of a batch (higher is usually faster)
+//
+// Returns:
+//
+//	result			[]byte			results as []byte
+//	total			int				Total found entries
+//	err				error			General errors
 func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Values, batchsize int) (result []byte, total int, err error) {
 
 	// Create collector for collecting requests
@@ -27,7 +29,7 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 
 	// If batchsize not set in function / is 0
 	if batchsize == 0 {
-		//Set it to default
+		// Set it to default
 		batchsize = c.option.Batchsize
 	}
 
@@ -38,8 +40,11 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 
 	// Create Setting Query for setting up the sync and getting the FilteredCount Header
 
-	// Store original params in paramquery
-	paramquery := params
+	// Store original params in a copy so we can modify it safely
+	paramquery := url.Values{}
+	for key, val := range params {
+		paramquery[key] = append([]string{}, val...)
+	}
 
 	// Delete Limit from params in case user defined it
 	paramquery.Del("Limit")
@@ -47,7 +52,7 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 	// Add Limit / Batchsize to params
 	paramquery.Add("Limit", strconv.Itoa(batchsize))
 	// Query Endpoint for results
-	rc, header, status, err := c.Get(ctx, endpoint, params)
+	rc, header, status, err := c.Get(ctx, endpoint, paramquery)
 
 	if err != nil {
 		return nil, 0, err
@@ -56,14 +61,14 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 	// Read from rc into settingResp
 	settingResp, err := ioutil.ReadAll(rc)
 	// Put setting query into collector
-	collector = append(collector, settingResp[:]...)
+	collector = append(collector, settingResp...)
 
 	// If Status not 200 log Error message
 	if err != nil {
 		return nil, 0, err
 	}
 	// Get total available objects
-	totalEntries := GetFiltererCount(header)
+	totalEntries := GetFilteredCount(header)
 
 	if totalEntries == 0 {
 		return nil, 0, err
@@ -84,9 +89,11 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 		// Loop over requests until we have all available objects
 		for totalEntriesCount < totalEntries {
 
-			// Reset the params to original
+			// Reset the params to original copy
 			paramquery := url.Values{}
-			paramquery = params
+			for key, val := range params {
+				paramquery[key] = append([]string{}, val...)
+			}
 
 			// To be sure; remove old limit + offset
 			paramquery.Del("Limit")
@@ -102,7 +109,7 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 			// Read from bc into temporary batchResp
 			batchResp, err := ioutil.ReadAll(bc)
 
-			collector = append(collector, batchResp[:]...)
+			collector = append(collector, batchResp...)
 			if err != nil {
 				panic(err)
 			}
@@ -114,18 +121,16 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 
 			// Unmarshall to interface so we can count elements in totalEntriesCount query
 			var jsonObjs2 interface{}
-			_ = json.Unmarshal([]byte(batchResp), &jsonObjs2)
+			_ = json.Unmarshal(batchResp, &jsonObjs2)
 			totalEntriesCount += len(jsonObjs2.([]interface{}))
 		}
 
 		// Clean the collector, replace JSON Tag to get one big JSON array
-		cleanCollector := bytes.Replace(collector, []byte("]["), []byte(","), -1)
+		cleanCollector := bytes.ReplaceAll(collector, []byte("]["), []byte(","))
 
 		return cleanCollector, totalEntriesCount, err
-
-		// If count of elements in first query is bigger or same than FilteredCount return
-	} else {
-		// Return
-		return collector, totalEntriesCount, err
 	}
+
+	// If count of elements in first query is bigger or same than FilteredCount return
+	return collector, totalEntriesCount, err
 }

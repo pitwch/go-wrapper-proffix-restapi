@@ -72,16 +72,16 @@ var artikelBatchTest = `[{
 
 func TestClient_SyncBatch(t *testing.T) {
 
-	//New Context
+	// New Context
 	ctx := context.Background()
 
-	//Connect
+	// Connect
 	pxrest, _ := ConnectTest([]string{"VOL"})
 
-	//Delete Artikel 99999
+	// Delete Artikel 99999
 	_, _, _, _ = pxrest.Delete(ctx, "LAG/Artikel/99999")
 
-	//Create Artikel 99999
+	// Create Artikel 99999
 	artikelMap := make(map[string]interface{})
 
 	_ = json.Unmarshal([]byte(artikel99999), &artikelMap)
@@ -89,41 +89,41 @@ func TestClient_SyncBatch(t *testing.T) {
 
 	created, updated, failed, errors, total, _ := pxrest.SyncBatch(ctx, "LAG/Artikel", "ArtikelNr", false, []byte(artikelBatchTest))
 
-	//Calculate created / updated
+	// Calculate created / updated
 	checkCreated := total - len(updated)
 	checkUpdated := total - len(created)
 
-	//Check Created
+	// Check Created
 	if len(created) != checkCreated {
 		t.Errorf("Created should be %v. Is %v", len(created), checkCreated)
 	}
 
-	//Check Updated
+	// Check Updated
 	if len(updated) != checkUpdated {
 		t.Errorf("Updated should be %v. Is %v", len(updated), checkUpdated)
 	}
 
-	//Check Failed
+	// Check Failed
 	if len(failed) != 0 {
 		t.Errorf("Failed should be 0. Is %v : %v", len(failed), failed)
 	}
 
-	//Check Errors
+	// Check Errors
 	if len(errors) != 0 {
 		t.Errorf("Errors should be 0. Is %v : %v", len(errors), errors)
 	}
 	if len(created) > 0 {
-		//Delete created AdressNr
+		// Delete created AdressNr
 		_, _, statusDelete, errDeleted := pxrest.Delete(ctx, "LAG/Artikel/"+created[0])
 
-		//Check HTTP Status of Logout. Should be 204
+		// Check HTTP Status of Logout. Should be 204
 		if statusDelete != 204 {
 			t.Errorf("Expected HTTP Status Code 204 for deleting AdressNr %v. Got '%v' with %v", created[0], statusDelete, errDeleted)
 		}
 	}
 	statuslogout, err := pxrest.Logout(ctx)
 
-	//Check HTTP Status of Logout. Should be 204
+	// Check HTTP Status of Logout. Should be 204
 	if statuslogout != 204 {
 		t.Errorf("Expected HTTP Status Code 204. Got '%v'", err)
 	}

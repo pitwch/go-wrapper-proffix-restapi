@@ -7,6 +7,7 @@ import (
 	"log"
 )
 
+// InfoStruct captures metadata returned by the PROFFIX REST-API info endpoint.
 type InfoStruct struct {
 	Version        string
 	ServerZeit     string
@@ -14,40 +15,39 @@ type InfoStruct struct {
 	Instanz        InstanzStruct
 }
 
+// InstanzStruct describes a PROFFIX instance and its licenses.
 type InstanzStruct struct {
 	InstanzNr string
 	Name      string
 	Lizenzen  []LizenzStruct
 }
 
+// LizenzStruct details a specific PROFFIX license entry.
 type LizenzStruct struct {
-	Name               string
-	Bezeichnung        string
-	Anzahl             int
-	AnzahlInVerwendung int
-	Demo               bool
-	Ablaufdatum        string
+	Name        string
+	Bezeichnung string
+	Anzahl      int
+	Demo        bool
+	Ablaufdatum string
 }
 
-// CheckAPI checks the PROFFIX REST API
-// Accepts client
-// Returns err
-func (c *Client) CheckApi(ctx context.Context, webservicepw string) (err error) {
+// CheckAPI checks the PROFFIX REST API.
+func (c *Client) CheckAPI(ctx context.Context, webservicepw string) (err error) {
 
-	//Set timeout to 10
+	// Set timeout to 10
 	c.option.Timeout = 10
 
-	//Set Module ADR
-	//c.Module = []string{"ADR"}
+	// Set Module ADR
+	// c.Module = []string{"ADR"}
 
-	//Check Login
+	// Check Login
 	err = c.Login(ctx)
 	if err != nil {
 		return err
 	}
 
-	//Check if PxSessionId is available
-	if c.GetPxSessionId() == "" {
+	// Check if PxSessionID is available
+	if c.GetPxSessionID() == "" {
 		return &PxError{Message: "No PxSessionId found"}
 	}
 

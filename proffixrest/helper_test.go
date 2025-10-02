@@ -26,13 +26,13 @@ func Test_errorFormatterPx(t *testing.T) {
 	}
 }
 
-func TestGetFiltererCount(t *testing.T) {
+func TestGetFilteredCount(t *testing.T) {
 	// Create test header with pxmetadata
 	header := http.Header{}
 	metadata := `{"FilteredCount":42}`
 	header.Set("pxmetadata", metadata)
 
-	count := GetFiltererCount(header)
+	count := GetFilteredCount(header)
 
 	if count != 42 {
 		t.Errorf("Expected FilteredCount 42, got %v", count)
@@ -40,7 +40,7 @@ func TestGetFiltererCount(t *testing.T) {
 
 	// Test with empty header
 	emptyHeader := http.Header{}
-	emptyCount := GetFiltererCount(emptyHeader)
+	emptyCount := GetFilteredCount(emptyHeader)
 	if emptyCount != 0 {
 		t.Errorf("Expected FilteredCount 0 for empty header, got %v", emptyCount)
 	}
@@ -135,7 +135,7 @@ func TestGetMap(t *testing.T) {
 func TestWriteFile(t *testing.T) {
 	// Create temp file path
 	tempFile := "test_write_file.txt"
-	defer os.Remove(tempFile)
+	defer func() { _ = os.Remove(tempFile) }()
 
 	// Create test data
 	testData := "Test file content for PROFFIX REST API"

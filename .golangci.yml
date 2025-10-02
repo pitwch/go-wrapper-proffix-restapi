@@ -1,3 +1,5 @@
+version: "2"
+
 run:
   timeout: 5m
   tests: true
@@ -6,13 +8,9 @@ run:
 linters:
   enable:
     - errcheck
-    - gosimple
     - govet
     - ineffassign
     - staticcheck
-    - unused
-    - gofmt
-    - goimports
     - misspell
     - unconvert
     - unparam
@@ -21,6 +19,11 @@ linters:
     - prealloc
     - gocritic
     - revive
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
 
 linters-settings:
   errcheck:

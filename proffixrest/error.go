@@ -64,11 +64,12 @@ func NewPxError(rc io.Reader, status int, endpoint string) *PxError {
 
 	// If API did not provide a message, set a sensible default to avoid empty error strings
 	if pxerr.Message == "" {
-		if pxerr.Status > 0 {
+		switch {
+		case pxerr.Status > 0:
 			pxerr.Message = fmt.Sprintf("HTTP %d from %s", pxerr.Status, pxerr.Endpoint)
-		} else if pxerr.Endpoint != "" {
+		case pxerr.Endpoint != "":
 			pxerr.Message = fmt.Sprintf("request to %s failed", pxerr.Endpoint)
-		} else {
+		default:
 			pxerr.Message = "unknown error"
 		}
 	}

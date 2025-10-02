@@ -28,7 +28,7 @@ func postAdresseWithStruct() {
 	//Query Endpoint ADR/Adresse with Headers
 	rc, header, _, err := pxrest.Post(ctx, "ADR/Adresse", data)
 
-	//Buffer decode for plain text response
+	// Buffer decode for plain text response
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(rc)
 	resp := buf.String()
@@ -59,7 +59,7 @@ func postAdresseWithMap() {
 	//Query Endpoint ADR/Adresse with Headers
 	rc, header, _, err := pxrest.Post(ctx, "ADR/Adresse", data)
 
-	//Buffer decode for plain text response
+	// Buffer decode for plain text response
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(rc)
 	resp := buf.String()
