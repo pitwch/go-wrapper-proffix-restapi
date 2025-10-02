@@ -71,6 +71,16 @@ func isClient(t interface{}) bool {
 	}
 }
 
+// Helper function for checking if is type *Client (pointer)
+func isClientPtr(t interface{}) bool {
+	switch t.(type) {
+	case *Client:
+		return true
+	default:
+		return false
+	}
+}
+
 // Test all Requests in one Session
 func TestClient_Requests(t *testing.T) {
 
@@ -365,18 +375,17 @@ func TestStructs(t *testing.T) {
 
 	pxrest, _ := ConnectTest([]string{})
 
-	//Set test vars
-	q := *pxrest
+	//Set test vars - use pointers to avoid copying mutex
 	w := *pxrest.option
 
-	//Check if pxrest is Options
+	//Check if pxrest.option is Options
 	if isOption(w) == false {
 		t.Errorf("w not of type Option")
 	}
 
-	//Check if pxrest.option is Options
-	if isClient(q) == false {
-		t.Errorf("q is not of type Client")
+	//Check if pxrest is Client (use pointer)
+	if !isClientPtr(pxrest) {
+		t.Errorf("pxrest is not of type *Client")
 	}
 
 	pxrest.Logout(ctx)

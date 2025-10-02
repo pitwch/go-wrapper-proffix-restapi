@@ -78,7 +78,7 @@ func TestGetBatch(t *testing.T) {
 
 		//Check default settings
 		if pxrest.option.Batchsize != 200 {
-			t.Errorf("Default batchsize should . Got '%v' vs. '%v'", len(adressen), total)
+			t.Errorf("Default batchsize should be 200. Got '%v'", pxrest.option.Batchsize)
 		}
 	}
 }

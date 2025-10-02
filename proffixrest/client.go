@@ -321,18 +321,11 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 	resp, err := c.client.Do(req)
 
 	if resp != nil && (resp.StatusCode >= 300 || resp.StatusCode < 200) {
-
-		if resp != nil {
-			pxErr := NewPxError(resp.Body, resp.StatusCode, endpoint)
-			if resp.Body != nil {
-				_ = resp.Body.Close()
-			}
-			return nil, nil, resp.StatusCode, pxErr
-		} else {
-
-			return nil, nil, 0, NewPxError(nil, 0, endpoint)
+		pxErr := NewPxError(resp.Body, resp.StatusCode, endpoint)
+		if resp.Body != nil {
+			_ = resp.Body.Close()
 		}
-
+		return nil, nil, resp.StatusCode, pxErr
 	}
 
 	if resp != nil {
@@ -342,13 +335,11 @@ func (c *Client) request(ctx context.Context, method, endpoint string, params ur
 		c.updatePxSessionId(resp.Header)
 
 		return resp.Body, resp.Header, resp.StatusCode, nil
-
-		// If everything fails -> logout
-	} else {
-
-		_, _ = c.Logout(ctx)
-		return nil, nil, 0, &PxError{Message: fmt.Sprintf("%v", err)}
 	}
+
+	// If everything fails -> logout
+	_, _ = c.Logout(ctx)
+	return nil, nil, 0, &PxError{Message: fmt.Sprintf("%v", err)}
 
 }
 

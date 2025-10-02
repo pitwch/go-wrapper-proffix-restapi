@@ -21,12 +21,13 @@ linters:
     - prealloc
     - gocritic
     - revive
+    - nilness
+    - copylocks
 
 linters-settings:
   errcheck:
     check-type-assertions: true
     check-blank: true
-  
   govet:
     enable:
       - shadow

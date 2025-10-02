@@ -23,8 +23,8 @@ var artikel99999 = `{
 		"WaehrungNr": "CHF"
 	},
 	"Ertragskonto": {},
-	"Steuercode": {SteuercodeNr: 101},
-	"SteuercodeEinkauf"": {SteuercodeNr: 101},
+	"Steuercode": {"SteuercodeNr": 101},
+	"SteuercodeEinkauf": {"SteuercodeNr": 101},
 	"KeinBestand": true
 }`
 
@@ -45,8 +45,8 @@ var artikelBatchTest = `[{
 		"WaehrungNr": "CHF"
 	},
 	"Ertragskonto": {},
-		"Steuercode": {SteuercodeNr: 101},
-	"SteuercodeEinkauf"": {SteuercodeNr: 101},
+	"Steuercode": {"SteuercodeNr": 101},
+	"SteuercodeEinkauf": {"SteuercodeNr": 101},
 	"KeinBestand": true
 }, {
 	"ArtikelNr": "66666",
@@ -65,8 +65,8 @@ var artikelBatchTest = `[{
 		"WaehrungNr": "CHF"
 	},
 	"Ertragskonto": {},
-		"Steuercode": {SteuercodeNr: 101},
-	"SteuercodeEinkauf"": {SteuercodeNr: 101},
+	"Steuercode": {"SteuercodeNr": 101},
+	"SteuercodeEinkauf": {"SteuercodeNr": 101},
 	"KeinBestand": true
 }]`
 
