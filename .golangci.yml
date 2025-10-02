@@ -17,23 +17,22 @@ linters:
     - prealloc
     - gocritic
     - revive
-
-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-  govet:
-    enable:
-      - shadow
-      - copylocks
-  gosec:
-    excludes:
-      - G304
-  revive:
-    rules:
-      - name: exported
-        severity: warning
-        disabled: false
-      - name: var-naming
-        severity: warning
-        disabled: false
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    govet:
+      enable:
+        - shadow
+        - copylocks
+    gosec:
+      excludes:
+        - G304
+    revive:
+      rules:
+        - name: exported
+          severity: warning
+          disabled: false
+        - name: var-naming
+          severity: warning
+          disabled: false
