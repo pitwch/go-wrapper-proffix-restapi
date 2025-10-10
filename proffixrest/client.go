@@ -11,25 +11,27 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"sync/atomic"
 )
 
 // Version of Wrapper
 const (
-	Version = "1.13.25"
+	Version = "1.13.30"
 )
 
 // Client Struct
 type Client struct {
-	restURL     *url.URL
-	Benutzer    string
-	Passwort    string
-	Datenbank   string
-	Module      []string
-	option      *Options
-	client      *http.Client
-	mu          sync.RWMutex
-	pxSessionID string
-	isLoggedIn  bool
+	restURL            *url.URL
+	Benutzer           string
+	Passwort           string
+	Datenbank          string
+	Module             []string
+	option             *Options
+	client             *http.Client
+	mu                 sync.RWMutex
+	pxSessionID        string
+	isLoggedIn         bool
+	logoutInProgress   atomic.Bool
 }
 
 // LoginStruct represents the login payload for the PROFFIX REST-API.
@@ -215,6 +217,13 @@ func (c *Client) updatePxSessionID(header http.Header) {
 
 // Logout invalidates the current PxSessionID on the PROFFIX REST-API and clears local state.
 func (c *Client) Logout(ctx context.Context) (int, error) {
+	// Prevent recursive logout (fixes infinite recursion bug)
+	if c.logoutInProgress.Load() {
+		return 0, &PxError{Message: "logout already in progress"}
+	}
+	c.logoutInProgress.Store(true)
+	defer c.logoutInProgress.Store(false)
+
 	// Just logout if we have a valid PxSessionid
 	if c.GetPxSessionID() != "" {
 
