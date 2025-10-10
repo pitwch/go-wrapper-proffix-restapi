@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.30](https://github.com/pitwch/go-wrapper-proffix-restapi/compare/v1.13.29...v1.13.30) (2025-10-10)
+
+
+### Bug Fixes
+
+* prevent recursive logout by adding atomic flag to track logout state ([185d980](https://github.com/pitwch/go-wrapper-proffix-restapi/commit/185d980b16d886fc5c276ae99453d20738b4b67a))
+
 ## [1.13.29](https://github.com/pitwch/go-wrapper-proffix-restapi/compare/v1.13.28...v1.13.29) (2025-10-02)
 
 
