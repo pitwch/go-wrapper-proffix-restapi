@@ -18,7 +18,7 @@ func TestClient_GetList(t *testing.T) {
 		t.Errorf("Expected no error for Connect. Got '%v'", err)
 	}
 
-	_, headers, status, err := pxrest.GetList(ctx, 1029, nil)
+	_, headers, status, err := pxrest.GetList(ctx, 2422, nil)
 
 	if status != 404 {
 		// Check error. Should be nil
