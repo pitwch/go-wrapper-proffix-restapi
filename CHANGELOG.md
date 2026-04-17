@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.31](https://github.com/pitwch/go-wrapper-proffix-restapi/compare/v1.13.30...v1.13.31) (2026-04-17)
+
 ## [1.13.30](https://github.com/pitwch/go-wrapper-proffix-restapi/compare/v1.13.29...v1.13.30) (2025-10-10)
 
 
