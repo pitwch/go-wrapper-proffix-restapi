@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/url"
 	"strconv"
 )
@@ -59,7 +59,10 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 	}
 
 	// Read from rc into settingResp
-	settingResp, err := ioutil.ReadAll(rc)
+	var settingResp []byte
+	if rc != nil {
+		settingResp, err = io.ReadAll(rc)
+	}
 	// Put setting query into collector
 	collector = append(collector, settingResp...)
 
@@ -78,7 +81,11 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 	var jsonObjs interface{}
 	err = json.Unmarshal(collector, &jsonObjs)
 
-	firstQueryCount := len(jsonObjs.([]interface{}))
+	jsonArr, ok := jsonObjs.([]interface{})
+	if !ok || jsonArr == nil {
+		return collector, 0, nil
+	}
+	firstQueryCount := len(jsonArr)
 
 	// Add firstQueryCount to the totalEntriesCount so we can save queries
 	totalEntriesCount := firstQueryCount
@@ -107,22 +114,33 @@ func (c *Client) GetBatch(ctx context.Context, endpoint string, params url.Value
 			bc, _, _, _ := c.Get(ctx, endpoint, paramquery)
 
 			// Read from bc into temporary batchResp
-			batchResp, err := ioutil.ReadAll(bc)
+			var batchResp []byte
+			if bc != nil {
+				batchResp, err = io.ReadAll(bc)
+			}
+
+			if err != nil {
+				return nil, totalEntriesCount, err
+			}
+
+			// If Status not 200 return error
+			if status != 200 {
+				return nil, totalEntriesCount, &PxError{Status: status, Message: string(collector)}
+			}
 
 			collector = append(collector, batchResp...)
-			if err != nil {
-				panic(err)
-			}
-
-			// If Status not 200 log Error message
-			if status != 200 {
-				panic(string(collector))
-			}
 
 			// Unmarshall to interface so we can count elements in totalEntriesCount query
 			var jsonObjs2 interface{}
 			_ = json.Unmarshal(batchResp, &jsonObjs2)
-			totalEntriesCount += len(jsonObjs2.([]interface{}))
+			jsonArr2, ok2 := jsonObjs2.([]interface{})
+			if !ok2 || jsonArr2 == nil {
+				break
+			}
+			if len(jsonArr2) == 0 {
+				break
+			}
+			totalEntriesCount += len(jsonArr2)
 		}
 
 		// Clean the collector, replace JSON Tag to get one big JSON array

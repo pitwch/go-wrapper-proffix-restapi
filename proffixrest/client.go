@@ -21,17 +21,17 @@ const (
 
 // Client Struct
 type Client struct {
-	restURL            *url.URL
-	Benutzer           string
-	Passwort           string
-	Datenbank          string
-	Module             []string
-	option             *Options
-	client             *http.Client
-	mu                 sync.RWMutex
-	pxSessionID        string
-	isLoggedIn         bool
-	logoutInProgress   atomic.Bool
+	restURL          *url.URL
+	Benutzer         string
+	Passwort         string
+	Datenbank        string
+	Module           []string
+	option           *Options
+	client           *http.Client
+	mu               sync.RWMutex
+	pxSessionID      string
+	isLoggedIn       bool
+	logoutInProgress atomic.Bool
 }
 
 // LoginStruct represents the login payload for the PROFFIX REST-API.
@@ -115,15 +115,18 @@ func NewClient(restURL string, apiUser string, apiPassword string, apiDatabase s
 
 // Function for creating new PxSessionID
 func (c *Client) createNewPxSessionID(ctx context.Context) (sessionid string, err error) {
+	log.Printf("DEBUG createNewPxSessionID: ENTER restURL=%s, LoginEndpoint=%s", c.restURL.String(), c.option.LoginEndpoint)
 
 	// Check URL, else exit
 	_, err = url.ParseRequestURI(c.restURL.String())
 	if err != nil {
+		log.Printf("DEBUG createNewPxSessionID: URL parse error: %v", err)
 		return "", &PxError{Message: "URL in wrong format"}
 	}
 
 	// Build Login URL
 	urlstr := c.restURL.String() + c.option.LoginEndpoint
+	log.Printf("DEBUG createNewPxSessionID: urlstr=%s", urlstr)
 
 	// Create Login Body
 	data := LoginStruct{c.Benutzer, c.Passwort, DatabaseStruct{c.Datenbank}, c.Module}
@@ -178,19 +181,23 @@ func (c *Client) createNewPxSessionID(ctx context.Context) (sessionid string, er
 
 // Login ensures the client has a valid PxSessionID by creating one if needed.
 func (c *Client) Login(ctx context.Context) error {
+	// DEBUG: Log Login entry
+	log.Printf("DEBUG Login: ENTER isLoggedIn=%v, pxSessionID=%s", c.isLoggedIn, c.GetPxSessionID())
 
 	// If Pxsessionid doesnt yet exists create a new one
 	c.mu.RLock()
 	loggedIn := c.isLoggedIn
 	c.mu.RUnlock()
 	if !loggedIn {
+		log.Printf("DEBUG Login: Not logged in, creating new session...")
 		sessionid, err := c.createNewPxSessionID(ctx)
-
+		log.Printf("DEBUG Login: createNewPxSessionID returned sessionid=%s, err=%v", sessionid, err)
 		_ = sessionid // already stored in client
 		return err
 	}
 
 	// If Pxsessionid already exists return stored value
+	log.Printf("DEBUG Login: Already logged in, skipping login")
 	return nil
 }
 
@@ -251,6 +258,23 @@ func (c *Client) Logout(ctx context.Context) (int, error) {
 // Request Method
 // Building the Request Method for Client
 func (c *Client) request(ctx context.Context, method, endpoint string, params url.Values, isFile bool, data interface{}) (io.ReadCloser, http.Header, int, error) {
+	// DEBUG: Log entry into request method
+	log.Printf("DEBUG request: ENTER method=%s, endpoint=%s, client_nil=%v, option_nil=%v, restURL_nil=%v",
+		method, endpoint, c == nil, c != nil && c.option == nil, c != nil && c.restURL == nil)
+
+	// Defensive nil checks
+	if c == nil {
+		return nil, nil, 0, &PxError{Message: "client is nil"}
+	}
+	if c.option == nil {
+		return nil, nil, 0, &PxError{Message: "client option is nil"}
+	}
+	if c.restURL == nil {
+		return nil, nil, 0, &PxError{Message: "client restURL is nil"}
+	}
+	if c.client == nil {
+		return nil, nil, 0, &PxError{Message: "client http.Client is nil"}
+	}
 
 	var urlstr string
 
@@ -383,6 +407,10 @@ func (c *Client) Get(ctx context.Context, endpoint string, params url.Values) (i
 	if err != nil {
 		return nil, nil, 0, err
 	}
+
+	// DEBUG: Log client state before request to diagnose state corruption
+	log.Printf("DEBUG Get: PxSessionID=%s, restURL=%s, isLoggedIn=%v, endpoint=%s",
+		c.GetPxSessionID(), c.restURL.String(), c.isLoggedIn, endpoint)
 
 	request, header, statuscode, err := c.request(ctx, "GET", endpoint, params, false, nil)
 	if err != nil {
