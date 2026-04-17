@@ -25,7 +25,8 @@ func TestClient_File(t *testing.T) {
 
 	// Note: This test may return 404 if file upload is not configured
 	// or return success if configured
-	if status == 201 {
+	switch {
+	case status == 201:
 		if err != nil {
 			t.Errorf("Expected no error for successful file upload. Got '%v'", err)
 		}
@@ -39,10 +40,10 @@ func TestClient_File(t *testing.T) {
 		if headers.Get("Content-Type") == "" {
 			t.Errorf("Expected Content-Type header in response")
 		}
-	} else if status == 404 {
+	case status == 404:
 		// File upload endpoint may not be available - this is acceptable
 		t.Logf("File upload endpoint returned 404 - may not be configured")
-	} else if status >= 400 {
+	case status >= 400:
 		// Other errors are logged but not failing
 		t.Logf("File upload returned status %d: %v", status, err)
 	}
